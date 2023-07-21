@@ -1,24 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import Main from './Components/Main';
+import { Box, ThemeProvider, createTheme } from '@mui/material';
 
 function App() {
+  // Creates the theme for the web app
+  const theme = createTheme({
+    palette: {
+      primary: { main: "#B5A197" },
+      secondary: { main: "#020301" },
+      divider: { main: "#020301" },
+      background: {
+        default: "#FFFFFF",
+        paper: "#F3F5F9",
+      },
+      text: {
+        primary: "#020301",
+      },
+    },
+  });
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Box className="App" sx={{margin: '0px'}}>
+      {/* Allows acces to the theme in every page within ThemeProvider */}
+      <ThemeProvider theme={theme}>
+        <Main />
+      </ThemeProvider>
+      
+    </Box>
   );
 }
 
