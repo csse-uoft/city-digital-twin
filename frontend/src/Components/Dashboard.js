@@ -4,6 +4,7 @@ import { useState } from "react";
 
 function Dashboard() {
     const [indicators, setIndicators] = useState([{value: '', id: 0}]);
+    const [years, setYears] = useState([{value: '', id: 0}]);
     const options = ['The Godfather', 'Pulp Fiction'];
 
     const handleAddIndicator = () => {
@@ -14,6 +15,21 @@ function Dashboard() {
         });
         setIndicators(temp);
         console.log(temp);
+    }
+
+    const handleAddYears = () => {
+        
+        const temp = [...years];
+        temp.push({
+            value1: '',
+            value2: '',
+            id: years.length
+        });
+        setYears(temp);
+        console.log(temp);
+
+        
+        
     }
     const handleUpdateIndicators = (id, value) => {
         const temp = [...indicators];
@@ -28,7 +44,7 @@ function Dashboard() {
             <Paper sx={{paddingBottom: '20px'}}>
                 <Grid container>
                     
-                    <Grid sm='12' md='3'>
+                    <Grid xs='12' md='3'>
                         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
 
                         
@@ -38,7 +54,7 @@ function Dashboard() {
                                         disablePortal
                                         key={id}
                                         options={options}
-                                        sx={{ width: 270 }}
+                                        sx={{ maxWidth: 270, minWidth: 220}}
                                         renderInput={(params) => (
                                             <TextField 
                                                 value={value} {...params} label={`Select Indicator #${id + 1}*`} 
@@ -47,38 +63,49 @@ function Dashboard() {
                                             />)}
                                         /> 
                                 ))}
-                                <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddIndicator()}><AddIcon /></Button>
+                                <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} onClick={() => handleAddIndicator()}><AddIcon /></Button>
                             </Stack>
                         </Box>
                         
                     </Grid>
-                    <Grid sm='12' md='6'>
+                    <Grid xs='12' md='6'>
                         <Stack spacing={5} sx={{}}>
-                            <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                                <TextField id="outlined-basic" label="Starting Year*" variant="outlined" sx={{paddingRight: '30px', width: '130px'}}/>
-                                <TextField id="outlined-basic" label="Ending Year*" variant="outlined" sx={{width: '130px'}}/>
-                            </Box>
+                            {years.map(({ id, value1, value2 }) => (
+                                <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                                    
+                                        <TextField id="outlined-basic" label={`Starting Year #${id + 1}*`} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
+                                        <TextField id="outlined-basic" label={`Ending Year #${id + 1}*`} variant="outlined" sx={{width: '130px'}}/>
+                                        
+                                    
+                                </Box>
+                            ))}
                             <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                                <Button variant="outlined" sx={{width: '290px', height: '56px'}}><AddIcon /></Button>
+                                {(
+                                    (years.length < indicators.length)
+                                    ?
+                                    <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}><AddIcon /></Button>
+                                    :
+                                    <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}disabled><AddIcon /></Button>
+                                )}
                             </Box>
                         </Stack>
                     
                         
 
                     </Grid>
-                    <Grid sm='12' md='3'>
+                    <Grid xs='12' md='3'>
                         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                             <Stack spacing={5}>
                                 <Autocomplete
                                     disablePortal
                                     options={options}
-                                    sx={{ width: 270 }}
+                                    sx={{ maxWidth: 270, minWidth: 220 }}
                                     renderInput={(params) => <TextField {...params} label="Select Administrative Type:*" />}
                                     />
                                 <Autocomplete
                                     disablePortal
                                     options={options}
-                                    sx={{ width: 270 }}
+                                    sx={{ maxWidth: 270, minWidth: 220 }}
                                     renderInput={(params) => <TextField {...params} label="Specific Area:" />}
                                     />
                             
