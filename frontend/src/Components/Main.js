@@ -21,7 +21,7 @@ function Nav() {
 function Main() {
     return (
         <Grid container sx={{margin: '0px'}}>
-            <Grid xs='4' sm='2'sx={{backgroundColor: 'background.paper', height: '100vh'}}>
+            <Grid xs='4' sm='2'sx={{backgroundColor: 'background.paper', }}>
                 <Nav />
             </Grid>
             <Grid xs='8' sm='10'>
