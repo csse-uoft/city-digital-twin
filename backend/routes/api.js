@@ -270,9 +270,13 @@ router.post("/3", async (req, res) => {
 // Output: Corresponding visualization and indicator data from connected database
 // OPTIONAL: adminInstance, 
 router.post("/4", async (req, res) => {
-  if (!req.body.cityName || !req.body.adminType) {
+  // ----------- MISSING REQUEST VARIABLE HANDLING -----------
+  if (!req.body.cityName) {
     res.status(400);
-    res.json({message:"Bad request: missing cityName or adminType"});
+    res.json({message:"Bad request: missing cityName"});
+  } else if (!req.body.adminType) {
+    res.status(400);
+    res.json({message:"Bad request: missing adminType"});
   } else if (!req.body.adminInstance) {
     res.status(400);
     res.json({message:"Bad request: missing adminInstance"});
@@ -282,27 +286,20 @@ router.post("/4", async (req, res) => {
   } else if (!req.body.date) {
     res.status(400);
     res.json({message:"Bad request: missing date"});
+  // ----------- ALL REQUEST VARIABLES PROVIDED ----------
   } else {
     const cityPrefix = String(req.body.cityName).split("#")[0];
     const citySuffix = String(req.body.cityName).split("#")[1];
+    
     const adminTypeSuffix = String(req.body.adminType).split("#")[1];
     const adminInstanceSuffix = String(req.body.adminInstance).split("#")[1];
-    
-    // Corresponding indicator prefixes and suffixes will have same index in respective arrays
-    // e.g. indicatorPrefixes[1] and indicatorSuffixes[1] correspond
-    // var indicatorPrefixes = [];
-    // var indicatorSuffixes = [];
-
-    // Object.entries(req.body.indicatorNames).forEach(value => {
-    //   indicatorPrefixes.push(String(value).split("#")[0]);
-    //   indicatorSuffixes.push(String(value).split("#")[1]);
-    // });
 
     const indicatorPrefix = String(req.body.indicatorName).split("#")[0];
     const indicatorSuffix = String(req.body.indicatorName).split("#")[1].slice(0, -4) + req.body.date;
     
     const client = new SparqlClient({ endpointUrl });
 
+    // Check if provided city exists; if not, exit
     const doesCityExist = await client.query.ask(`
       PREFIX CITY: <${cityPrefix}#>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
@@ -361,7 +358,6 @@ router.post("/4", async (req, res) => {
   
     adminAreaTypeNameStream.on('end', async () => {
       // Determine if each indicator exist for given admin Type
-      // var notSameAdminType = new Array(indicatorPrefixes.length).fill("");
 
       var notSameAdminType = "";
 
@@ -378,25 +374,32 @@ router.post("/4", async (req, res) => {
         }
       `);
 
+
       if (!isIndicatorAdminTypeSame) {
-        
         // Find the area type with matching data
-        adminAreaTypeNames.every(async adminArea => {
-          const isAdminTypeMatching = await client.query.ask(`
-            PREFIX INDICATOR: <${indicatorPrefix}#>
-            PREFIX CITY: <${cityPrefix}#>
-            PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-          
-            ASK {
-              ?area a iso50872:CityAdministrativeArea.
-              ?indicator a INDICATOR:${indicatorSuffix}.
-              ?p ?area.
-              ?area a CITY:${adminArea}.
-            }
-          `);
-          
-          if (isAdminTypeMatching) {
+        for (let adminArea in adminAreaTypeNames) {
+          var isAdminTypeMatching;
+          try {
+            isAdminTypeMatching = await client.query.ask(`
+              PREFIX INDICATOR: <${indicatorPrefix}#>
+              PREFIX CITY: <${cityPrefix}#>
+              PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
             
+              ASK {
+                ?area a iso50872:CityAdministrativeArea.
+                ?indicator a INDICATOR:${indicatorSuffix};
+                ?p ?area.
+                ?area a CITY:${adminAreaTypeNames[adminArea]}.
+              }
+            `);
+          } catch (err) {
+            // Handle and log the error
+            console.error('Error executing SPARQL query:', error);
+            res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
+          }
+
+
+          if (isAdminTypeMatching) {
             // Also determine which of the new admin areas overlap with the old area, if an adminInstance was provided
             // If data is only available at a LARGER admin area, return an error (no way to split it down)
             var overlappingAreaList = [];
@@ -408,7 +411,7 @@ router.post("/4", async (req, res) => {
               
               SELECT ?overlappingArea WHERE {
                   CITY:${adminInstanceSuffix} iso5087m:hasProperPart ?overlappingArea.
-                  ?overlappingArea rdf:type CITY:${adminArea}.
+                  ?overlappingArea rdf:type CITY:${adminAreaTypeNames[adminArea]}.
               }
             `);
 
@@ -440,12 +443,16 @@ router.post("/4", async (req, res) => {
                   `;
 
                   indicatorDataQuery += `
-                    {INDICATOR:${overlappingArea}${indicatorSuffix}${req.body.date} iso21972:value ?measure.
+                    {INDICATOR:${overlappingArea}${indicatorSuffix} iso21972:value ?measure.
                     ?measure iso21972:numerical_value ?value.}
                   `;
                 });
 
+
                 indicatorDataQuery += "}";
+
+                // Removes newline characters
+                indicatorDataQuery = indicatorDataQuery.replace(/(\r\n|\n|\r)/gm, "");
 
                 const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery);
 
@@ -454,14 +461,22 @@ router.post("/4", async (req, res) => {
                 getValuesForOverlappingAreas.on('data', row => {
                   Object.entries(row).forEach(([key, value]) => {
                     hasData = true;
-                    result += value.value;
+                    temp = parseInt(value.value);
+
+                    // Only add new value to result if it's a number, else return an error
+                    if (!Number.isNaN(temp)) {
+                      result += temp;
+                    } else {
+                      res.status(500);
+                      res.json({message:"Bad request: Result of query is not a numerical value."});
+                    }
                   });
                 });
         
                 getValuesForOverlappingAreas.on('end', () => {
                   if (!hasData) {
                     res.status(500);
-                    res.json({message:"MULTI Bad request: No data for given parameters"});
+                    res.json({message:"Bad request: No data for given parameters"});
                   } else {
                     res.json({message:"success", indicatorDataValue:result});
                   }
@@ -473,14 +488,13 @@ router.post("/4", async (req, res) => {
               }
             });
           }
-        });
+        }
 
         if (notSameAdminType === "") {
           res.status(400);
           res.json({message:`Bad request: indicator ${indicatorPrefix}#${indicatorSuffix} has no associated data, for any administrative area, in the database.`});
         }
       } else {
-        notSameAdminType = adminTypeSuffix;
 
         var result = 0;
 
@@ -500,7 +514,15 @@ router.post("/4", async (req, res) => {
         indicatorDataStream.on('data', row => {
           Object.entries(row).forEach(([key, value]) => {
             hasData = true;
-            result += value.value;
+            temp = parseInt(value.value);
+
+            // Only add new value to result if it's a number, else return an error
+            if (!Number.isNaN(temp)) {
+              result += temp;
+            } else {
+              res.status(500);
+              res.json({message:"Bad request: Result of query is not a numerical value."});
+            }
           });
         });
 
