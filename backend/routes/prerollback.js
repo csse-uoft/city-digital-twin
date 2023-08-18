@@ -285,7 +285,7 @@ router.post("/4", async (req, res) => {
     res.json({message:"Bad request: missing indicatorName"});
   } else if (!req.body.startTime || !req.body.endTime) {
     res.status(400);
-    res.json({message:"Bad request: missing date"});
+    res.json({message:"Bad request: missing startTime and endTime"});
   // ----------- ALL REQUEST VARIABLES PROVIDED ----------
   } else {
     const cityPrefix = String(req.body.cityName).split("#")[0];
@@ -360,123 +360,151 @@ router.post("/4", async (req, res) => {
         }
       });
     });
-  
+
     adminAreaTypeNameStream.on('end', async () => {
-      
+      const promises = [];
       for (let year = startTime; year <= endTime; year++) {
-        
         const indicatorSuffixWithYear = indicatorSuffix + String(year);
+        promises.push(fetchIndicatorDataForYear(client, req, res, cityPrefix, adminInstanceSuffix, indicatorPrefix, indicatorSuffixWithYear, adminTypeSuffix, adminAreaTypeNames, year));
+        // finalResult[year] = await fetchIndicatorDataForYear(client, req, res, cityPrefix, adminInstanceSuffix, indicatorPrefix, indicatorSuffixWithYear, adminTypeSuffix, adminAreaTypeNames, year);
+      }
 
-        // Determine if each indicator exist for given admin Type
-        var notSameAdminType = "";
+      try {
+        const results = await Promise.all(promises);
+        results.forEach((result, index) => {
+          finalResult[startTime + index] = result;
+        });
+        res.json({ message: "success", indicatorDataValues: finalResult });
+      } catch (err) {
+        console.error('Error processing indicator data:', err);
+        res.status(500).json({ message: 'Oops, something went wrong!' });
+      }
 
-        const isIndicatorAdminTypeSame = await client.query.ask(`
-          PREFIX INDICATOR: <${indicatorPrefix}#>
-          PREFIX CITY: <${cityPrefix}#>
-          PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      res.json({message:"success", indicatorDataValues:{[`${cityPrefix}#${adminInstanceSuffix}`]:finalResult}});
+    });
 
-          ASK {
-            ?area a iso50872:CityAdministrativeArea.
-            ?indicator a INDICATOR:${indicatorSuffixWithYear};
-            ?p ?area.
-            ?area a CITY:${adminTypeSuffix}.
+    adminAreaTypeNameStream.on('error', err => {
+      res.status(500).send('Oops, error!');
+    });
+  }
+});
+
+async function fetchIndicatorDataForYear(client, req, res, cityPrefix, adminInstanceSuffix, indicatorPrefix, indicatorSuffixWithYear, adminTypeSuffix, adminAreaTypeNames, year) {
+  return new Promise(async (resolve, reject) => {
+    // Determine if each indicator exist for given admin Type
+    // var notSameAdminType = "";
+
+    const isIndicatorAdminTypeSame = await client.query.ask(`
+      PREFIX INDICATOR: <${indicatorPrefix}#>
+      PREFIX CITY: <${cityPrefix}#>
+      PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+
+      ASK {
+        ?area a iso50872:CityAdministrativeArea.
+        ?indicator a INDICATOR:${indicatorSuffixWithYear};
+        ?p ?area.
+        ?area a CITY:${adminTypeSuffix}.
+      }
+    `);
+
+    if (!isIndicatorAdminTypeSame) {
+      var promiseResults = [];
+      
+      // Find the area type with matching data
+      for (let adminArea in adminAreaTypeNames) {
+        promiseResults.push(new Promise(async (resolve, reject) => {
+          var isAdminTypeMatching;
+          try {
+            isAdminTypeMatching = await client.query.ask(`
+              PREFIX INDICATOR: <${indicatorPrefix}#>
+              PREFIX CITY: <${cityPrefix}#>
+              PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+            
+              ASK {
+                ?area a iso50872:CityAdministrativeArea.
+                ?indicator a INDICATOR:${indicatorSuffixWithYear};
+                ?p ?area.
+                ?area a CITY:${adminArea}.
+              }
+            `);
+          } catch (err) {
+            // Handle and log the error
+            console.error('Error executing SPARQL query:', error);
+            reject(new Error("Error executing SPARQL query"));
+            // res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
           }
-        `);
 
-        if (!isIndicatorAdminTypeSame) {
-          // Find the area type with matching data
-          for (let adminArea in adminAreaTypeNames) {
-            var isAdminTypeMatching;
-            try {
-              isAdminTypeMatching = await client.query.ask(`
-                PREFIX INDICATOR: <${indicatorPrefix}#>
-                PREFIX CITY: <${cityPrefix}#>
-                PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+          if (isAdminTypeMatching) {
+            // Also determine which of the new admin areas overlap with the old area, if an adminInstance was provided
+            // If data is only available at a LARGER admin area, return an error (no way to split it down)
+            var overlappingAreaList = [];
+
+            const overlappingAdminAreas = await client.query.select(`
+              PREFIX CITY: <${cityPrefix}#>
+              PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+              PREFIX iso5087m: <http://ontology.eil.utoronto.ca/5087/1/Mereology/>
               
-                ASK {
-                  ?area a iso50872:CityAdministrativeArea.
-                  ?indicator a INDICATOR:${indicatorSuffixWithYear};
-                  ?p ?area.
-                  ?area a CITY:${adminAreaTypeNames[adminArea]}.
-                }
-              `);
-            } catch (err) {
-              // Handle and log the error
-              console.error('Error executing SPARQL query:', error);
-              res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
-            }
+              SELECT ?overlappingArea WHERE {
+                  CITY:${adminInstanceSuffix} iso5087m:hasProperPart ?overlappingArea.
+                  ?overlappingArea rdf:type CITY:${adminArea}.
+              }
+            `);
 
-
-            if (isAdminTypeMatching) {
-              notSameAdminType = adminArea;
-              // Also determine which of the new admin areas overlap with the old area, if an adminInstance was provided
-              // If data is only available at a LARGER admin area, return an error (no way to split it down)
-              var overlappingAreaList = [];
-
-              const overlappingAdminAreas = await client.query.select(`
-                PREFIX CITY: <${cityPrefix}#>
-                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX iso5087m: <http://ontology.eil.utoronto.ca/5087/1/Mereology/>
-                
-                SELECT ?overlappingArea WHERE {
-                    CITY:${adminInstanceSuffix} iso5087m:hasProperPart ?overlappingArea.
-                    ?overlappingArea rdf:type CITY:${adminAreaTypeNames[adminArea]}.
-                }
-              `);
-
-              overlappingAdminAreas.on('data', row => {
-                Object.entries(row).forEach(([key, value]) => {
-                  overlappingAreaList.push(String(value.value).split("#")[1]);
-                });
+            overlappingAdminAreas.on('data', row => {
+              Object.entries(row).forEach(([key, value]) => {
+                overlappingAreaList.push(String(value.value).split("#")[1]);
               });
+            });
 
-              overlappingAdminAreas.on('end', async () => {
+            overlappingAdminAreas.on('end', async () => {
+              const innerResult = await new Promise(async (resolveInner, rejectInner) => {
                 var result = 0;
+              
                 if (overlappingAreaList.length === 0) {
                   res.status(500);
                   res.json({message:"Bad request: No indicator data for given admin area type of smaller"});
+                  reject(new Error("No indicator data for given admin area type of smaller"));
                 } else {
                   var result = 0;
-
+    
                   var indicatorDataQuery = `
                     PREFIX CITY: <${cityPrefix}#>
                     PREFIX INDICATOR: <${indicatorPrefix}#>
                     PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-
+    
                     SELECT ?value WHERE { 
                   `;
-
+    
                   overlappingAreaList.forEach((overlappingArea, index) => {
                     if (index !== 0) indicatorDataQuery += `
                       UNION
                     `;
-
+    
                     indicatorDataQuery += `
                       {INDICATOR:${overlappingArea}${indicatorSuffixWithYear} iso21972:value ?measure.
                       ?measure iso21972:numerical_value ?value.}
                     `;
                   });
-
-
+    
                   indicatorDataQuery += "}";
-
+    
                   // Removes newline characters
                   indicatorDataQuery = indicatorDataQuery.replace(/(\r\n|\n|\r)/gm, "");
-
+    
                   const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery);
-
+    
                   var hasData = false;
-
+    
                   getValuesForOverlappingAreas.on('data', row => {
                     Object.entries(row).forEach(([key, value]) => {
                       hasData = true;
                       temp = parseInt(value.value);
-
+    
                       // Only add new value to result if it's a number, else return an error
                       if (!Number.isNaN(temp)) {
                         result += temp;
                       } else {
-                        finalResult[year] = NaN;
+                        resolveInner(NaN);
                         // res.status(500);
                         // res.json({message:"Bad request: Result of query is not a numerical value."});
                       }
@@ -485,83 +513,117 @@ router.post("/4", async (req, res) => {
           
                   getValuesForOverlappingAreas.on('end', () => {
                     if (!hasData) {
-                      finalResult[year] = NaN;
+                      resolveInner(NaN);
+                      // finalResult[year] = NaN;
                       // res.status(500);
                       // res.json({message:"Bad request: No data for given parameters"});
                     } else {
-                      finalResult[year] = result;
-                      // res.json({message:"success", indicatorDataValue:result});
+                      resolveInner(result);
+                      // finalResult[year] = result;
+                      // res.json({message:"success", indicatorDataValues:result});
                     }
                   });
-
+    
                   getValuesForOverlappingAreas.on('error', err => {
                     res.status(500).send('Oops, error!');
+                    rejectInner(err);
                   });
                 }
               });
-            }
-          }
-
-          if (notSameAdminType === "") {
-            finalResult[year] = NaN;
-            // res.status(400);
-            // res.json({message:`Bad request: indicator ${indicatorPrefix}#${indicatorSuffix} has no associated data, for any administrative area, in the database.`});
-          }
-          // }
-        
-        } else {
-          var result = 0;
-
-          indicatorDataStream = await client.query.select(`
-            PREFIX CITY: <${cityPrefix}#>
-            PREFIX INDICATOR: <${indicatorPrefix}#>
-            PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-
-            SELECT ?value WHERE {
-              INDICATOR:${adminInstanceSuffix}${indicatorSuffixWithYear} iso21972:value ?measure.
-              ?measure iso21972:numerical_value ?value.
-            }
-          `);
-
-          var hasData = false;
-
-          indicatorDataStream.on('data', row => {
-            Object.entries(row).forEach(([key, value]) => {
-              hasData = true;
-              temp = parseInt(value.value);
-
-              // Only add new value to result if it's a number, else return an error
-              if (!Number.isNaN(temp)) {
-                result += temp;
-              } else {
-                finalResult[year] = NaN;
-                // res.status(500);
-                // res.json({message:"Bad request: Result of query is not a numerical value."});
-              }
+              resolve(innerResult);
             });
-          });
-
-          indicatorDataStream.on('end', () => {
-            if (!hasData) {
-              finalResult[year] = NaN;
-            } else {
-              finalResult[year] = result;
-            }
-          });
-
-          indicatorDataStream.on('error', err => {
-            res.status(500).send('Oops, error!');
-          });
-        }
+          }
+        }));
       }
-      res.json({message:"success", indicatorDataValues:{[`${cityPrefix}#${adminInstanceSuffix}`]:finalResult}});
-      
-    });
+  
+      // const matchingAreaPromises = adminAreaTypeNames.map(async adminArea => {
+        
+      // });
 
-    adminAreaTypeNameStream.on('error', err => {
-      res.status(500).send('Oops, error!');
-    });
-  }
-});
+      // Wait for all matching area promises to resolve
+
+      try {
+        const resolved = await Promise.all(promiseResults);
+        resolved.forEach((resu, index) => {
+          if (index + 1 === resolved.length && isNaN(resu)) {
+            resolve(resu);
+          } else if (!isNaN(resu) && resu !== null) {
+            resolve(resu);
+          } else {
+            
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
+
+      // await Promise.all(matchingAreaPromises);
+
+      // for (let adminArea in adminAreaTypeNames) {
+        
+      // }
+
+      // if (notSameAdminType === "") {
+      //   resolve(NaN);
+        // finalResult[year] = NaN;
+        // res.status(400);
+        // res.json({message:`Bad request: indicator ${indicatorPrefix}#${indicatorSuffix} has no associated data, for any administrative area, in the database.`});
+      // }
+    } else {
+
+      var result = 0;
+
+      indicatorDataStream = await client.query.select(`
+        PREFIX CITY: <${cityPrefix}#>
+        PREFIX INDICATOR: <${indicatorPrefix}#>
+        PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+
+        SELECT ?value WHERE {
+          INDICATOR:${adminInstanceSuffix}${indicatorSuffixWithYear} iso21972:value ?measure.
+          ?measure iso21972:numerical_value ?value.
+        }
+      `);
+
+      var hasData = false;
+
+      indicatorDataStream.on('data', row => {
+        Object.entries(row).forEach(([key, value]) => {
+          hasData = true;
+          temp = parseInt(value.value);
+
+          // Only add new value to result if it's a number, else return an error
+          if (!Number.isNaN(temp)) {
+            result += temp;
+          } else {
+            // return NaN;
+            resolve(NaN);
+            // res.status(500);
+            // res.json({message:"Bad request: Result of query is not a numerical value."});
+          }
+        });
+      });
+
+      indicatorDataStream.on('end', () => {
+        if (!hasData) {
+          // return NaN;
+          resolve(NaN);
+          // res.status(500);
+          // res.json({message:"Bad request: No data for given parameters"});
+        } else {
+          // return result;
+          resolve(result);
+          // finalResult[year] = result;
+
+          // res.json({message:"success", indicatorDataValues:{[req.body.date]:result}});
+        }
+      });
+
+      indicatorDataStream.on('error', err => {
+        res.status(500).send('Oops, error!');
+        reject(err);
+      });
+    }
+  });
+}
 
 module.exports = router;
