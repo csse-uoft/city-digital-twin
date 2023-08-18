@@ -1,11 +1,109 @@
 import { Autocomplete, Box, Button, Container, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 function Dashboard() {
     const [indicators, setIndicators] = useState([{value: '', id: 0}]);
     const [years, setYears] = useState([{value: '', id: 0}]);
-    const options = ['The Godfather', 'Pulp Fiction'];
+    let options = ['The Godfather', 'Pulp Fiction'];
+
+    const [cities, setCities] = useState([]);
+    const [cityURLs, setCityURLs] = useState({});
+
+    const [admin, setAdmin] = useState([]);
+    const [adminURLs, setAdminURLs] = useState({});
+
+    const [area, setArea] = useState([]);
+    const [areaURLs, setAreaURLs] = useState({});
+
+
+    
+
+    const fetchCities = async () => {
+        const response = await axios.get(
+            `http://localhost:3000/api/0`
+          );
+        response.data.cityNames.forEach((URL, index) => {
+            const [, cityName] = URL.split('#'); 
+            
+            setCityURLs(prevCityURLs => ({
+                ...prevCityURLs,
+                [cityName]: URL
+            }));
+            
+            setCities([...cities, cityName]);
+        })
+    }
+    
+    const fetchAdministration = async (city) => {
+        if (city){
+            try {
+                const response = await axios.post('http://localhost:3000/api/2', {
+                    cityName: cityURLs[city]
+                });
+                setAdminURLs({'currCity': city})
+                response.data.adminAreaTypeNames.forEach((URL, index) => {
+                    const [, adminName] = URL.split('#'); 
+                  
+                    setAdminURLs(prevAdminURLs => ({
+                      ...prevAdminURLs,
+                      [adminName]: URL
+                    }));
+                  
+                    setAdmin(prevAdmin => [...prevAdmin, adminName]);
+                  });
+              } catch (error) {
+                console.error('POST Error:', error);
+              }
+        } else{
+            setAdminURLs({});
+            setAdmin([]);
+        }
+    }
+
+    const fetchArea= async (admin) => {
+        setAreaURLs({});
+        setArea([]);
+        if (admin){
+            try {
+                const response = await axios.post('http://localhost:3000/api/3', {
+                    cityName: cityURLs[adminURLs['currCity']],
+                    adminType: adminURLs[admin]
+
+                });
+                console.log('admin instances', response.data['adminAreaInstanceNames'])
+                response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
+                    
+                  
+                    setAreaURLs(prevAreaURLs => ({
+                      ...prevAreaURLs,
+                      [Instance['areaName']]: Instance['adminAreaInstance']
+                    }));
+                  
+                    setArea(prevArea => [...prevArea, Instance['areaName']]);
+                  });
+              } catch (error) {
+                console.error('POST Error:', error);
+              }
+        } else{
+            setAreaURLs({});
+            setArea([]);
+        }
+    }
+
+    useEffect(() => {
+        fetchCities();
+        
+      }, []);
+      useEffect(() => {
+        // console.log('city url', cityURLs);
+        // console.log('admin url', adminURLs);
+        console.log('areaurl', areaURLs);
+    }, [cityURLs, adminURLs, areaURLs]);
+
+
+
 
     const handleAddIndicator = () => {
         const temp = [...indicators];
@@ -55,7 +153,9 @@ function Dashboard() {
                                     <Stack spacing={5}>
                                         <Autocomplete
                                             disablePortal
-                                            options={options}
+                                            id="city-input"
+                                            onChange={(event, newValue) => fetchAdministration(newValue)}
+                                            options={cities}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
                                             renderInput={(params) => <TextField {...params} label="Select City:*" />}
                                             />
@@ -69,13 +169,14 @@ function Dashboard() {
                                     <Stack spacing={5}>
                                         <Autocomplete
                                             disablePortal
-                                            options={options}
+                                            onChange={(event, newValue) => fetchArea(newValue)}
+                                            options={admin}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
                                             renderInput={(params) => <TextField {...params} label="Select Administrative Type:*" />}
                                             />
                                         <Autocomplete
                                             disablePortal
-                                            options={options}
+                                            options={area}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
                                             renderInput={(params) => <TextField {...params} label="Specific Area:" />}
                                             />
