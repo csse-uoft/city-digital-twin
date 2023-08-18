@@ -17,6 +17,8 @@ var router = express.Router();
 var SparqlClient = require('sparql-http-client');
 const endpointUrl = 'http://ec2-3-97-59-180.ca-central-1.compute.amazonaws.com:7200/repositories/CACensus';
 
+const client = new SparqlClient({ endpointUrl });
+
 /// API 0
 // Type: GET
 // URL: /api/0/
@@ -33,7 +35,7 @@ router.get("/0", async (req, res) => {
     }
   `;
 
-  const client = new SparqlClient({ endpointUrl });
+  
   const stream = await client.query.select(query);
 
   var result = [];
@@ -87,7 +89,6 @@ router.post("/1", async (req, res) => {
       }
     `;
 
-    const client = new SparqlClient({ endpointUrl });
     const stream = await client.query.select(query);
 
     var result = [];
@@ -136,8 +137,6 @@ router.post("/2", async (req, res) => {
           ?AdminAreaType rdfs:subClassOf iso50872:CityAdministrativeArea.
       }
     `;
-    
-    const client = new SparqlClient({ endpointUrl });
 
     // Check if city is in database; if not, quit
     const doesCityExist = await client.query.ask(`
@@ -202,8 +201,6 @@ router.post("/3", async (req, res) => {
         ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
       }
     `;
-
-    const client = new SparqlClient({ endpointUrl });
 
     // Check if city is in database; if not, quit
     const doesCityExist = await client.query.ask(`
@@ -301,8 +298,6 @@ router.post("/4", async (req, res) => {
     const endTime = parseInt(req.body.endTime);
 
     var finalResult = {};
-    
-    const client = new SparqlClient({ endpointUrl });
 
     // Check if provided city exists; if not, exit
     const doesCityExist = await client.query.ask(`
@@ -363,7 +358,7 @@ router.post("/4", async (req, res) => {
   
     adminAreaTypeNameStream.on('end', async () => {
       
-      for (let year = startTime; year <= endTime; year++) {
+      for (let year = startTime; year <= endTime + 1; year++) {
         
         const indicatorSuffixWithYear = indicatorSuffix + String(year);
 
