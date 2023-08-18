@@ -478,7 +478,10 @@ router.post("/4", async (req, res) => {
                         if (!Number.isNaN(temp)) {
                           result += temp;
                         } else {
-                          instanceResult[year] = NaN;
+                          if (year <= endTime) {
+                            instanceResult[year] = NaN;
+                          }
+                          
                           // res.status(500);
                           // res.json({message:"Bad request: Result of query is not a numerical value."});
                         }
@@ -487,11 +490,17 @@ router.post("/4", async (req, res) => {
             
                     getValuesForOverlappingAreas.on('end', () => {
                       if (!hasData) {
-                        instanceResult[year] = NaN;
+                        if (year <= endTime) {
+                          instanceResult[year] = NaN;
+                        }
+                        
                         // res.status(500);
                         // res.json({message:"Bad request: No data for given parameters"});
                       } else {
-                        instanceResult[year] = result;
+                        if (year <= endTime) {
+                          instanceResult[year] = result;
+                        }
+                        
                         // res.json({message:"success", indicatorDataValue:result});
                       }
                     });
@@ -505,7 +514,9 @@ router.post("/4", async (req, res) => {
             }
 
             if (notSameAdminType === "") {
-              instanceResult[year] = NaN;
+              if (year <= endTime) {
+                instanceResult[year] = NaN;
+              }
               // res.status(400);
               // res.json({message:`Bad request: indicator ${indicatorPrefix}#${indicatorSuffix} has no associated data, for any administrative area, in the database.`});
             }
@@ -536,7 +547,10 @@ router.post("/4", async (req, res) => {
                 if (!Number.isNaN(temp)) {
                   result += temp;
                 } else {
-                  instanceResult[year] = NaN;
+                  if (year <= endTime) {
+                    instanceResult[year] = NaN;
+                  }
+                  
                   // res.status(500);
                   // res.json({message:"Bad request: Result of query is not a numerical value."});
                 }
@@ -545,9 +559,15 @@ router.post("/4", async (req, res) => {
 
             indicatorDataStream.on('end', () => {
               if (!hasData) {
-                instanceResult[year] = NaN;
+                if (year <= endTime) {
+                  instanceResult[year] = NaN;
+                }
+                
               } else {
-                instanceResult[year] = result;
+                if (year <= endTime) {
+                  instanceResult[year] = result;
+                }
+                
               }
             });
 

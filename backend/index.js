@@ -15,11 +15,14 @@ if (typeof globalThis === 'undefined') {
 var express = require('express');
 var bodyParser = require('body-parser');
 var multer = require('multer');
+var cors = require('cors');
 var upload = multer();
 
 var app = express();
 
 var api = require('./routes/api.js');
+
+app.use(cors());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
