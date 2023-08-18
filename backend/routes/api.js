@@ -78,6 +78,9 @@ router.post("/1", async (req, res) => {
   if (!req.body.cityName) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
+  } else if (!String(req.body.cityName).includes("#")) {
+    res.status(400);
+    res.json({message:"Bad request: cityName is not an URI"});
   } else {
     const query = `
       PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#> 
@@ -121,6 +124,9 @@ router.post("/2", async (req, res) => {
   if (!req.body.cityName) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
+  } else if (!String(req.body.cityName).includes("#")) {
+    res.status(400);
+    res.json({message:"Bad request: cityName is not an URI"});
   } else {
     const prefix = String(req.body.cityName).split("#")[0];
     const suffix = String(req.body.cityName).split("#")[1];
@@ -152,26 +158,26 @@ router.post("/2", async (req, res) => {
     if (!doesCityExist) {
       res.status(400);
       res.json({message:"Bad request: Provided city does not exist"});
-    }
+    } else {
+      const stream = await client.query.select(query);
 
-    const stream = await client.query.select(query);
+      var result = [];
 
-    var result = [];
-
-    stream.on('data', row => {
-      // Version for simply putting each result value into the final array
-      Object.entries(row).forEach(([key, value]) => {
-        result.push(value.value);
+      stream.on('data', row => {
+        // Version for simply putting each result value into the final array
+        Object.entries(row).forEach(([key, value]) => {
+          result.push(value.value);
+        });
       });
-    });
-  
-    stream.on('end', () => {
-      res.json({message: "success", adminAreaTypeNames: result});
-    });
     
-    stream.on('error', err => {
-      res.status(500).send('Oops, error!');
-    });
+      stream.on('end', () => {
+        res.json({message: "success", adminAreaTypeNames: result});
+      });
+      
+      stream.on('error', err => {
+        res.status(500).send('Oops, error!');
+      });
+    }
   }
 });
 
@@ -181,10 +187,13 @@ router.post("/2", async (req, res) => {
 // Input: Name of city (cityName), name of administrative area type (adminType)
 // Output: List of all admin area instances for the given type and city
 router.post("/3", async (req, res) => {
-  if (!req.body.cityName || !req.body.adminType) {
+  if (!req.body.cityName || !req.body.adminType || typeof req.body.cityName !== "string" || typeof req.body.adminType !== "string") {
     res.status(400);
-    res.json({message:"Bad request: missing cityName or adminType"});
-  } else {
+    res.json({message:"Bad request: missing or non-string cityName or adminType"});
+  } else if (!String(req.body.cityName).includes("#") || !String(req.body.adminType).includes("#")) {
+    res.status(400);
+    res.json({message:"Bad request: cityName or adminType is not an URI"}); 
+  }else {
     const prefix = String(req.body.cityName).split("#")[0];
     const citySuffix = String(req.body.cityName).split("#")[1];
     const adminTypeSuffix = String(req.body.adminType).split("#")[1];
@@ -213,11 +222,6 @@ router.post("/3", async (req, res) => {
       }
     `);
 
-    if (!doesCityExist) {
-      res.status(400);
-      res.json({message:"Bad request: Provided city does not exist"});
-    }
-
     // Check if provided admin area type exists; if not, exit
     const doesAdminAreaTypeExist = await client.query.ask(`
       PREFIX CITY: <${prefix}#>
@@ -231,32 +235,40 @@ router.post("/3", async (req, res) => {
           CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
       }
     `);
-    if (!doesAdminAreaTypeExist) {
-      res.status(400);
-      res.json({message:"Bad request: Provided administrative area type does not exist"});
+
+    if (!doesCityExist || !doesAdminAreaTypeExist) {
+      if (!doesCityExist) {
+        res.status(400);
+        res.json({message:"Bad request: Provided city does not exist"});
+      } else {
+        res.status(400);
+        res.json({message:"Bad request: Provided administrative area type does not exist"});
+      } 
+    } else {
+      const stream = await client.query.select(query);
+
+      var result = [];
+
+      stream.on('data', row => {
+        var singleRow = {};
+        // Version for simply putting each result value into the final array
+        Object.entries(row).forEach(([key, value]) => {
+          singleRow[key] = value.value;
+          // singleRow.push(value.value);
+        });
+        result.push(singleRow);
+      });
+    
+      stream.on('end', () => {
+        res.json({message: "success", adminAreaInstanceNames: result});
+      });
+      
+      stream.on('error', err => {
+        res.status(500).send('Oops, error!');
+      });
     }
 
-    const stream = await client.query.select(query);
-
-    var result = [];
-
-    stream.on('data', row => {
-      var singleRow = {};
-      // Version for simply putting each result value into the final array
-      Object.entries(row).forEach(([key, value]) => {
-        singleRow[key] = value.value;
-        // singleRow.push(value.value);
-      });
-      result.push(singleRow);
-    });
-  
-    stream.on('end', () => {
-      res.json({message: "success", adminAreaInstanceNames: result});
-    });
     
-    stream.on('error', err => {
-      res.status(500).send('Oops, error!');
-    });
   }
 });
 
