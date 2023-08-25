@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 function Dashboard() {
-    const [indicators, setIndicators] = useState([{value: '', id: 0}]);
+    
     const [years, setYears] = useState([{value: '', id: 0}]);
     let options = ['The Godfather', 'Pulp Fiction'];
 
@@ -17,7 +17,12 @@ function Dashboard() {
     const [area, setArea] = useState([]);
     const [areaURLs, setAreaURLs] = useState({});
 
+    const [indicators, setIndicators] = useState([]);
+    const [indicatorURLs, setIndicatorURLs] = useState({});
 
+    const [selectedIndicators, setSelectedIndicators] = useState({'0': ''});
+
+    const [reload, setReload] = useState(false);
     
 
     const fetchCities = async () => {
@@ -62,6 +67,33 @@ function Dashboard() {
         }
     }
 
+    const fetchIndicators = async (city) => {
+        if (city){
+            try {
+                const response = await axios.post('http://localhost:3000/api/1', {
+                    cityName: cityURLs[city]
+                });
+                console.log('response', response.data.indicatorNames);
+                response.data.indicatorNames.forEach((URL, index) => {
+                    const [, indName] = URL.split('#'); 
+                  
+                    setIndicatorURLs(prevIndicatorURLs => ({
+                      ...prevIndicatorURLs,
+                      [indName]: URL
+                    }));
+                  
+                    setIndicators(prevIndicator => [...prevIndicator, indName]);
+                  });
+                  console.log('indicators', indicators)
+              } catch (error) {
+                console.error('POST Error:', error);
+              }
+        } else{
+            setIndicatorURLs({});
+            setIndicators([]);
+        }
+    }
+
     const fetchArea= async (admin) => {
         setAreaURLs({});
         setArea([]);
@@ -95,25 +127,24 @@ function Dashboard() {
     useEffect(() => {
         fetchCities();
         
+        
       }, []);
       useEffect(() => {
-        // console.log('city url', cityURLs);
-        // console.log('admin url', adminURLs);
-        console.log('areaurl', areaURLs);
-    }, [cityURLs, adminURLs, areaURLs]);
-
-
+        setReload(!reload);
+        console.log('update indicator:', selectedIndicators);
+    }, [indicators, selectedIndicators]);
 
 
     const handleAddIndicator = () => {
-        const temp = [...indicators];
-        temp.push({
-            value: '',
-            id: indicators.length
-        });
-        setIndicators(temp);
-        console.log(temp);
-    }
+        const newId = Object.keys(selectedIndicators).length;
+        const newValue = '';
+        
+        const newSelectedIndicators = { ...selectedIndicators, [newId]: newValue };
+        setSelectedIndicators(newSelectedIndicators);
+        
+        console.log('add indicator:', newSelectedIndicators);
+    };
+    
 
     const handleAddYears = () => {
         
@@ -130,11 +161,12 @@ function Dashboard() {
         
     }
     const handleUpdateIndicators = (id, value) => {
-        const temp = [...indicators];
-        const variableToUpdate = temp.find((variable) => variable.id === id);
-        variableToUpdate[value] = value;
-        setIndicators({ temp });
-    }
+        setSelectedIndicators(prevState => ({
+            ...prevState,
+            [id]: value
+        }));
+        
+    };
 
     return (
         <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
@@ -154,7 +186,11 @@ function Dashboard() {
                                         <Autocomplete
                                             disablePortal
                                             id="city-input"
-                                            onChange={(event, newValue) => fetchAdministration(newValue)}
+                                            onChange={
+                                                (event, newValue) => {
+                                                    fetchAdministration(newValue);
+                                                    fetchIndicators(newValue);
+                                                }}
                                             options={cities}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
                                             renderInput={(params) => <TextField {...params} label="Select City:*" />}
@@ -198,22 +234,27 @@ function Dashboard() {
                             <Grid xs='12' md='6'>
                                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
 
-                                
+                                 
                                     <Stack spacing={5}>
-                                        {indicators.map(({ id, value }) => (
+                                        {Object.entries(selectedIndicators).map(([ index, value ]) => (
                                             <Autocomplete
                                                 disablePortal
-                                                key={id}
-                                                options={options}
+                                                onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue)}
+                                                key={index}
+                                                options={indicators}
                                                 sx={{ maxWidth: 270, minWidth: 220}}
                                                 renderInput={(params) => (
                                                     <TextField 
-                                                        value={value} {...params} label={`Select Indicator #${id + 1}*`} 
-
-
+                                                        value={value} {...params} label={`Select Indicator #${parseInt(index) + 1}*`} 
                                                     />)}
                                                 /> 
-                                        ))}
+                                        ))} 
+                                        {/* <Autocomplete
+                                            disablePortal
+                                            options={indicators}
+                                            sx={{ maxWidth: 270, minWidth: 220 }}
+                                            renderInput={(params) => <TextField {...params} label={`Select Indicator #${1}*`}/>}
+                                            /> */}
                                         <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} onClick={() => handleAddIndicator()}><AddIcon /></Button>
                                     </Stack>
                                 </Box>
@@ -233,7 +274,7 @@ function Dashboard() {
                                     <Box sx={{display: 'flex', justifyContent: 'center'}}>
                                         {(
                                             (years.length < indicators.length)
-                                            ?
+                                            ? 
                                             <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}><AddIcon /></Button>
                                             :
                                             <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}disabled><AddIcon /></Button>
