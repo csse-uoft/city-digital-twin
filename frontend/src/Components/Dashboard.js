@@ -43,8 +43,8 @@ function Dashboard() {
     const [indicators, setIndicators] = useState([]);
     const [indicatorURLs, setIndicatorURLs] = useState({});
 
+    const [locations, setLocations] = useState({});
 
-    
     var wkt = new Wkt.Wkt();
 
     const [selectedIndicators, setSelectedIndicators] = useState({'0': ''});
