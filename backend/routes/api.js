@@ -35,29 +35,20 @@ router.get("/0", async (req, res) => {
     }
   `;
 
-  
   const stream = await client.query.select(query);
 
   var result = [];
+  var totalResults = 0;
   
   stream.on('data', row => {
-    // Version for putting each result triple in its own array (easier parsing later)
-    // Don't use for API 0, since we don't have triples here
-    // var singleRow = [];
-    // Object.entries(row).forEach(([key, value]) => {
-    //   singleRow.push(value.value);
-    // });
-    // result.push(singleRow);
-
-    // Version for simply putting each result value into the final array
-    // Use for API 0
     Object.entries(row).forEach(([key, value]) => {
       result.push(value.value);
+      totalResults++;
     });
   });
 
   stream.on('end', () => {
-    res.json({message: "success", cityNames: result});
+    res.json({message: "success", cityNames: result, totalResults: totalResults});
   });
   
   stream.on('error', err => {
@@ -75,7 +66,8 @@ router.get("/0", async (req, res) => {
 // CURRENT ISSUES
 // - Does not take into account city input at all, just gets list of ALL indicators from database, whether they're from chosen city or not
 router.post("/1", async (req, res) => {
-  if (!req.body.cityName) {
+  if (!includesAllInputs([req.body.cityName], "string")) {
+  // if (!req.body.cityName) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
   } else if (!String(req.body.cityName).includes("#")) {
@@ -95,16 +87,18 @@ router.post("/1", async (req, res) => {
     const stream = await client.query.select(query);
 
     var result = [];
+    var totalResults = 0;
 
     stream.on('data', row => {
       // Version for simply putting each result value into the final array
       Object.entries(row).forEach(([key, value]) => {
         result.push(value.value);
+        totalResults++;
       });
     });
   
     stream.on('end', () => {
-      res.json({message: "success", indicatorNames: result});
+      res.json({message: "success", indicatorNames: result, totalResults: totalResults});
     });
     
     stream.on('error', err => {
@@ -121,18 +115,17 @@ router.post("/1", async (req, res) => {
 // Output: JSON list of all administrative area types
 // Description: Get all administrative area types (ward, neighbourhood, etc.) for a given city
 router.post("/2", async (req, res) => {
-  if (!req.body.cityName) {
+  if (!includesAllInputs([req.body.cityName], "string")) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
-  } else if (!String(req.body.cityName).includes("#")) {
+  } else if (!isURI(req.body.cityName)) {
     res.status(400);
     res.json({message:"Bad request: cityName is not an URI"});
   } else {
-    const prefix = String(req.body.cityName).split("#")[0];
-    const suffix = String(req.body.cityName).split("#")[1];
+    const [prefix, suffix] = splitURI(req.body.cityName);
 
     const query = `
-      PREFIX CITY: <${prefix}#>
+      PREFIX CITY: <${prefix}>
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -146,7 +139,7 @@ router.post("/2", async (req, res) => {
 
     // Check if city is in database; if not, quit
     const doesCityExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}#>
+      PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -187,24 +180,22 @@ router.post("/2", async (req, res) => {
 // Input: Name of city (cityName), name of administrative area type (adminType)
 // Output: List of all admin area instances for the given type and city
 router.post("/3", async (req, res) => {
-  if (!req.body.cityName || !req.body.adminType || typeof req.body.cityName !== "string" || typeof req.body.adminType !== "string") {
+  if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
     res.status(400);
     res.json({message:"Bad request: missing or non-string cityName or adminType"});
-  } else if (!String(req.body.cityName).includes("#") || !String(req.body.adminType).includes("#")) {
+  } else if (!isURI(req.body.cityName) || !isURI(req.body.adminType)) {
     res.status(400);
     res.json({message:"Bad request: cityName or adminType is not an URI"}); 
-  }else {
-    const prefix = String(req.body.cityName).split("#")[0];
-    const citySuffix = String(req.body.cityName).split("#")[1];
-    const adminTypeSuffix = String(req.body.adminType).split("#")[1];
+  } else {
+    const [prefix, citySuffix] = splitURI(req.body.cityName);
+    const [,adminTypeSuffix] = splitURI(req.body.adminType);
 
     const query = `
-      PREFIX CITY: <${prefix}#>
-      PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX CITY: <${prefix}>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-      SELECT DISTINCT ?adminAreaInstance ?areaName WHERE {
+      SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
         CITY:${citySuffix} ?p ?adminAreaInstance.
         ?adminAreaInstance rdfs:comment ?areaName.
         ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
@@ -213,7 +204,7 @@ router.post("/3", async (req, res) => {
 
     // Check if city is in database; if not, quit
     const doesCityExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}#>
+      PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -224,7 +215,7 @@ router.post("/3", async (req, res) => {
 
     // Check if provided admin area type exists; if not, exit
     const doesAdminAreaTypeExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}#>
+      PREFIX CITY: <${prefix}>
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -248,27 +239,25 @@ router.post("/3", async (req, res) => {
       const stream = await client.query.select(query);
 
       var result = [];
+      var totalResults = 0;
 
       stream.on('data', row => {
         var singleRow = {};
-        // Version for simply putting each result value into the final array
         Object.entries(row).forEach(([key, value]) => {
           singleRow[key] = value.value;
-          // singleRow.push(value.value);
         });
         result.push(singleRow);
+        totalResults++;
       });
     
       stream.on('end', () => {
-        res.json({message: "success", adminAreaInstanceNames: result});
+        res.json({message: "success", adminAreaInstanceNames: result, totalResults:totalResults});
       });
       
       stream.on('error', err => {
         res.status(500).send('Oops, error!');
       });
     }
-
-    
   }
 });
 
@@ -277,7 +266,6 @@ router.post("/3", async (req, res) => {
 // URL: /api/4/
 // Input: Name of city (cityName), admin area type (adminType), admin area instance (adminInstance), indicators (indicatorNames), time range (timeStart, timeEnd)
 // Output: Corresponding visualization and indicator data from connected database
-// OPTIONAL: adminInstance, 
 router.post("/4", async (req, res) => {
   // ----------- MISSING REQUEST VARIABLE HANDLING -----------
   if (!req.body.cityName) {
@@ -312,8 +300,6 @@ router.post("/4", async (req, res) => {
       return String(instance).split("#")[1];
     }) : String(req.body.adminInstance).split("#")[1];
 
-    // res.json({list:adminInstanceSuffix});
-    // String(req.body.adminInstance).split("#")[1];
 
     var finalResult = {};
 
@@ -471,7 +457,6 @@ router.post("/4", async (req, res) => {
                       `;
                     });
 
-
                     indicatorDataQuery += "}";
 
                     // Removes newline characters
@@ -493,9 +478,6 @@ router.post("/4", async (req, res) => {
                           if (year <= endTime) {
                             instanceResult[year] = NaN;
                           }
-                          
-                          // res.status(500);
-                          // res.json({message:"Bad request: Result of query is not a numerical value."});
                         }
                       });
                     });
@@ -505,15 +487,10 @@ router.post("/4", async (req, res) => {
                         if (year <= endTime) {
                           instanceResult[year] = NaN;
                         }
-                        
-                        // res.status(500);
-                        // res.json({message:"Bad request: No data for given parameters"});
                       } else {
                         if (year <= endTime) {
                           instanceResult[year] = result;
                         }
-                        
-                        // res.json({message:"success", indicatorDataValue:result});
                       }
                     });
 
@@ -529,11 +506,7 @@ router.post("/4", async (req, res) => {
               if (year <= endTime) {
                 instanceResult[year] = NaN;
               }
-              // res.status(400);
-              // res.json({message:`Bad request: indicator ${indicatorPrefix}#${indicatorSuffix} has no associated data, for any administrative area, in the database.`});
             }
-            // }
-          
           } else {
             var result = 0;
 
@@ -562,9 +535,6 @@ router.post("/4", async (req, res) => {
                   if (year <= endTime) {
                     instanceResult[year] = NaN;
                   }
-                  
-                  // res.status(500);
-                  // res.json({message:"Bad request: Result of query is not a numerical value."});
                 }
               });
             });
@@ -598,5 +568,182 @@ router.post("/4", async (req, res) => {
     });
   }
 });
+
+// API 5
+// Select a property (or all matching properties) for a given subject
+// 
+router.post("/5", async (req, res) => {
+  // ----------- MISSING REQUEST VARIABLE HANDLING -----------
+  if (!includesAllInputs([req.body.predicate, req.body.subject], "string")) {
+    res.status(400);
+    res.json({message:"Bad request: missing required input(s) (cityName, predicate, or subject)"});
+  } else if (!isURI(req.body.predicate) || !isURI(req.body.subject)) {
+    res.status(400);
+    res.json({message:"Bad request: predicate or subject is not an URI"}); 
+  } else {
+    const [predicatePrefix, predicateSuffix] = splitURI(req.body.predicate);
+    const [subjectPrefix, subjectSuffix] = splitURI(req.body.subject);
+
+    const stream = await client.query.select(`
+      PREFIX FINDFROM: <${subjectPrefix}>
+      PREFIX PROPERTY: <${predicatePrefix}>
+
+      SELECT ?propertyValue WHERE {
+        FINDFROM:${subjectSuffix} PROPERTY:${predicateSuffix} ?propertyValue.
+      }
+    `);
+
+    var result = [];
+    var totalResults = 0;
+
+    stream.on('data', row => {
+      // Version for simply putting each result value into the final array
+      Object.entries(row).forEach(([key, value]) => {
+        result.push(value.value);
+        totalResults++;
+      });
+    });
+  
+    stream.on('end', () => {
+      res.json({message: "success", propertyValue: result, totalResults:totalResults});
+    });
+    
+    stream.on('error', err => {
+      res.status(500).send('Oops, error!');
+    });
+  }
+});
+
+// API 6
+// Return all the geoWKT location data.
+router.post("/6", async (req, res) => {
+  if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
+    res.status(400);
+    res.json({message:"Bad request: missing or non-string cityName or adminType"});
+  } else if (!isURI(req.body.cityName) || !isURI(req.body.adminType)) {
+    res.status(400);
+    res.json({message:"Bad request: cityName or adminType is not an URI"}); 
+  } else {
+    const [prefix, citySuffix] = splitURI(req.body.cityName);
+    const [,adminTypeSuffix] = splitURI(req.body.adminType);
+
+    const query = `
+      PREFIX CITY: <${prefix}>
+      PREFIX iso50872City: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX iso50871Loc: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+      SELECT DISTINCT ?adminAreaInstance ?areaLocation WHERE {
+        CITY:${citySuffix} ?p ?adminAreaInstance.
+        ?adminAreaInstance rdfs:comment ?areaName.
+        ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
+        ?adminAreaInstance iso50871Loc:hasLocation ?loc.
+        ?loc geo:asWKT ?areaLocation.
+      }
+    `;
+
+    // Check if city is in database; if not, quit
+    const doesCityExist = await client.query.ask(`
+      PREFIX CITY: <${prefix}>
+      PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+      ASK {
+        CITY:${citySuffix} rdf:type i50872:City.
+      }
+    `);
+
+    // Check if provided admin area type exists; if not, exit
+    const doesAdminAreaTypeExist = await client.query.ask(`
+      PREFIX CITY: <${prefix}>
+      PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      
+      ASK {
+          CITY:${citySuffix} ?p ?AdminArea.
+          ?AdminArea rdf:type CITY:${adminTypeSuffix}.
+          CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+      }
+    `);
+
+    if (!doesCityExist || !doesAdminAreaTypeExist) {
+      if (!doesCityExist) {
+        res.status(400);
+        res.json({message:"Bad request: Provided city does not exist"});
+      } else {
+        res.status(400);
+        res.json({message:"Bad request: Provided administrative area type does not exist"});
+      } 
+    } else {
+      const stream = await client.query.select(query);
+
+      var result = [];
+      var totalResults = 0;
+
+      stream.on('data', row => {
+        var singleRow = {};
+        Object.entries(row).forEach(([key, value]) => {
+          singleRow[key] = value.value;
+        });
+        result.push(singleRow);
+        totalResults++;
+      });
+    
+      stream.on('end', () => {
+        res.json({message: "success", adminAreaInstanceNames: result, totalResults:totalResults});
+      });
+      
+      stream.on('error', err => {
+        res.status(500).send('Oops, error!');
+      });
+    }
+  }
+});
+
+
+// Function to handle the multiple cases for splitting URIs
+// Supports both URIs with "#" and those with just "/"
+function splitURI(URI) {
+  var prefix, suffix;
+  if (String(URI).includes("#")) {
+    prefix = String(URI).split("#")[0] + "#";
+    suffix = String(URI).split("#")[1];
+  } else {
+    prefix = String(URI).substring(0, String(URI).lastIndexOf("/") + 1);
+    suffix = String(URI).substring(String(URI).lastIndexOf("/"));
+
+    // Remove illegal characters (currently / and #) from the suffix, as they break SPARQL queries
+    suffix = suffix.replace(/[\/#]/g, "");
+  }
+
+  return [prefix, suffix];
+}
+
+function isURI(URI) {
+
+  URI = String(URI);
+  
+  const hasHTTP = URI.includes("http");
+  const hasHashtag = URI.includes("#");
+  const hasSlash = URI.includes("/");
+
+  return hasHTTP && (hasHashtag || hasSlash);
+}
+
+function includesAllInputs(requiredInputs, inputType) {
+  if (!Array.isArray(requiredInputs) || typeof inputType !== "string") {
+    return null;
+  }
+  
+  for (let input in requiredInputs) {
+    if (!requiredInputs[input] || typeof requiredInputs[input] !== inputType) {
+      return false;
+    }
+  }
+  return true;
+}
 
 module.exports = router;
