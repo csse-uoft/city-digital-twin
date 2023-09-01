@@ -1,10 +1,11 @@
 import { Autocomplete, Box, Button, Container, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import testCoords from "./testdata";
 import 'leaflet/dist/leaflet.css'
-import {MapContainer, Marker, Popup, TileLayer, Polygon, Tooltip} from 'react-leaflet'
+import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet'
+import {useMap} from 'react-leaflet/hooks'
 import L from 'leaflet'
 import MarkerClusterGroup from "react-leaflet-cluster";
 import Wkt from 'wicket';
@@ -43,14 +44,15 @@ function Dashboard() {
     const [indicators, setIndicators] = useState([]);
     const [indicatorURLs, setIndicatorURLs] = useState({});
 
-    const [locations, setLocations] = useState({});
-
-    var wkt = new Wkt.Wkt();
+    const [locationURLs, setLocationURLs] = useState({});
 
     const [selectedIndicators, setSelectedIndicators] = useState({'0': ''});
 
     const [reload, setReload] = useState(false);
-    
+
+    const [mapPolygons, setMapPolygons] = useState([]);
+
+    const mapRef = useRef(); // Ref for the Leaflet map instance
     
 
     const fetchCities = async () => {
@@ -134,8 +136,6 @@ function Dashboard() {
                 });
                 console.log('admin instances', response.data['adminAreaInstanceNames'])
                 response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
-                    
-                  
                     setAreaURLs(prevAreaURLs => ({
                       ...prevAreaURLs,
                       [Instance['areaName']]: Instance['adminAreaInstance']
@@ -152,12 +152,63 @@ function Dashboard() {
         }
     }
 
+    const fetchLocations = async admin => {
+        setLocationURLs({});
+        if (admin){
+            try {
+                const response = await axios.post('http://localhost:3000/api/6', {
+                    cityName: cityURLs[adminURLs['currCity']],
+                    adminType: adminURLs[admin]
+                });
+                console.log('admin instances', response.data['adminAreaInstanceNames']);
+
+                const updatedLocationURLs = {...locationURLs};
+                response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
+                    var wkt = new Wkt.Wkt();
+                    wkt.read(Instance['areaLocation']);
+
+                    var flipped = wkt.toJson();
+                    // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
+                    // The code requires Lat/Lon, so flip it back.
+                    flipped.coordinates = flipped.coordinates.map(innerArray => innerArray.map(coords => [coords[1], coords[0]]));
+                    // console.log("wkt", index, wkt.toJson())
+                    updatedLocationURLs[Instance['adminAreaInstance']] = flipped;
+                    // setLocationURLs(prevLocationURLs => ({
+                    //   ...prevLocationURLs,
+                    //   [Instance['adminAreaInstance']]: wkt.toJson()
+                    // }));                  
+                  });
+                  setLocationURLs(updatedLocationURLs);
+                  console.log("locations", updatedLocationURLs);
+              } catch (error) {
+                console.error('POST Error:', error);
+              }
+        } else{
+            setLocationURLs({});
+        }
+    }
+
     useEffect(() => {
+        
+
+        setMapPolygons([]);
+
+        const newPolygons = Object.keys(locationURLs).map(key => (
+            <Polygon key={key} pathOptions={{ color: 'red' }} positions={locationURLs[key].coordinates}>
+                <Tooltip sticky><strong>Spadina-Fort York (10)</strong> <br/>Number of Homicides: <br/>10 (2016)</Tooltip>
+                <Popup><strong>Spadina-Fort York (10)</strong> <br/>Number of Homicides: <br/>10 (2016)</Popup>
+            </Polygon>
+        ));
+
+        setMapPolygons(newPolygons);
+    }, [locationURLs]);
+
+    useEffect(() => {   
         fetchCities();
         
         
       }, []);
-      useEffect(() => {
+    useEffect(() => {
         // console.log('city url', cityURLs);
         // console.log('admin url', adminURLs);
         console.log('areaurl', areaURLs);
@@ -235,7 +286,10 @@ function Dashboard() {
                                     <Stack spacing={5}>
                                         <Autocomplete
                                             disablePortal
-                                            onChange={(event, newValue) => fetchArea(newValue)}
+                                            onChange={(event, newValue) => {
+                                                fetchArea(newValue);
+                                                fetchLocations(newValue);
+                                            }}
                                             options={admin}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
                                             renderInput={(params) => <TextField {...params} label="Select Administrative Type:*" />}
@@ -311,14 +365,8 @@ function Dashboard() {
                                         )}
                                     </Box>
                                 </Stack>
-                            
-                                
-
                             </Grid>
-                            
-
                         </Grid>
-                        
                     </Paper>
                 </Box>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
@@ -337,11 +385,8 @@ function Dashboard() {
                     attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
                     url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                
-                <Polygon pathOptions={{ color: 'red' }} positions={testCoords.coordinates}>
-                    <Tooltip sticky><strong>Spadina-Fort York (10)</strong> <br/>Number of Homicides: <br/>10 (2016)</Tooltip>
-                    <Popup><strong>Spadina-Fort York (10)</strong> <br/>Number of Homicides: <br/>10 (2016)</Popup>
-                </Polygon>
+
+                {mapPolygons}
             </MapContainer>
         </Container>
     );
