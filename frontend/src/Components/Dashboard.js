@@ -9,6 +9,9 @@ import {useMap} from 'react-leaflet/hooks'
 import L from 'leaflet'
 import MarkerClusterGroup from "react-leaflet-cluster";
 import Wkt from 'wicket';
+import { DataGrid } from '@mui/x-data-grid';
+
+
 // import {MapLibreTileLayer} from "./MapLibreTileLayer.tsx";
 // import arcades from './arcades.json'
 
@@ -48,9 +51,13 @@ function Dashboard() {
 
     const [selectedIndicators, setSelectedIndicators] = useState({'0': ''});
 
+    const [indicatorData, setIndicatorData] = useState({});
+
     const [reload, setReload] = useState(false);
 
     const [mapPolygons, setMapPolygons] = useState([]);
+
+    const [showingVisualization, setShowingVisualization] = useState(false);
 
     const mapRef = useRef(); // Ref for the Leaflet map instance
     
@@ -182,6 +189,39 @@ function Dashboard() {
         }
     }
 
+    const fetchData = async () => {
+        setIndicatorData({});
+        if (admin) {
+            try {
+                const response = await axios.post('http://localhost:3000/api/4', {
+                    cityName: cityURLs[adminURLs['currCity']],
+                    adminType: adminURLs[admin],
+                    
+                });
+                console.log('admin instances', response.data['adminAreaInstanceNames']);
+
+                const updatedLocationURLs = {...locationURLs};
+                response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
+                    var wkt = new Wkt.Wkt();
+                    wkt.read(Instance['areaLocation']);
+
+                    var flipped = wkt.toJson();
+
+                    // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
+                    // The code requires Lat/Lon, so flip it back.
+                    flipped.coordinates = flipped.coordinates.map(innerArray => innerArray.map(coords => [coords[1], coords[0]]));
+                    updatedLocationURLs[Instance['adminAreaInstance']] = flipped;             
+                  });
+                  setLocationURLs(updatedLocationURLs);
+                  console.log("locations", updatedLocationURLs);
+              } catch (error) {
+                console.error('POST Error:', error);
+              }
+        } else {
+            setLocationURLs({});
+        }
+    };
+
     useEffect(() => {
         setMapPolygons([]);
 
@@ -255,6 +295,15 @@ function Dashboard() {
             [id]: value
         }));
     };
+
+    const handleGenerateVisualization = () => {
+        if (!showingVisualization) {
+            setShowingVisualization(true);
+        }
+        // Complete fetchData first
+        // fetchData();
+
+    }
 
     return (
         <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
@@ -377,24 +426,51 @@ function Dashboard() {
                     </Paper>
                 </Box>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                    <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}}>Generate Visualization</Button>
+                    <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} onClick={() => handleGenerateVisualization()}>Generate Visualization</Button>
                 </Box>
             </Stack>
-            <MapContainer
-                className="map"
-                center={[43.651070, -79.347015]}
-                zoom={10}
-                minZoom={3}
-                maxZoom={19}
-                maxBounds={[[-85.06, -180], [85.06, 180]]}
-                scrollWheelZoom={true}>
-                <TileLayer
-                    attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+            <Stack spacing={3}>
 
-                {mapPolygons}
-            </MapContainer>
+                <MapContainer
+                    className="map"
+                    center={[43.651070, -79.347015]}
+                    zoom={10}
+                    minZoom={3}
+                    maxZoom={19}
+                    maxBounds={[[-85.06, -180], [85.06, 180]]}
+                    scrollWheelZoom={true}>
+                    <TileLayer
+                        attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
+                        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    {mapPolygons}
+                </MapContainer>
+                {/* <DataGrid 
+                    rows={[
+                        {id:0, adminID:"admin1", indicator1:24, indicator2:33},
+                        {id:1, adminID:"admin2", indicator1:66, indicator2:21},
+                        {id:2, adminID:"admin3", indicator1:44, indicator2:5}
+                    ]}
+                    columns={[
+                        {field:"id", headerName:"ID"},
+                        {field:"adminID", headerName:"Admin Area Instance"},
+                        {field:"indicator1",headerName:"Indicator 1"},
+                        {field:"indicator2",headerName:"Indicator 2"}
+                    ]}
+                    initialState={{
+                        pagination: {
+                          paginationModel: {
+                            pageSize: 10,
+                          },
+                        },
+                      }}
+                    pageSizeOptions={[5]}
+                    checkboxSelection
+                    disableRowSelectionOnClick
+                /> */}
+            </Stack>
+            
         </Container>
     );
 }
