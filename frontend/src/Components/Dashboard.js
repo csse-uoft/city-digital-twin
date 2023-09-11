@@ -54,7 +54,6 @@ function Dashboard() {
 
     const mapRef = useRef(); // Ref for the Leaflet map instance
     
-
     const fetchCities = async () => {
         const response = await axios.get(
             `http://localhost:3000/api/0`
@@ -132,7 +131,6 @@ function Dashboard() {
                 const response = await axios.post('http://localhost:3000/api/3', {
                     cityName: cityURLs[adminURLs['currCity']],
                     adminType: adminURLs[admin]
-
                 });
                 console.log('admin instances', response.data['adminAreaInstanceNames'])
                 response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
@@ -154,7 +152,7 @@ function Dashboard() {
 
     const fetchLocations = async admin => {
         setLocationURLs({});
-        if (admin){
+        if (admin) {
             try {
                 const response = await axios.post('http://localhost:3000/api/6', {
                     cityName: cityURLs[adminURLs['currCity']],
@@ -168,54 +166,67 @@ function Dashboard() {
                     wkt.read(Instance['areaLocation']);
 
                     var flipped = wkt.toJson();
+
                     // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
                     // The code requires Lat/Lon, so flip it back.
                     flipped.coordinates = flipped.coordinates.map(innerArray => innerArray.map(coords => [coords[1], coords[0]]));
-                    // console.log("wkt", index, wkt.toJson())
-                    updatedLocationURLs[Instance['adminAreaInstance']] = flipped;
-                    // setLocationURLs(prevLocationURLs => ({
-                    //   ...prevLocationURLs,
-                    //   [Instance['adminAreaInstance']]: wkt.toJson()
-                    // }));                  
+                    updatedLocationURLs[Instance['adminAreaInstance']] = flipped;             
                   });
                   setLocationURLs(updatedLocationURLs);
                   console.log("locations", updatedLocationURLs);
               } catch (error) {
                 console.error('POST Error:', error);
               }
-        } else{
+        } else {
             setLocationURLs({});
         }
     }
 
     useEffect(() => {
-        
-
         setMapPolygons([]);
+
+        const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
 
         const newPolygons = Object.keys(locationURLs).map(key => (
             <Polygon key={key} pathOptions={{ color: 'red' }} positions={locationURLs[key].coordinates}>
-                <Tooltip sticky><strong>Spadina-Fort York (10)</strong> <br/>Number of Homicides: <br/>10 (2016)</Tooltip>
-                <Popup><strong>Spadina-Fort York (10)</strong> <br/>Number of Homicides: <br/>10 (2016)</Popup>
+            {console.log(selectedIndicators[0] === "")}
+            {
+                
+                selectedIndicators[0] === "" ? 
+                    <>
+                        <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>No indicators selected</Tooltip>
+                        <Popup><strong>{currentAreaNames[key]}</strong> <br/>No indicators selected</Popup>
+                    </>
+                :
+                    <>
+                        <Tooltip sticky>
+                            <strong>{currentAreaNames[key]}</strong> <br/>
+                            {selectedIndicators[0]}: <br/>
+                            10 (2016)
+                        </Tooltip>
+                        <Popup>
+                            <strong>{currentAreaNames[key]}</strong> <br/>
+                            {selectedIndicators[0]}: <br/>
+                            10 (2016)
+                        </Popup>
+                    </>
+            }
+                
             </Polygon>
         ));
 
         setMapPolygons(newPolygons);
-    }, [locationURLs]);
+    }, [locationURLs,selectedIndicators]);
 
     useEffect(() => {   
         fetchCities();
-        
-        
-      }, []);
+    }, []);
+
     useEffect(() => {
         // console.log('city url', cityURLs);
         // console.log('admin url', adminURLs);
         console.log('areaurl', areaURLs);
     }, [cityURLs, adminURLs, areaURLs]);
-
-
-
 
     const handleAddIndicator = () => {
         const newId = Object.keys(selectedIndicators).length;
@@ -237,16 +248,12 @@ function Dashboard() {
         });
         setYears(temp);
         console.log(temp);
-
-        
-        
     }
     const handleUpdateIndicators = (id, value) => {
         setSelectedIndicators(prevState => ({
             ...prevState,
             [id]: value
         }));
-        
     };
 
     return (
@@ -370,8 +377,8 @@ function Dashboard() {
                     </Paper>
                 </Box>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                        <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}}>Generate Visualization</Button>
-                    </Box>
+                    <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}}>Generate Visualization</Button>
+                </Box>
             </Stack>
             <MapContainer
                 className="map"
