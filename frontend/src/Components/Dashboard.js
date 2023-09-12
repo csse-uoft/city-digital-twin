@@ -59,6 +59,12 @@ function Dashboard() {
 
     const [showingVisualization, setShowingVisualization] = useState(false);
 
+    const [currentAdminType, setCurrentAdminType] = useState("");
+    const [currentAdminInstance, setCurrentAdminInstance] = useState("");
+    const [startYear, setStartYear] = useState(-1);
+    const [endYear, setEndYear] = useState(-1);
+
+    
     const mapRef = useRef(); // Ref for the Leaflet map instance
     
     const fetchCities = async () => {
@@ -189,36 +195,38 @@ function Dashboard() {
         }
     }
 
+    const checkIfInputsFilled = () => {
+        return (
+            typeof(adminURLs['currCity']) !== 'undefined' &&
+            typeof(currentAdminType) === 'string' && currentAdminType !== '' &&
+            typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  
+            // typeof()
+        )
+    }
+
     const fetchData = async () => {
         setIndicatorData({});
         if (admin) {
             try {
                 const response = await axios.post('http://localhost:3000/api/4', {
                     cityName: cityURLs[adminURLs['currCity']],
-                    adminType: adminURLs[admin],
-                    
+                    adminType: currentAdminType,
+                    adminInstance: null,
+                    indicatorName: null,
+                    startTime: null,
+                    endTime: null
                 });
-                console.log('admin instances', response.data['adminAreaInstanceNames']);
+                console.log('admin instances', response.data['indicatorDataValues']);
 
                 const updatedLocationURLs = {...locationURLs};
-                response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
-                    var wkt = new Wkt.Wkt();
-                    wkt.read(Instance['areaLocation']);
+                response.data['indicatorDataValues'].forEach((Instance, index) => {
 
-                    var flipped = wkt.toJson();
-
-                    // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
-                    // The code requires Lat/Lon, so flip it back.
-                    flipped.coordinates = flipped.coordinates.map(innerArray => innerArray.map(coords => [coords[1], coords[0]]));
-                    updatedLocationURLs[Instance['adminAreaInstance']] = flipped;             
-                  });
-                  setLocationURLs(updatedLocationURLs);
-                  console.log("locations", updatedLocationURLs);
+                });
               } catch (error) {
                 console.error('POST Error:', error);
               }
         } else {
-            setLocationURLs({});
+            setIndicatorData({});
         }
     };
 
@@ -327,6 +335,7 @@ function Dashboard() {
                                                 (event, newValue) => {
                                                     fetchAdministration(newValue);
                                                     fetchIndicators(newValue);
+                                                    setCurrentAdminType(adminURLs[newValue]);
                                                 }}
                                             options={cities}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
@@ -354,6 +363,9 @@ function Dashboard() {
                                             disablePortal
                                             options={area}
                                             sx={{ maxWidth: 270, minWidth: 220 }}
+                                            onChange={(event, newValue) => {
+
+                                            }}
                                             renderInput={(params) => <TextField {...params} label="Specific Area:" />}
                                             />
                                     
@@ -405,8 +417,8 @@ function Dashboard() {
                                     {years.map(({ id, value1, value2 }) => (
                                         <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                                             
-                                                <TextField id="outlined-basic" label={`Starting Year #${id + 1}*`} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
-                                                <TextField id="outlined-basic" label={`Ending Year #${id + 1}*`} variant="outlined" sx={{width: '130px'}}/>
+                                                <TextField type="number" id="outlined-basic" label={`Starting Year #${id + 1}*`} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
+                                                <TextField type="number" id="outlined-basic" label={`Ending Year #${id + 1}*`} variant="outlined" sx={{width: '130px'}}/>
                                                 
                                             
                                         </Box>
