@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, Container, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Autocomplete, Box, Button, Container, Grid, Paper, Stack, TextField, Typography, ThemeProvider, createTheme } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
@@ -10,7 +10,7 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import Wkt from 'wicket';
 import { DataGrid } from '@mui/x-data-grid';
 import MUIDataTable from "mui-datatables";
-import { useTheme } from '@mui/material/styles';
+// import { createTheme, useTheme } from '@mui/material/styles';
 
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -22,7 +22,7 @@ L.Icon.Default.mergeOptions({
 });
 
 function Dashboard() {
-  const theme = useTheme();
+  const defaultTheme = createTheme();
 
   const [years, setYears] = useState([{value1: -1, value2: -1, id: 0}]);
   let options = ['The Godfather', 'Pulp Fiction'];
@@ -196,36 +196,27 @@ function Dashboard() {
     setIndicatorData({});
 
     try {
-      await axios.post('http://localhost:3000/api/4', {
+      const response = await axios.post('http://localhost:3000/api/4', {
         cityName: cityURLs[adminURLs['currCity']],
         adminType: currentAdminType,
         adminInstance: [currentAdminInstance],
         indicatorName: indicatorURLs[selectedIndicators['0']],
         startTime: years[0].value1,
         endTime: years[0].value2
-      }).then(response => {
-        console.log('final data', response.data['indicatorDataValues']);
-        setIndicatorData(response.data['indicatorDataValues']);
       });
 
-      // response.data['indicatorDataValues'].forEach((Instance, index) => {
-      //   setIndicatorData(prevIndicatorData => ({
-      //     ...prevIndicatorData,
-      //     [Object.keys(instance)[0]]: Instance
-      //   }));
-      //   setAreaURLs(prevAreaURLs => ({
-      //     ...prevAreaURLs,
-      //     [Instance['areaName']]: Instance['adminAreaInstance']
-      //   }));
-      
-      //   setArea(prevArea => [...prevArea, Instance['areaName']]);
-      // });
-      
-      // setIndicatorData(response.data['indicatorDataValues']);
+      console.log('final data', response.data['indicatorDataValues']);
+      setIndicatorData(response.data['indicatorDataValues']);
     } catch (error) {
       console.error('POST Error:', error);
     }
   };
+
+  useEffect(() => {
+    console.log("INDICATOR DATA STATE VAL:", indicatorData);
+
+    
+  }, [indicatorData]); 
 
   // useEffect(() => {
     // setMapPolygons([]);
@@ -323,7 +314,7 @@ function Dashboard() {
     }));
   };
 
-  const handleGenerateVisualization = () => {
+  const handleGenerateVisualization = async () => {
     const checkIfInputsFilled = () => {
       return (
         typeof(adminURLs['currCity']) !== 'undefined' &&
@@ -567,16 +558,19 @@ function Dashboard() {
             disableRowSelectionOnClick
           />
           */}
-{/* 
-          <MUIDataTable
-            title={selectedIndicators[0]}
-            columns={tableColumns}
-            data={tableData}
-            options={{
-              filterType: 'checkbox'
-            }}
-            pagination
-          /> */}
+          <ThemeProvider theme={defaultTheme}>
+            <MUIDataTable
+              title={selectedIndicators[0]}
+              columns={tableColumns}
+              data={tableData}
+              options={{
+                filterType: 'checkbox'
+              }}
+              pagination
+            />
+          </ThemeProvider>
+          
+          
         </Stack>
       }
     </Container>
