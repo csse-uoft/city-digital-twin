@@ -9,7 +9,9 @@ import L from 'leaflet';
 import MarkerClusterGroup from "react-leaflet-cluster";
 import Wkt from 'wicket';
 import { DataGrid } from '@mui/x-data-grid';
-import {MUIDataTable} from "mui-datatables";
+import MUIDataTable from "mui-datatables";
+import { useTheme } from '@mui/material/styles';
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -20,6 +22,8 @@ L.Icon.Default.mergeOptions({
 });
 
 function Dashboard() {
+  const theme = useTheme();
+
   const [years, setYears] = useState([{value1: -1, value2: -1, id: 0}]);
   let options = ['The Godfather', 'Pulp Fiction'];
 
@@ -195,13 +199,13 @@ function Dashboard() {
       const response = await axios.post('http://localhost:3000/api/4', {
         cityName: cityURLs[adminURLs['currCity']],
         adminType: currentAdminType,
-        adminInstance: currentAdminInstance,
+        adminInstance: [currentAdminInstance],
         indicatorName: indicatorURLs[selectedIndicators['0']],
         startTime: years[0].value1,
         endTime: years[0].value2
       });
-      console.log('admin instances', response.data['indicatorDataValues']);
-
+      console.log('final data', response.data['indicatorDataValues']);
+      
       setIndicatorData(response.data['indicatorDataValues']);
     } catch (error) {
       console.error('POST Error:', error);
@@ -276,7 +280,7 @@ function Dashboard() {
   }
 
   const handleUpdateYear = (id, startOrEnd, event) => {
-    if (("" + event.target.value).length === 4) {
+    // if (("" + event.target.value).length === 4) {
       var temp = years.slice(0, id);
       if (startOrEnd === "start") {
         temp.push({
@@ -294,7 +298,7 @@ function Dashboard() {
       temp.push(years.slice(id+1));
 
       setYears(temp);
-    }
+    // }
   };
 
   const handleUpdateIndicators = (id, value) => {
@@ -316,34 +320,48 @@ function Dashboard() {
       );
     };
 
-    if (!showingVisualization && checkIfInputsFilled()) {
-      setShowingVisualization(true);
-    } 
+    // if (!showingVisualization && checkIfInputsFilled()) {
+      
+    // } 
 
     if (checkIfInputsFilled()) {
       fetchData();
 
       var yearRange = [];
       for (let i = years[0].value1; i <= years[0].value2; ++i) {
-        yearRange.push(i);
+        yearRange.push(i.toString());
       }
       setTableColumns(["Admin Area Name"].concat(yearRange));
       
-      setTableData(Object.entries(indicatorData).map((instanceName, data) => {
+      setTableData(Object.entries(indicatorData).map((instanceName, data) => (
         [instanceName].concat(Object.entries(data).map((year, value) => value))
-      }));
+      )));
 
       setMapPolygons([]);
 
       const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
+      
+      console.log("INDICATOR DATA", indicatorData);
+      const itemColor = (key) => {
+        if (Object.keys(indicatorData).indexOf(key) !== -1) {
+          return 'green'; 
+        } else {
+          return 'red';
+        }
+      }
 
+      console.log("SIZE: ", Object.keys(locationURLs).length);
       const newPolygons = Object.keys(locationURLs).map(key => (
-        <Polygon key={key} pathOptions={{ color: Object.keys(indicatorData).find(key) !== undefined ? 'green' : 'red'}} positions={locationURLs[key].coordinates}>
+        <>
+        {console.log("KEY:", key)}
+        {console.log("COLOR:", itemColor(key))}
+        {console.log("POSITION:", locationURLs[key].coordinates)}
+        <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
           {
-            Object.keys(indicatorData).find(key) === undefined ? 
+            Object.keys(indicatorData).indexOf(key) === -1 ? 
               <>
-                <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>Area not selected</Tooltip>
-                <Popup><strong>{currentAreaNames[key]}</strong> <br/>Area not selected</Popup>
+                <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Tooltip>
+                <Popup><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Popup>
               </>
             :
               <>
@@ -368,9 +386,16 @@ function Dashboard() {
               </>
           }   
         </Polygon>
+        </>
       ));
       setMapPolygons(newPolygons);
-    } 
+
+      if (!showingVisualization) {
+        setShowingVisualization(true);
+      }
+    } else {
+      console.log("Can't generate visualization: missing data");
+    }
   }
 
   return (
@@ -423,6 +448,7 @@ function Dashboard() {
                       sx={{ maxWidth: 270, minWidth: 220 }}
                       onChange={(event, newValue) => {
                         setCurrentAdminInstance(areaURLs[newValue]);
+                        console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
                       }}
                       renderInput={(params) => <TextField {...params} label="Specific Area:" />}
                     />
@@ -512,17 +538,8 @@ function Dashboard() {
           </MapContainer>
           {/*
           <DataGrid 
-            rows={[
-              {id:0, adminID:"admin1", indicator1:24, indicator2:33},
-              {id:1, adminID:"admin2", indicator1:66, indicator2:21},
-              {id:2, adminID:"admin3", indicator1:44, indicator2:5}
-            ]}
-            columns={[
-              {field:"id", headerName:"ID"},
-              {field:"adminID", headerName:"Admin Area Instance"},
-              {field:"indicator1",headerName:"Indicator 1"},
-              {field:"indicator2",headerName:"Indicator 2"}
-            ]}
+            rows={tableData}
+            columns={tableColumns}
             initialState={{
               pagination: {
                 paginationModel: {
@@ -535,7 +552,7 @@ function Dashboard() {
             disableRowSelectionOnClick
           />
           */}
-
+{/* 
           <MUIDataTable
             title={selectedIndicators[0]}
             columns={tableColumns}
@@ -544,7 +561,7 @@ function Dashboard() {
               filterType: 'checkbox'
             }}
             pagination
-          />
+          /> */}
         </Stack>
       }
     </Container>
