@@ -2,16 +2,14 @@ import { Autocomplete, Box, Button, Container, Grid, Paper, Stack, TextField, Ty
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import testCoords from "./testdata";
-import 'leaflet/dist/leaflet.css'
-import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet'
-import {useMap} from 'react-leaflet/hooks'
-import L from 'leaflet'
+import 'leaflet/dist/leaflet.css';
+import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet';
+import {useMap} from 'react-leaflet/hooks';
+import L from 'leaflet';
 import MarkerClusterGroup from "react-leaflet-cluster";
 import Wkt from 'wicket';
 import { DataGrid } from '@mui/x-data-grid';
-// import {MapLibreTileLayer} from "./MapLibreTileLayer.tsx";
-// import arcades from './arcades.json'
+import {MUIDataTable} from "mui-datatables";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -22,7 +20,7 @@ L.Icon.Default.mergeOptions({
 });
 
 function Dashboard() {
-  const [years, setYears] = useState([{value: '', id: 0}]);
+  const [years, setYears] = useState([{value1: -1, value2: -1, id: 0}]);
   let options = ['The Godfather', 'Pulp Fiction'];
 
   const [cities, setCities] = useState([]);
@@ -36,6 +34,7 @@ function Dashboard() {
 
   const [indicators, setIndicators] = useState([]);
   const [indicatorURLs, setIndicatorURLs] = useState({});
+  const [indicatorNames, setIndicatorNames] = useState({});
 
   const [locationURLs, setLocationURLs] = useState({});
 
@@ -43,16 +42,16 @@ function Dashboard() {
 
   const [indicatorData, setIndicatorData] = useState({});
 
-  const [reload, setReload] = useState(false);
-
   const [mapPolygons, setMapPolygons] = useState([]);
 
   const [showingVisualization, setShowingVisualization] = useState(false);
 
   const [currentAdminType, setCurrentAdminType] = useState("");
   const [currentAdminInstance, setCurrentAdminInstance] = useState("");
-  const [startYear, setStartYear] = useState(-1);
-  const [endYear, setEndYear] = useState(-1);
+
+  const [tableColumns, setTableColumns] = useState(["Admin Area Name"]);
+  const [tableData, setTableData] = useState([]);
+
 
   const fetchCities = async () => {
     const response = await axios.get(
@@ -111,6 +110,11 @@ function Dashboard() {
             ...prevIndicatorURLs,
             [indName]: URL
           }));
+
+          setIndicatorNames(prevIndicatorNames => ({
+            ...prevIndicatorNames,
+            [URL]: indName
+          }));
         
           setIndicators(prevIndicator => [...prevIndicator, indName]);
         });
@@ -118,8 +122,9 @@ function Dashboard() {
       } catch (error) {
         console.error('POST Error:', error);
       }
-    } else{
+    } else {
       setIndicatorURLs({});
+      setIndicatorNames({});
       setIndicators([]);
     }
   }
@@ -191,22 +196,13 @@ function Dashboard() {
         cityName: cityURLs[adminURLs['currCity']],
         adminType: currentAdminType,
         adminInstance: currentAdminInstance,
-        indicatorName: selectedIndicators['0'],
-        startTime: startYear,
-        endTime: endYear
+        indicatorName: indicatorURLs[selectedIndicators['0']],
+        startTime: years[0].value1,
+        endTime: years[0].value2
       });
       console.log('admin instances', response.data['indicatorDataValues']);
 
-      // const updatedLocationURLs = {...locationURLs};
       setIndicatorData(response.data['indicatorDataValues']);
-
-      // // Flip all keys and values in areaURLs object, 
-      // const areaNames = Object.fromEntries(Object.entries(areaURLs).map(([k, v]) => [v, k]))
-
-      // const finalResponse = {};
-      // response.data['indicatorDataValues'].forEach((Instance, index) => {
-          
-      // });
     } catch (error) {
       console.error('POST Error:', error);
     }
@@ -248,7 +244,7 @@ function Dashboard() {
     // setMapPolygons(newPolygons);
   // }, [locationURLs,selectedIndicators]);
 
-  useEffect(() => {   
+  useEffect(() => {
     fetchCities();
   }, []);
 
@@ -269,16 +265,38 @@ function Dashboard() {
   };
 
   const handleAddYears = () => {
-      
     const temp = [...years];
     temp.push({
-      value1: '',
-      value2: '',
+      value1: -1,
+      value2: -1,
       id: years.length
     });
     setYears(temp);
     console.log(temp);
   }
+
+  const handleUpdateYear = (id, startOrEnd, event) => {
+    if (("" + event.target.value).length === 4) {
+      var temp = years.slice(0, id);
+      if (startOrEnd === "start") {
+        temp.push({
+          value1: event.target.value,
+          value2: years[id].value2,
+          id: id
+        });
+      } else {
+        temp.push({
+          value1: years[id].value1,
+          value2: event.target.value,
+          id: id
+        });
+      }
+      temp.push(years.slice(id+1));
+
+      setYears(temp);
+    }
+  };
+
   const handleUpdateIndicators = (id, value) => {
     setSelectedIndicators(prevState => ({
       ...prevState,
@@ -288,15 +306,15 @@ function Dashboard() {
 
   const handleGenerateVisualization = () => {
     const checkIfInputsFilled = () => {
-        return (
-          typeof(adminURLs['currCity']) !== 'undefined' &&
-          typeof(currentAdminType) === 'string' && currentAdminType !== '' &&
-          typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
-          selectedIndicators['0'] !== '' &&
-          startYear !== -1 &&
-          endYear !== -1
-        )
-    }
+      return (
+        typeof(adminURLs['currCity']) !== 'undefined' &&
+        typeof(currentAdminType) === 'string' && currentAdminType !== '' &&
+        typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
+        selectedIndicators['0'] !== '' &&
+        years[0].value1 !== -1 &&
+        years[0].value1 !== -1
+      );
+    };
 
     if (!showingVisualization && checkIfInputsFilled()) {
       setShowingVisualization(true);
@@ -305,41 +323,50 @@ function Dashboard() {
     if (checkIfInputsFilled()) {
       fetchData();
 
+      var yearRange = [];
+      for (let i = years[0].value1; i <= years[0].value2; ++i) {
+        yearRange.push(i);
+      }
+      setTableColumns(["Admin Area Name"].concat(yearRange));
+      
+      setTableData(Object.entries(indicatorData).map((instanceName, data) => {
+        [instanceName].concat(Object.entries(data).map((year, value) => value))
+      }));
+
       setMapPolygons([]);
 
       const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
 
       const newPolygons = Object.keys(locationURLs).map(key => (
-        <Polygon key={key} pathOptions={{ color: 'red' }} positions={locationURLs[key].coordinates}>
-        {console.log(selectedIndicators[0] === "")}
-        {
-          selectedIndicators[0] === "" ? 
-            <>
-              <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>No indicators selected</Tooltip>
-              <Popup><strong>{currentAreaNames[key]}</strong> <br/>No indicators selected</Popup>
-            </>
-          :
-            <>
-              <Tooltip sticky>
-                <strong>{currentAreaNames[key]}</strong> <br/>
-                {selectedIndicators[0]}:
-                {indicatorData[selectedIndicators[0]].map(([key, value]) => (
-                  <>
-                    <br/> {value} ({key})
-                  </>
-                ))}
-              </Tooltip>
-              <Popup>
-                <strong>{currentAreaNames[key]}</strong> <br/>
-                {selectedIndicators[0]}: <br/>
-                {indicatorData[selectedIndicators[0]].map(([key, value]) => (
-                  <>
-                    <br/> {value} ({key})
-                  </>
-                ))}
-              </Popup>
-            </>
-        }   
+        <Polygon key={key} pathOptions={{ color: Object.keys(indicatorData).find(key) !== undefined ? 'green' : 'red'}} positions={locationURLs[key].coordinates}>
+          {
+            Object.keys(indicatorData).find(key) === undefined ? 
+              <>
+                <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>Area not selected</Tooltip>
+                <Popup><strong>{currentAreaNames[key]}</strong> <br/>Area not selected</Popup>
+              </>
+            :
+              <>
+                <Tooltip sticky>
+                  <strong>{currentAreaNames[key]}</strong> <br/>
+                  {selectedIndicators[0]}:
+                  {indicatorData[indicatorURLs[selectedIndicators[0]]].map(([key, value]) => (
+                    <>
+                      <br/> {value} ({key})
+                    </>
+                  ))}
+                </Tooltip>
+                <Popup>
+                  <strong>{currentAreaNames[key]}</strong> <br/>
+                  {selectedIndicators[0]}: <br/>
+                  {indicatorData[indicatorURLs[selectedIndicators[0]]].map(([key, value]) => (
+                    <>
+                      <br/> {value} ({key})
+                    </>
+                  ))}
+                </Popup>
+              </>
+          }   
         </Polygon>
       ));
       setMapPolygons(newPolygons);
@@ -366,7 +393,8 @@ function Dashboard() {
                         (event, newValue) => {
                           fetchAdministration(newValue);
                           fetchIndicators(newValue);
-                        }}
+                        }
+                      }
                       options={cities}
                       sx={{ maxWidth: 270, minWidth: 220 }}
                       renderInput={(params) => <TextField {...params} label="Select City:*" />}
@@ -394,7 +422,7 @@ function Dashboard() {
                       options={area}
                       sx={{ maxWidth: 270, minWidth: 220 }}
                       onChange={(event, newValue) => {
-                        setCurrentAdminInstance(areaURLs[newValue])
+                        setCurrentAdminInstance(areaURLs[newValue]);
                       }}
                       renderInput={(params) => <TextField {...params} label="Specific Area:" />}
                     />
@@ -422,7 +450,8 @@ function Dashboard() {
                         sx={{ maxWidth: 270, minWidth: 220}}
                         renderInput={(params) => (
                           <TextField 
-                            value={value} {...params} label={`Select Indicator #${parseInt(index) + 1}*`} 
+                            value={value} {...params} 
+                            label={`Select Indicator #${parseInt(index) + 1}*`} 
                           />
                         )}
                       /> 
@@ -441,8 +470,8 @@ function Dashboard() {
                 <Stack spacing={5} sx={{}}>
                   {years.map(({ id, value1, value2 }) => (
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                      <TextField type="number" id="outlined-basic" label={`Starting Year #${id + 1}*`} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
-                      <TextField type="number" id="outlined-basic" label={`Ending Year #${id + 1}*`} variant="outlined" sx={{width: '130px'}}/>
+                      <TextField type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
+                      <TextField type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event)} variant="outlined" sx={{width: '130px'}}/>
                     </Box>
                   ))}
                   <Box sx={{display: 'flex', justifyContent: 'center'}}>
@@ -463,47 +492,61 @@ function Dashboard() {
           <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} onClick={() => handleGenerateVisualization()}>Generate Visualization</Button>
         </Box>
       </Stack>
-      <Stack spacing={3}>
 
-        <MapContainer
-          className="map"
-          center={[43.651070, -79.347015]}
-          zoom={10}
-          minZoom={3}
-          maxZoom={19}
-          maxBounds={[[-85.06, -180], [85.06, 180]]}
-          scrollWheelZoom={true}>
-          <TileLayer
-            attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+      {showingVisualization && 
+        <Stack spacing={3}>
+          <MapContainer
+            className="map"
+            center={[43.651070, -79.347015]}
+            zoom={10}
+            minZoom={3}
+            maxZoom={19}
+            maxBounds={[[-85.06, -180], [85.06, 180]]}
+            scrollWheelZoom={true}>
+            <TileLayer
+              attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
+              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          {mapPolygons}
-        </MapContainer>
-        {/*<DataGrid 
-          rows={[
-            {id:0, adminID:"admin1", indicator1:24, indicator2:33},
-            {id:1, adminID:"admin2", indicator1:66, indicator2:21},
-            {id:2, adminID:"admin3", indicator1:44, indicator2:5}
-          ]}
-          columns={[
-            {field:"id", headerName:"ID"},
-            {field:"adminID", headerName:"Admin Area Instance"},
-            {field:"indicator1",headerName:"Indicator 1"},
-            {field:"indicator2",headerName:"Indicator 2"}
-          ]}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
+            {mapPolygons}
+          </MapContainer>
+          {/*
+          <DataGrid 
+            rows={[
+              {id:0, adminID:"admin1", indicator1:24, indicator2:33},
+              {id:1, adminID:"admin2", indicator1:66, indicator2:21},
+              {id:2, adminID:"admin3", indicator1:44, indicator2:5}
+            ]}
+            columns={[
+              {field:"id", headerName:"ID"},
+              {field:"adminID", headerName:"Admin Area Instance"},
+              {field:"indicator1",headerName:"Indicator 1"},
+              {field:"indicator2",headerName:"Indicator 2"}
+            ]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
               },
-            },
-          }}
-          pageSizeOptions={[5]}
-          checkboxSelection
-          disableRowSelectionOnClick
-          />*/}
-      </Stack>
+            }}
+            pageSizeOptions={[5]}
+            checkboxSelection
+            disableRowSelectionOnClick
+          />
+          */}
+
+          <MUIDataTable
+            title={selectedIndicators[0]}
+            columns={tableColumns}
+            data={tableData}
+            options={{
+              filterType: 'checkbox'
+            }}
+            pagination
+          />
+        </Stack>
+      }
     </Container>
   );
 }
