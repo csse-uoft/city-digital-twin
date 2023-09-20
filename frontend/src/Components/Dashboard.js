@@ -196,17 +196,32 @@ function Dashboard() {
     setIndicatorData({});
 
     try {
-      const response = await axios.post('http://localhost:3000/api/4', {
+      await axios.post('http://localhost:3000/api/4', {
         cityName: cityURLs[adminURLs['currCity']],
         adminType: currentAdminType,
         adminInstance: [currentAdminInstance],
         indicatorName: indicatorURLs[selectedIndicators['0']],
         startTime: years[0].value1,
         endTime: years[0].value2
+      }).then(response => {
+        console.log('final data', response.data['indicatorDataValues']);
+        setIndicatorData(response.data['indicatorDataValues']);
       });
-      console.log('final data', response.data['indicatorDataValues']);
+
+      // response.data['indicatorDataValues'].forEach((Instance, index) => {
+      //   setIndicatorData(prevIndicatorData => ({
+      //     ...prevIndicatorData,
+      //     [Object.keys(instance)[0]]: Instance
+      //   }));
+      //   setAreaURLs(prevAreaURLs => ({
+      //     ...prevAreaURLs,
+      //     [Instance['areaName']]: Instance['adminAreaInstance']
+      //   }));
       
-      setIndicatorData(response.data['indicatorDataValues']);
+      //   setArea(prevArea => [...prevArea, Instance['areaName']]);
+      // });
+      
+      // setIndicatorData(response.data['indicatorDataValues']);
     } catch (error) {
       console.error('POST Error:', error);
     }
