@@ -49,6 +49,7 @@ function Dashboard() {
   const [mapPolygons, setMapPolygons] = useState([]);
 
   const [showingVisualization, setShowingVisualization] = useState(false);
+  const [beginGeneration, setBeginGeneration] = useState(false);
 
   const [currentAdminType, setCurrentAdminType] = useState("");
   const [currentAdminInstance, setCurrentAdminInstance] = useState("");
@@ -56,6 +57,7 @@ function Dashboard() {
   const [tableColumns, setTableColumns] = useState(["Admin Area Name"]);
   const [tableData, setTableData] = useState([]);
 
+  
 
   const fetchCities = async () => {
     const response = await axios.get(
@@ -192,68 +194,6 @@ function Dashboard() {
     }
   }
 
-  const fetchData = async () => {
-    setIndicatorData({});
-
-    try {
-      const response = await axios.post('http://localhost:3000/api/4', {
-        cityName: cityURLs[adminURLs['currCity']],
-        adminType: currentAdminType,
-        adminInstance: [currentAdminInstance],
-        indicatorName: indicatorURLs[selectedIndicators['0']],
-        startTime: years[0].value1,
-        endTime: years[0].value2
-      });
-
-      console.log('final data', response.data['indicatorDataValues']);
-      setIndicatorData(response.data['indicatorDataValues']);
-    } catch (error) {
-      console.error('POST Error:', error);
-    }
-  };
-
-  useEffect(() => {
-    console.log("INDICATOR DATA STATE VAL:", indicatorData);
-
-    
-  }, [indicatorData]); 
-
-  // useEffect(() => {
-    // setMapPolygons([]);
-
-    // const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
-
-    // const newPolygons = Object.keys(locationURLs).map(key => (
-    //     <Polygon key={key} pathOptions={{ color: 'red' }} positions={locationURLs[key].coordinates}>
-    //     {console.log(selectedIndicators[0] === "")}
-    //     {
-            
-    //         selectedIndicators[0] === "" ? 
-    //             <>
-    //                 <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>No indicators selected</Tooltip>
-    //                 <Popup><strong>{currentAreaNames[key]}</strong> <br/>No indicators selected</Popup>
-    //             </>
-    //         :
-    //             <>
-    //                 <Tooltip sticky>
-    //                     <strong>{currentAreaNames[key]}</strong> <br/>
-    //                     {selectedIndicators[0]}: <br/>
-    //                     10 (2016)
-    //                 </Tooltip>
-    //                 <Popup>
-    //                     <strong>{currentAreaNames[key]}</strong> <br/>
-    //                     {selectedIndicators[0]}: <br/>
-    //                     10 (2016)
-    //                 </Popup>
-    //             </>
-    //     }
-            
-    //     </Polygon>
-    // ));
-
-    // setMapPolygons(newPolygons);
-  // }, [locationURLs,selectedIndicators]);
-
   useEffect(() => {
     fetchCities();
   }, []);
@@ -314,6 +254,7 @@ function Dashboard() {
     }));
   };
 
+
   const handleGenerateVisualization = async () => {
     const checkIfInputsFilled = () => {
       return (
@@ -326,12 +267,35 @@ function Dashboard() {
       );
     };
 
-    // if (!showingVisualization && checkIfInputsFilled()) {
-      
-    // } 
-
     if (checkIfInputsFilled()) {
-      fetchData();
+      setIndicatorData({});
+
+      try {
+        const response = await axios.post('http://localhost:3000/api/4', {
+          cityName: cityURLs[adminURLs['currCity']],
+          adminType: currentAdminType,
+          adminInstance: [currentAdminInstance],
+          indicatorName: indicatorURLs[selectedIndicators['0']],
+          startTime: years[0].value1,
+          endTime: years[0].value2
+        });
+
+        console.log('final data', response.data['indicatorDataValues']);
+        setIndicatorData(response.data['indicatorDataValues']);
+        setBeginGeneration(true);
+      } catch (error) {
+        console.error('POST Error:', error);
+      }
+    } else {
+      console.log("Can't generate visualization: missing data");
+    }
+  }
+
+  useEffect(() => {
+    if (beginGeneration) {
+      const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
+
+      // Set table information: column names and data
 
       var yearRange = [];
       for (let i = years[0].value1; i <= years[0].value2; ++i) {
@@ -339,15 +303,14 @@ function Dashboard() {
       }
       setTableColumns(["Admin Area Name"].concat(yearRange));
       
-      setTableData(Object.entries(indicatorData).map((instanceName, data) => (
-        [instanceName].concat(Object.entries(data).map((year, value) => value))
+      setTableData(Object.entries(indicatorData).map(([instanceURL, data]) => (
+        [currentAreaNames[instanceURL]].concat(Object.entries(data).map(([year, value]) => value))
       )));
+      
+      // Set map information
 
       setMapPolygons([]);
-
-      const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
       
-      console.log("INDICATOR DATA", indicatorData);
       const itemColor = (key) => {
         if (Object.keys(indicatorData).indexOf(key) !== -1) {
           return 'green'; 
@@ -356,12 +319,7 @@ function Dashboard() {
         }
       }
 
-      console.log("SIZE: ", Object.keys(locationURLs).length);
       const newPolygons = Object.keys(locationURLs).map(key => (
-        <>
-        {console.log("KEY:", key)}
-        {console.log("COLOR:", itemColor(key))}
-        {console.log("POSITION:", locationURLs[key].coordinates)}
         <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
           {
             Object.keys(indicatorData).indexOf(key) === -1 ? 
@@ -373,36 +331,34 @@ function Dashboard() {
               <>
                 <Tooltip sticky>
                   <strong>{currentAreaNames[key]}</strong> <br/>
-                  {selectedIndicators[0]}:
-                  {indicatorData[indicatorURLs[selectedIndicators[0]]].map(([key, value]) => (
-                    <>
-                      <br/> {value} ({key})
-                    </>
+                  {selectedIndicators[0]}:<br/>
+                  {Object.entries(indicatorData[currentAdminInstance]).map(([year, value]) => (
+                    <div key={currentAreaNames[key]}>
+                      {value} ({year})
+                    </div>
                   ))}
                 </Tooltip>
                 <Popup>
                   <strong>{currentAreaNames[key]}</strong> <br/>
-                  {selectedIndicators[0]}: <br/>
-                  {indicatorData[indicatorURLs[selectedIndicators[0]]].map(([key, value]) => (
-                    <>
-                      <br/> {value} ({key})
-                    </>
+                  {selectedIndicators[0]}:<br/>
+                  {Object.entries(indicatorData[currentAdminInstance]).map(([year, value]) => (
+                    <div key={currentAreaNames[key]}>
+                      {value} ({year})
+                    </div>
                   ))}
                 </Popup>
               </>
           }   
         </Polygon>
-        </>
       ));
       setMapPolygons(newPolygons);
 
       if (!showingVisualization) {
         setShowingVisualization(true);
       }
-    } else {
-      console.log("Can't generate visualization: missing data");
+      setBeginGeneration(false);
     }
-  }
+  }, [indicatorData]); 
 
   return (
     <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
@@ -527,6 +483,7 @@ function Dashboard() {
 
       {showingVisualization && 
         <Stack spacing={3}>
+          <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close</Button>
           <MapContainer
             className="map"
             center={[43.651070, -79.347015]}
@@ -542,22 +499,7 @@ function Dashboard() {
 
             {mapPolygons}
           </MapContainer>
-          {/*
-          <DataGrid 
-            rows={tableData}
-            columns={tableColumns}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 10,
-                },
-              },
-            }}
-            pageSizeOptions={[5]}
-            checkboxSelection
-            disableRowSelectionOnClick
-          />
-          */}
+          {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
           <ThemeProvider theme={defaultTheme}>
             <MUIDataTable
               title={selectedIndicators[0]}
