@@ -46,7 +46,7 @@ function Dashboard() {
 
   const [indicatorData, setIndicatorData] = useState({});
 
-  const [mapPolygons, setMapPolygons] = useState([]);
+  const [mapPolygons, setMapPolygons] = useState({});
 
   const [showingVisualization, setShowingVisualization] = useState(false);
   const [beginGeneration, setBeginGeneration] = useState(false);
@@ -54,10 +54,15 @@ function Dashboard() {
   const [currentAdminType, setCurrentAdminType] = useState("");
   const [currentAdminInstance, setCurrentAdminInstance] = useState("");
 
-  const [tableColumns, setTableColumns] = useState(["Admin Area Name"]);
-  const [tableData, setTableData] = useState([]);
+  const [tableColumns, setTableColumns] = useState({});
+  const [tableData, setTableData] = useState({});
 
-  
+  class Table {
+    constructor(columns, data) {
+      this.columns = columns;
+      this.data = data;
+    }
+  }
 
   const fetchCities = async () => {
     const response = await axios.get(
@@ -226,28 +231,26 @@ function Dashboard() {
   }
 
   const handleUpdateYear = (id, startOrEnd, event) => {
-    // if (("" + event.target.value).length === 4) {
-      var temp = years.slice(0, id);
-      if (startOrEnd === "start") {
-        temp.push({
-          value1: event.target.value,
-          value2: years[id].value2,
-          id: id
-        });
-      } else {
-        temp.push({
-          value1: years[id].value1,
-          value2: event.target.value,
-          id: id
-        });
-      }
-      
-      if (years.slice(id+1).length !== 0) {
-        temp.push(years.slice(id+1));
-      }
-      
-      setYears(temp);
-    // }
+    var temp = years.slice(0, id);
+    if (startOrEnd === "start") {
+      temp.push({
+        value1: event.target.value,
+        value2: years[id].value2,
+        id: id
+      });
+    } else {
+      temp.push({
+        value1: years[id].value1,
+        value2: event.target.value,
+        id: id
+      });
+    }
+    
+    if (years.slice(id+1).length !== 0) {
+      temp.push(years.slice(id+1));
+    }
+    
+    setYears(temp);
   };
 
   const handleUpdateIndicators = (id, value) => {
@@ -264,9 +267,8 @@ function Dashboard() {
         typeof(adminURLs['currCity']) !== 'undefined' &&
         typeof(currentAdminType) === 'string' && currentAdminType !== '' &&
         typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
-        selectedIndicators['0'] !== '' &&
-        years[0].value1 !== -1 &&
-        years[0].value2 !== -1
+        Object.keys(selectedIndicators).every(index => {return selectedIndicators[index] !== ''}) &&
+        years.every((item) => {return item.value1 > 0 && item.value2 > 0})
       );
     };
 
@@ -274,17 +276,22 @@ function Dashboard() {
       setIndicatorData({});
 
       try {
-        const response = await axios.post('http://localhost:3000/api/4', {
-          cityName: cityURLs[adminURLs['currCity']],
-          adminType: currentAdminType,
-          adminInstance: [currentAdminInstance],
-          indicatorName: indicatorURLs[selectedIndicators['0']],
-          startTime: years[0].value1,
-          endTime: years[0].value2
-        });
-
-        console.log('final data', response.data['indicatorDataValues']);
-        setIndicatorData(response.data['indicatorDataValues']);
+        await Promise.all(Object.keys(selectedIndicators).map(async index => {
+          const response = await axios.post('http://localhost:3000/api/4', {
+            cityName: cityURLs[adminURLs['currCity']],
+            adminType: currentAdminType,
+            adminInstance: [currentAdminInstance],
+            indicatorName: indicatorURLs[selectedIndicators[index]],
+            startTime: years[parseInt(index)].value1,
+            endTime: years[parseInt(index)].value2
+          });
+          
+          console.log('final data', index, response.data['indicatorDataValues']);
+          setIndicatorData(prevData => ({
+            ...prevData,
+            [indicatorURLs[selectedIndicators[index]]]: response.data['indicatorDataValues']
+          }));
+        }));
         setBeginGeneration(true);
       } catch (error) {
         console.error('POST Error:', error);
@@ -295,66 +302,84 @@ function Dashboard() {
   }
 
   useEffect(() => {
-    if (beginGeneration) {
+    // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
+    if (beginGeneration && Object.keys(indicatorData).length === Object.keys(selectedIndicators).length) {
       const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
+      const currentIndicatorNames = Object.fromEntries(Object.entries(indicatorURLs).map(([key, value]) => [value, key]));
+      const indicatorIndices = Object.fromEntries(Object.entries(selectedIndicators).map(([key, value]) => [value, key]));
 
-      // Set table information: column names and data
+      setMapPolygons({});
+      setTableColumns({});
+      setTableData({});
 
-      var yearRange = [];
-      for (let i = years[0].value1; i <= years[0].value2; ++i) {
-        yearRange.push(i.toString());
-      }
-      setTableColumns(["Admin Area Name"].concat(yearRange));
-      
-      setTableData(Object.entries(indicatorData).map(([instanceURL, data]) => (
-        [currentAreaNames[instanceURL]].concat(Object.entries(data).map(([year, value]) => value))
-      )));
-      
-      // Set map information
-
-      setMapPolygons([]);
-      
-      const itemColor = (key) => {
-        if (Object.keys(indicatorData).indexOf(key) !== -1) {
-          return 'green'; 
-        } else {
-          return 'red';
+      Object.keys(indicatorData).forEach(indicator => {
+        var yearRange = [];
+        const ind = parseInt(indicatorIndices[currentIndicatorNames[indicator]]);
+        for (let i = years[ind].value1; i <= years[ind].value2; ++i) {
+          yearRange.push(i.toString());
         }
-      }
 
-      const newPolygons = Object.keys(locationURLs).map(key => (
-        <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
-          {
-            Object.keys(indicatorData).indexOf(key) === -1 ? 
-              <>
-                <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Tooltip>
-                <Popup><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Popup>
-              </>
-            :
-              <>
-                <Tooltip sticky>
-                  <strong>{currentAreaNames[key]}</strong> <br/>
-                  {selectedIndicators[0]}:<br/>
-                  {Object.entries(indicatorData[currentAdminInstance]).map(([year, value]) => (
-                    <div key={currentAreaNames[key]}>
-                      {value} ({year})
-                    </div>
-                  ))}
-                </Tooltip>
-                <Popup>
-                  <strong>{currentAreaNames[key]}</strong> <br/>
-                  {selectedIndicators[0]}:<br/>
-                  {Object.entries(indicatorData[currentAdminInstance]).map(([year, value]) => (
-                    <div key={currentAreaNames[key]}>
-                      {value} ({year})
-                    </div>
-                  ))}
-                </Popup>
-              </>
-          }   
-        </Polygon>
-      ));
-      setMapPolygons(newPolygons);
+        // Set table information: column names and data
+        setTableColumns(prevColumns => ({
+          ...prevColumns,
+          [indicator]: ["Admin Area Name"].concat(yearRange)
+        }));
+
+
+        setTableData(prevData => ({
+          ...prevData,
+          [indicator]: Object.entries(indicatorData[indicator]).map(([instanceURL, data]) => (
+            [currentAreaNames[instanceURL]].concat(Object.entries(data).map(([year, value]) => value))
+          ))
+        }));
+        
+        // Set map information
+
+        const itemColor = (key) => {
+          if (Object.keys(indicatorData[indicator]).indexOf(key) !== -1) {
+            return 'green'; 
+          } else {
+            return 'red';
+          }
+        }
+
+        const newPolygons = Object.keys(locationURLs).map(key => (
+          <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
+            {
+              Object.keys(indicatorData[indicator]).indexOf(key) === -1 ? 
+                <>
+                  <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Tooltip>
+                  <Popup><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Popup>
+                </>
+              :
+                <>
+                  <Tooltip sticky>
+                    <strong>{currentAreaNames[key]}</strong> <br/>
+                    {selectedIndicators[ind]}:<br/>
+                    {Object.entries(indicatorData[indicator][currentAdminInstance]).map(([year, value]) => (
+                      <div key={currentAreaNames[key]}>
+                        {value} ({year})
+                      </div>
+                    ))}
+                  </Tooltip>
+                  <Popup>
+                    <strong>{currentAreaNames[key]}</strong> <br/>
+                    {selectedIndicators[ind]}:<br/>
+                    {Object.entries(indicatorData[indicator][currentAdminInstance]).map(([year, value]) => (
+                      <div key={currentAreaNames[key]}>
+                        {value} ({year})
+                      </div>
+                    ))}
+                  </Popup>
+                </>
+            }   
+          </Polygon>
+        ));
+        setMapPolygons(oldPolygons => ({
+          ...oldPolygons,
+          [indicator]: {polygons:newPolygons, index:ind}
+        }));
+      });
 
       if (!showingVisualization) {
         setShowingVisualization(true);
@@ -494,7 +519,40 @@ function Dashboard() {
       {showingVisualization && 
         <Stack spacing={3}>
           <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close</Button>
-          <MapContainer
+          
+          {Object.keys(mapPolygons).map(indicator => (
+            <>
+              <MapContainer
+                className="map"
+                center={[43.651070, -79.347015]}
+                zoom={10}
+                minZoom={3}
+                maxZoom={19}
+                maxBounds={[[-85.06, -180], [85.06, 180]]}
+                scrollWheelZoom={true}>
+                <TileLayer
+                  attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
+                  url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+
+                {mapPolygons[indicator].polygons}
+              </MapContainer>
+
+              {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
+              <ThemeProvider theme={defaultTheme}>
+                <MUIDataTable
+                  title={selectedIndicators[mapPolygons[indicator].index]}
+                  columns={tableColumns[indicator]}
+                  data={tableData[indicator]}
+                  options={{
+                    filterType: 'checkbox'
+                  }}
+                  pagination
+                />
+              </ThemeProvider>
+            </>
+          ))}
+          {/* <MapContainer
             className="map"
             center={[43.651070, -79.347015]}
             zoom={10}
@@ -508,10 +566,10 @@ function Dashboard() {
             />
 
             {mapPolygons}
-          </MapContainer>
+          </MapContainer> */}
 
           {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-          <ThemeProvider theme={defaultTheme}>
+          {/* <ThemeProvider theme={defaultTheme}>
             <MUIDataTable
               title={selectedIndicators[0]}
               columns={tableColumns}
@@ -521,7 +579,7 @@ function Dashboard() {
               }}
               pagination
             />
-          </ThemeProvider>
+          </ThemeProvider> */}
         </Stack>
       }
     </Container>
