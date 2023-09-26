@@ -6,12 +6,9 @@ import 'leaflet/dist/leaflet.css';
 import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet';
 import {useMap} from 'react-leaflet/hooks';
 import L from 'leaflet';
-import MarkerClusterGroup from "react-leaflet-cluster";
 import Wkt from 'wicket';
-import { DataGrid } from '@mui/x-data-grid';
 import MUIDataTable from "mui-datatables";
-// import { createTheme, useTheme } from '@mui/material/styles';
-
+import { red } from "@mui/material/colors";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -25,7 +22,6 @@ function Dashboard() {
   const defaultTheme = createTheme();
 
   const [years, setYears] = useState([{value1: -1, value2: -1, id: 0}]);
-  let options = ['The Godfather', 'Pulp Fiction'];
 
   const [cities, setCities] = useState([]);
   const [cityURLs, setCityURLs] = useState({});
@@ -37,8 +33,8 @@ function Dashboard() {
   const [areaURLs, setAreaURLs] = useState({});
 
   const [indicators, setIndicators] = useState([]);
+
   const [indicatorURLs, setIndicatorURLs] = useState({});
-  const [indicatorNames, setIndicatorNames] = useState({});
 
   const [locationURLs, setLocationURLs] = useState({});
 
@@ -56,6 +52,8 @@ function Dashboard() {
 
   const [tableColumns, setTableColumns] = useState({});
   const [tableData, setTableData] = useState({});
+
+  const [showVisError, setShowVisError] = useState(false);
 
   class Table {
     constructor(columns, data) {
@@ -121,11 +119,6 @@ function Dashboard() {
             ...prevIndicatorURLs,
             [indName]: URL
           }));
-
-          setIndicatorNames(prevIndicatorNames => ({
-            ...prevIndicatorNames,
-            [URL]: indName
-          }));
         
           setIndicators(prevIndicator => [...prevIndicator, indName]);
         });
@@ -135,7 +128,6 @@ function Dashboard() {
       }
     } else {
       setIndicatorURLs({});
-      setIndicatorNames({});
       setIndicators([]);
     }
   }
@@ -199,6 +191,7 @@ function Dashboard() {
     }
   }
 
+  // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities();
   }, []);
@@ -273,6 +266,10 @@ function Dashboard() {
     };
 
     if (checkIfInputsFilled()) {
+      if (showVisError) {
+        setShowVisError(false);
+      }
+      
       setIndicatorData({});
 
       try {
@@ -297,6 +294,7 @@ function Dashboard() {
         console.error('POST Error:', error);
       }
     } else {
+      setShowVisError(true);
       console.log("Can't generate visualization: missing data");
     }
   }
@@ -472,12 +470,6 @@ function Dashboard() {
                         )}
                       /> 
                     ))} 
-                    {/* <Autocomplete
-                        disablePortal
-                        options={indicators}
-                        sx={{ maxWidth: 270, minWidth: 220 }}
-                        renderInput={(params) => <TextField {...params} label={`Select Indicator #${1}*`}/>}
-                        /> */}
                     <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} 
                             onClick={() => {
                               handleAddIndicator();
@@ -497,15 +489,6 @@ function Dashboard() {
                       <TextField type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event)} variant="outlined" sx={{width: '130px'}}/>
                     </Box>
                   ))}
-                  {/* <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                    {(
-                      (years.length < indicators.length)
-                      ? 
-                      <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}><AddIcon /></Button>
-                      :
-                      <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}disabled><AddIcon /></Button>
-                    )}
-                  </Box> */}
                 </Stack>
               </Grid>
             </Grid>
@@ -515,6 +498,10 @@ function Dashboard() {
           <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} onClick={() => handleGenerateVisualization()}>Generate Visualization</Button>
         </Box>
       </Stack>
+
+      {showVisError &&
+        <Typography variant="h6" align="center" sx={{color:red}}>ERROR: Could not generate visualization due to missing/improper data.<br/>Please check form inputs.</Typography>  
+      }
 
       {showingVisualization && 
         <Stack spacing={3}>
@@ -552,34 +539,6 @@ function Dashboard() {
               </ThemeProvider>
             </>
           ))}
-          {/* <MapContainer
-            className="map"
-            center={[43.651070, -79.347015]}
-            zoom={10}
-            minZoom={3}
-            maxZoom={19}
-            maxBounds={[[-85.06, -180], [85.06, 180]]}
-            scrollWheelZoom={true}>
-            <TileLayer
-              attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-
-            {mapPolygons}
-          </MapContainer> */}
-
-          {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-          {/* <ThemeProvider theme={defaultTheme}>
-            <MUIDataTable
-              title={selectedIndicators[0]}
-              columns={tableColumns}
-              data={tableData}
-              options={{
-                filterType: 'checkbox'
-              }}
-              pagination
-            />
-          </ThemeProvider> */}
         </Stack>
       }
     </Container>
