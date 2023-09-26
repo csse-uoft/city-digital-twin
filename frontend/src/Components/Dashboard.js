@@ -241,8 +241,11 @@ function Dashboard() {
           id: id
         });
       }
-      temp.push(years.slice(id+1));
-
+      
+      if (years.slice(id+1).length !== 0) {
+        temp.push(years.slice(id+1));
+      }
+      
       setYears(temp);
     // }
   };
