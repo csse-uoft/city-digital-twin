@@ -263,7 +263,7 @@ function Dashboard() {
         typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
         selectedIndicators['0'] !== '' &&
         years[0].value1 !== -1 &&
-        years[0].value1 !== -1
+        years[0].value2 !== -1
       );
     };
 
@@ -450,7 +450,14 @@ function Dashboard() {
                         sx={{ maxWidth: 270, minWidth: 220 }}
                         renderInput={(params) => <TextField {...params} label={`Select Indicator #${1}*`}/>}
                         /> */}
-                    <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} onClick={() => handleAddIndicator()}><AddIcon /></Button>
+                    <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} 
+                            onClick={() => {
+                              handleAddIndicator();
+                              handleAddYears();
+                            }}
+                    >
+                      <AddIcon />
+                    </Button>
                   </Stack>
                 </Box>
               </Grid>
@@ -462,7 +469,7 @@ function Dashboard() {
                       <TextField type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event)} variant="outlined" sx={{width: '130px'}}/>
                     </Box>
                   ))}
-                  <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                  {/* <Box sx={{display: 'flex', justifyContent: 'center'}}>
                     {(
                       (years.length < indicators.length)
                       ? 
@@ -470,7 +477,7 @@ function Dashboard() {
                       :
                       <Button variant="outlined" sx={{width: '270px', height: '56px'}} onClick={() => handleAddYears()}disabled><AddIcon /></Button>
                     )}
-                  </Box>
+                  </Box> */}
                 </Stack>
               </Grid>
             </Grid>
@@ -499,6 +506,7 @@ function Dashboard() {
 
             {mapPolygons}
           </MapContainer>
+
           {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
           <ThemeProvider theme={defaultTheme}>
             <MUIDataTable
@@ -511,8 +519,6 @@ function Dashboard() {
               pagination
             />
           </ThemeProvider>
-          
-          
         </Stack>
       }
     </Container>
