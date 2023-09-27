@@ -9,6 +9,7 @@ import L from 'leaflet';
 import Wkt from 'wicket';
 import MUIDataTable from "mui-datatables";
 import { red } from "@mui/material/colors";
+import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -52,6 +53,8 @@ function Dashboard() {
 
   const [tableColumns, setTableColumns] = useState({});
   const [tableData, setTableData] = useState({});
+
+  const [chartData, setChartData] = useState({});
 
   const [showVisError, setShowVisError] = useState(false);
 
@@ -253,7 +256,6 @@ function Dashboard() {
     }));
   };
 
-
   const handleGenerateVisualization = async () => {
     const checkIfInputsFilled = () => {
       return (
@@ -264,6 +266,8 @@ function Dashboard() {
         years.every((item) => {return item.value1 > 0 && item.value2 > 0})
       );
     };
+
+    setMapPolygons([]);
 
     if (checkIfInputsFilled()) {
       if (showVisError) {
@@ -296,6 +300,7 @@ function Dashboard() {
     } else {
       setShowVisError(true);
       console.log("Can't generate visualization: missing data");
+      setShowingVisualization(false);
     }
   }
 
@@ -309,6 +314,7 @@ function Dashboard() {
       setMapPolygons({});
       setTableColumns({});
       setTableData({});
+      setChartData({});
 
       Object.keys(indicatorData).forEach(indicator => {
         var yearRange = [];
@@ -330,6 +336,16 @@ function Dashboard() {
             [currentAreaNames[instanceURL]].concat(Object.entries(data).map(([year, value]) => value))
           ))
         }));
+
+        // Set chart information
+        const tempChartData = yearRange.map(year => ({
+          name: year,
+          value: indicatorData[indicator][currentAdminInstance][year]
+        }));
+        setChartData(oldData => ({
+          ...oldData,
+          [indicator]: tempChartData
+        }));
         
         // Set map information
 
@@ -340,6 +356,7 @@ function Dashboard() {
             return 'red';
           }
         }
+
 
         const newPolygons = Object.keys(locationURLs).map(key => (
           <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
@@ -500,7 +517,7 @@ function Dashboard() {
       </Stack>
 
       {showVisError &&
-        <Typography variant="h6" align="center" sx={{color:red}}>ERROR: Could not generate visualization due to missing/improper data.<br/>Please check form inputs.</Typography>  
+        <Typography variant="h6" align="center" sx={{color:"red"}}>ERROR: Could not generate visualization due to missing/improper data.<br/>Please check form inputs.</Typography>  
       }
 
       {showingVisualization && 
@@ -508,36 +525,62 @@ function Dashboard() {
           <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close</Button>
           
           {Object.keys(mapPolygons).map(indicator => (
-            <>
-              <MapContainer
-                className="map"
-                center={[43.651070, -79.347015]}
-                zoom={10}
-                minZoom={3}
-                maxZoom={19}
-                maxBounds={[[-85.06, -180], [85.06, 180]]}
-                scrollWheelZoom={true}>
-                <TileLayer
-                  attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-                  url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+            <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
+              <Stack spacing={3}>
+                <Typography variant="h4" align="center" sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
+                <MapContainer
+                  className="map"
+                  center={[43.651070, -79.347015]}
+                  zoom={10}
+                  minZoom={3}
+                  maxZoom={19}
+                  maxBounds={[[-85.06, -180], [85.06, 180]]}
+                  scrollWheelZoom={true}>
+                  <TileLayer
+                    attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
+                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
 
-                {mapPolygons[indicator].polygons}
-              </MapContainer>
+                  {mapPolygons[indicator].polygons}
+                </MapContainer>
 
-              {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-              <ThemeProvider theme={defaultTheme}>
-                <MUIDataTable
-                  title={selectedIndicators[mapPolygons[indicator].index]}
-                  columns={tableColumns[indicator]}
-                  data={tableData[indicator]}
-                  options={{
-                    filterType: 'checkbox'
-                  }}
-                  pagination
-                />
-              </ThemeProvider>
-            </>
+                {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
+                <ThemeProvider theme={defaultTheme}>
+                  <MUIDataTable
+                    title={selectedIndicators[mapPolygons[indicator].index]}
+                    columns={tableColumns[indicator]}
+                    data={tableData[indicator]}
+                    options={{
+                      filterType: 'checkbox'
+                    }}
+                    pagination
+                  />
+                </ThemeProvider>
+
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <Line type="monotone" dataKey="value" stroke="#8884d8" />
+                    <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <ChartTooltip/>
+                  </LineChart>
+                </ResponsiveContainer>
+
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <ChartTooltip />
+                    <Legend />
+                    <Bar dataKey="value" fill="#8884d8" />
+                  </BarChart>
+              </ResponsiveContainer>
+              </Stack>
+            </Paper>
+
+            
           ))}
         </Stack>
       }
