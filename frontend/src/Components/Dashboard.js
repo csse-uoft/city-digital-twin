@@ -528,6 +528,20 @@ function Dashboard() {
             <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
               <Stack spacing={3}>
                 <Typography variant="h4" align="center" sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
+                
+                {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
+                <ThemeProvider theme={defaultTheme}>
+                  <MUIDataTable
+                    title={selectedIndicators[mapPolygons[indicator].index]}
+                    columns={tableColumns[indicator]}
+                    data={tableData[indicator]}
+                    options={{
+                      filterType: 'checkbox'
+                    }}
+                    pagination
+                  />
+                </ThemeProvider>
+                
                 <MapContainer
                   className="map"
                   center={[43.651070, -79.347015]}
@@ -544,18 +558,7 @@ function Dashboard() {
                   {mapPolygons[indicator].polygons}
                 </MapContainer>
 
-                {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                <ThemeProvider theme={defaultTheme}>
-                  <MUIDataTable
-                    title={selectedIndicators[mapPolygons[indicator].index]}
-                    columns={tableColumns[indicator]}
-                    data={tableData[indicator]}
-                    options={{
-                      filterType: 'checkbox'
-                    }}
-                    pagination
-                  />
-                </ThemeProvider>
+                
 
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
