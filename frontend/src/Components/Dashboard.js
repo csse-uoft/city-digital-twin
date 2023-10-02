@@ -10,6 +10,11 @@ import Wkt from 'wicket';
 import MUIDataTable from "mui-datatables";
 import { red } from "@mui/material/colors";
 import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
+import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
+import MapView from "./MapView";
+import IndicatorTable from "./Table";
+
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -65,138 +70,10 @@ function Dashboard() {
     }
   }
 
-  const fetchCities = async () => {
-    const response = await axios.get(
-      `http://localhost:3000/api/0`
-    );
-
-    response.data.cityNames.forEach((URL, index) => {
-      const [, cityName] = URL.split('#'); 
-      
-      setCityURLs(prevCityURLs => ({
-        ...prevCityURLs,
-        [cityName]: URL
-      }));
-      
-      setCities([...cities, cityName]);
-    })
-  }
-  
-  const fetchAdministration = async (city) => {
-    if (city){
-      try {
-        const response = await axios.post('http://localhost:3000/api/2', {
-          cityName: cityURLs[city]
-        });
-        setAdminURLs({'currCity': city}) //The current city is stored in the adminURL['currCity']
-        response.data.adminAreaTypeNames.forEach((URL, index) => {
-          const [, adminName] = URL.split('#'); 
-        
-          setAdminURLs(prevAdminURLs => ({
-            ...prevAdminURLs,
-            [adminName]: URL
-          }));
-        
-          setAdmin(prevAdmin => [...prevAdmin, adminName]);
-        });
-      } catch (error) {
-        console.error('POST Error:', error);
-      }
-    } else{
-      setAdminURLs({});
-      setAdmin([]);
-    }
-  }
-
-  const fetchIndicators = async (city) => {
-    if (city){
-      try {
-        const response = await axios.post('http://localhost:3000/api/1', {
-          cityName: cityURLs[city]
-        });
-        console.log('response', response.data.indicatorNames);
-        response.data.indicatorNames.forEach((URL, index) => {
-          const [, indName] = URL.split('#'); 
-        
-          setIndicatorURLs(prevIndicatorURLs => ({
-            ...prevIndicatorURLs,
-            [indName]: URL
-          }));
-        
-          setIndicators(prevIndicator => [...prevIndicator, indName]);
-        });
-        console.log('indicators', indicators)
-      } catch (error) {
-        console.error('POST Error:', error);
-      }
-    } else {
-      setIndicatorURLs({});
-      setIndicators([]);
-    }
-  }
-
-  const fetchArea= async (admin) => {
-    setAreaURLs({});
-    setArea([]);
-    if (admin){
-      try {
-        const response = await axios.post('http://localhost:3000/api/3', {
-          cityName: cityURLs[adminURLs['currCity']],
-          adminType: adminURLs[admin]
-        });
-        console.log('admin instances', response.data['adminAreaInstanceNames'])
-        response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
-          setAreaURLs(prevAreaURLs => ({
-            ...prevAreaURLs,
-            [Instance['areaName']]: Instance['adminAreaInstance']
-          }));
-        
-          setArea(prevArea => [...prevArea, Instance['areaName']]);
-        });
-      } catch (error) {
-        console.error('POST Error:', error);
-      }
-    } else {
-      setAreaURLs({});
-      setArea([]);
-    }
-  }
-
-  const fetchLocations = async admin => {
-    setLocationURLs({});
-    if (admin) {
-      try {
-        const response = await axios.post('http://localhost:3000/api/6', {
-          cityName: cityURLs[adminURLs['currCity']],
-          adminType: adminURLs[admin]
-        });
-        console.log('admin instances', response.data['adminAreaInstanceNames']);
-
-        const updatedLocationURLs = {...locationURLs};
-        response.data['adminAreaInstanceNames'].forEach((Instance, index) => {
-          var wkt = new Wkt.Wkt();
-          wkt.read(Instance['areaLocation']);
-
-          var flipped = wkt.toJson();
-
-          // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
-          // The code requires Lat/Lon, so flip it back.
-          flipped.coordinates = flipped.coordinates.map(innerArray => innerArray.map(coords => [coords[1], coords[0]]));
-          updatedLocationURLs[Instance['adminAreaInstance']] = flipped;             
-        });
-        setLocationURLs(updatedLocationURLs);
-        console.log("locations", updatedLocationURLs);
-      } catch (error) {
-        console.error('POST Error:', error);
-      }
-    } else {
-      setLocationURLs({});
-    }
-  }
 
   // Upon initial page load, fetch list of cities
   useEffect(() => {
-    fetchCities();
+    fetchCities(setCityURLs, setCities, cities);
   }, []);
 
   useEffect(() => {
@@ -205,104 +82,8 @@ function Dashboard() {
     console.log('areaurl', areaURLs);
   }, [cityURLs, adminURLs, areaURLs]);
 
-  const handleAddIndicator = () => {
-    const newId = Object.keys(selectedIndicators).length;
-    const newValue = '';
-    
-    const newSelectedIndicators = { ...selectedIndicators, [newId]: newValue };
-    setSelectedIndicators(newSelectedIndicators);
-    
-    console.log('add indicator:', newSelectedIndicators);
-  };
-
-  const handleAddYears = () => {
-    const temp = [...years];
-    temp.push({
-      value1: -1,
-      value2: -1,
-      id: years.length
-    });
-    setYears(temp);
-    console.log(temp);
-  }
-
-  const handleUpdateYear = (id, startOrEnd, event) => {
-    var temp = years.slice(0, id);
-    if (startOrEnd === "start") {
-      temp.push({
-        value1: event.target.value,
-        value2: years[id].value2,
-        id: id
-      });
-    } else {
-      temp.push({
-        value1: years[id].value1,
-        value2: event.target.value,
-        id: id
-      });
-    }
-    
-    if (years.slice(id+1).length !== 0) {
-      temp.push(years.slice(id+1));
-    }
-    
-    setYears(temp);
-  };
-
-  const handleUpdateIndicators = (id, value) => {
-    setSelectedIndicators(prevState => ({
-      ...prevState,
-      [id]: value
-    }));
-  };
-
-  const handleGenerateVisualization = async () => {
-    const checkIfInputsFilled = () => {
-      return (
-        typeof(adminURLs['currCity']) !== 'undefined' &&
-        typeof(currentAdminType) === 'string' && currentAdminType !== '' &&
-        typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
-        Object.keys(selectedIndicators).every(index => {return selectedIndicators[index] !== ''}) &&
-        years.every((item) => {return item.value1 > 0 && item.value2 > 0})
-      );
-    };
-
-    setMapPolygons([]);
-
-    if (checkIfInputsFilled()) {
-      if (showVisError) {
-        setShowVisError(false);
-      }
-      
-      setIndicatorData({});
-
-      try {
-        await Promise.all(Object.keys(selectedIndicators).map(async index => {
-          const response = await axios.post('http://localhost:3000/api/4', {
-            cityName: cityURLs[adminURLs['currCity']],
-            adminType: currentAdminType,
-            adminInstance: [currentAdminInstance],
-            indicatorName: indicatorURLs[selectedIndicators[index]],
-            startTime: years[parseInt(index)].value1,
-            endTime: years[parseInt(index)].value2
-          });
-          
-          console.log('final data', index, response.data['indicatorDataValues']);
-          setIndicatorData(prevData => ({
-            ...prevData,
-            [indicatorURLs[selectedIndicators[index]]]: response.data['indicatorDataValues']
-          }));
-        }));
-        setBeginGeneration(true);
-      } catch (error) {
-        console.error('POST Error:', error);
-      }
-    } else {
-      setShowVisError(true);
-      console.log("Can't generate visualization: missing data");
-      setShowingVisualization(false);
-    }
-  }
+  
+  
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
@@ -421,8 +202,8 @@ function Dashboard() {
                       id="city-input"
                       onChange={
                         (event, newValue) => {
-                          fetchAdministration(newValue);
-                          fetchIndicators(newValue);
+                          fetchAdministration(newValue, cityURLs, setAdminURLs, setAdmin);
+                          fetchIndicators(newValue, cityURLs, setIndicatorURLs, setIndicators, indicators);
                         }
                       }
                       options={cities}
@@ -439,8 +220,8 @@ function Dashboard() {
                     <Autocomplete
                       disablePortal
                       onChange={(event, newValue) => {
-                        fetchArea(newValue);
-                        fetchLocations(newValue);
+                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea);
+                        fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
                         setCurrentAdminType(adminURLs[newValue]);
                       }}
                       options={admin}
@@ -475,7 +256,7 @@ function Dashboard() {
                     {Object.entries(selectedIndicators).map(([ index, value ]) => (
                       <Autocomplete
                         disablePortal
-                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue)}
+                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
                         key={index}
                         options={indicators}
                         sx={{ maxWidth: 270, minWidth: 220}}
@@ -489,8 +270,8 @@ function Dashboard() {
                     ))} 
                     <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} 
                             onClick={() => {
-                              handleAddIndicator();
-                              handleAddYears();
+                              handleAddIndicator(selectedIndicators, setSelectedIndicators);
+                              handleAddYears(years, setYears);
                             }}
                     >
                       <AddIcon />
@@ -502,8 +283,8 @@ function Dashboard() {
                 <Stack spacing={5} sx={{}}>
                   {years.map(({ id, value1, value2 }) => (
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                      <TextField type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
-                      <TextField type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event)} variant="outlined" sx={{width: '130px'}}/>
+                      <TextField type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
+                      <TextField type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)} variant="outlined" sx={{width: '130px'}}/>
                     </Box>
                   ))}
                 </Stack>
@@ -512,7 +293,8 @@ function Dashboard() {
           </Paper>
         </Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-          <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} onClick={() => handleGenerateVisualization()}>Generate Visualization</Button>
+          <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} 
+          onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstance, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button>
         </Box>
       </Stack>
 
@@ -530,33 +312,9 @@ function Dashboard() {
                 <Typography variant="h4" align="center" sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
                 
                 {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                <ThemeProvider theme={defaultTheme}>
-                  <MUIDataTable
-                    title={selectedIndicators[mapPolygons[indicator].index]}
-                    columns={tableColumns[indicator]}
-                    data={tableData[indicator]}
-                    options={{
-                      filterType: 'checkbox'
-                    }}
-                    pagination
-                  />
-                </ThemeProvider>
-                
-                <MapContainer
-                  className="map"
-                  center={[43.651070, -79.347015]}
-                  zoom={10}
-                  minZoom={3}
-                  maxZoom={19}
-                  maxBounds={[[-85.06, -180], [85.06, 180]]}
-                  scrollWheelZoom={true}>
-                  <TileLayer
-                    attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
+                <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
+                <MapView mapPolygons = {mapPolygons} indicator = {indicator} />
 
-                  {mapPolygons[indicator].polygons}
-                </MapContainer>
 
                 
 
