@@ -9,10 +9,11 @@ import L from 'leaflet';
 import Wkt from 'wicket';
 import MUIDataTable from "mui-datatables";
 import { red } from "@mui/material/colors";
-import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
+import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie } from 'recharts';
 import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
 import MapView from "./MapView";
 import IndicatorTable from "./Table";
+import ActivePie from "./ActivePie";
 
 
 
@@ -62,6 +63,8 @@ function Dashboard() {
   const [chartData, setChartData] = useState({});
 
   const [showVisError, setShowVisError] = useState(false);
+
+  
 
   class Table {
     constructor(columns, data) {
@@ -310,34 +313,69 @@ function Dashboard() {
             <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
               <Stack spacing={3}>
                 <Typography variant="h4" align="center" sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
-                
-                {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
                 <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
-                <MapView mapPolygons = {mapPolygons} indicator = {indicator} />
+
+                {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
+                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                      <Autocomplete
+                        disablePortal
+                        id="change-graph"
+                        options={['Bar', 'Pie', 'Line']}
+                        sx={{ maxWidth: 260, minWidth: 190 }}
+                        renderInput={(params) => <TextField {...params} label="Select Graph 1 Type" />}
+                      />
+                      <Box sx={{margin: '20px'}}></Box>
+                      <Autocomplete
+                        disablePortal
+                        id="change-graph"
+                        options={['Bar', 'Pie', 'Line']}
+                        sx={{ maxWidth: 260, minWidth: 190 }}
+                        renderInput={(params) => <TextField {...params} label="Select Graph 2 Type" />}
+                      />
+                    </Box>
+                    
+                <Grid container >
+                  
+                  <Grid sm='6'>
+                    <Box sx={{height: '100px'}}>
+                      <MapView mapPolygons = {mapPolygons} indicator = {indicator} />
+                    </Box>
+
+                  </Grid>
+                  <Grid sm='6'>
+
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <Line type="monotone" dataKey="value" stroke="#8884d8" />
+                        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <ChartTooltip/>
+                      </LineChart>
+                    </ResponsiveContainer>
+                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+
+                      <ActivePie data={chartData[indicator]}></ActivePie>
+                    </Box>
+                    {/* <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <ChartTooltip />
+                        <Legend />
+                        <Bar dataKey="value" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer> */}
+                  </Grid>
 
 
-                
+                  
 
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                    <Line type="monotone" dataKey="value" stroke="#8884d8" />
-                    <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <ChartTooltip/>
-                  </LineChart>
-                </ResponsiveContainer>
 
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <ChartTooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill="#8884d8" />
-                  </BarChart>
-              </ResponsiveContainer>
+
+
+                </Grid>
               </Stack>
             </Paper>
 
