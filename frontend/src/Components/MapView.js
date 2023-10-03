@@ -6,6 +6,7 @@ import { MapContainer, TileLayer } from "react-leaflet";
 function MapView({mapPolygons, indicator}) {
   return (
     <MapContainer
+      style={{ minHeight: '100%'}}
       className="map"
       center={[43.651070, -79.347015]}
       zoom={10}
