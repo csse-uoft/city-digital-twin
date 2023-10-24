@@ -57,7 +57,8 @@ function Dashboard() {
   const [currentAdminType, setCurrentAdminType] = useState("");
   const [currentAdminInstance, setCurrentAdminInstance] = useState("");
   const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
-  const [currentAreaNames, setCurrentAreaNames] = useState([]);
+  const [currentAreaNames, setCurrentAreaNames] = useState({});
+  const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
 
   const [tableColumns, setTableColumns] = useState({});
   const [tableData, setTableData] = useState({});
@@ -83,7 +84,7 @@ function Dashboard() {
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
     if (beginGeneration && Object.keys(indicatorData).length === Object.keys(selectedIndicators).length) {
-      const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
+      // const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
       const currentIndicatorNames = Object.fromEntries(Object.entries(indicatorURLs).map(([key, value]) => [value, key]));
       const indicatorIndices = Object.fromEntries(Object.entries(selectedIndicators).map(([key, value]) => [value, key]));
 
@@ -114,10 +115,24 @@ function Dashboard() {
         }));
 
         // Set chart information
-        const tempChartData = yearRange.map(year => ({
-          name: year,
-          value: currentAdminInstances.map(instance => indicatorData[indicator][instance][year])
-        }));
+        const tempChartData = yearRange.map(year => {
+          const res = {name: year};
+
+          const val = Object.fromEntries(currentAdminInstances.map(instance => (
+            [currentAreaNames[instance], indicatorData[indicator][instance][year]]
+          )))
+          
+          return {...res, ...val};
+        }
+        // ({
+        //   name: year,
+          
+        //   value: currentAdminInstances.map(instance => indicatorData[indicator][instance][year])
+        // })
+        );
+
+        // value: indicatorData[indicator][currentAdminInstance[0]][year]
+
         setChartData(oldData => ({
           ...oldData,
           [indicator]: tempChartData
@@ -132,7 +147,6 @@ function Dashboard() {
             return 'red';
           }
         }
-
 
         const newPolygons = Object.keys(locationURLs).map(key => (
           <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
@@ -190,7 +204,7 @@ function Dashboard() {
       // On autofill we get a stringified value.
       // typeof value === 'string' ? value.split(',') : value,
     );
-    setCurrentAreaNames(String(event.target.value).split(','));
+    setCurrentSelectedAreas(String(event.target.value).split(','));
   };
 
   return (
@@ -234,7 +248,7 @@ function Dashboard() {
                     <Autocomplete
                       disablePortal
                       onChange={(event, newValue) => {
-                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea);
+                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames);
                         fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
                         setCurrentAdminType(adminURLs[newValue]);
                       }}
@@ -248,7 +262,7 @@ function Dashboard() {
                         labelId="select-admin-instances-label"
                         id="select-admin-instances"
                         multiple
-                        value={currentAreaNames}
+                        value={currentSelectedAreas}
                         renderValue={(selected) => selected.join(', ')}
                         onChange={(event, newValue) => {
                           handleChangeAreas(event);
@@ -259,15 +273,14 @@ function Dashboard() {
                         // MenuProps={MenuProps}
                       >
                         {area.map(a => (
-                          <MenuItem key={a}
-                          value={a}>
-                            <Checkbox checked={currentAreaNames.indexOf(a) > -1} />
+                          <MenuItem key={a} value={a}>
+                            <Checkbox checked={currentSelectedAreas.indexOf(a) > -1} />
                             {a}
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
-                    <Autocomplete
+                    {/* <Autocomplete
                       disablePortal
                       options={area}
                       sx={{ maxWidth: 270, minWidth: 220 }}
@@ -278,7 +291,7 @@ function Dashboard() {
                         console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
                       }}
                       renderInput={(params) => <TextField {...params} label="Specific Area(s):" />}
-                    />
+                    /> */}
                   </Stack>
                 </Box>
               </Grid>
@@ -309,11 +322,13 @@ function Dashboard() {
                         )}
                       /> 
                     ))} 
-                    <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} 
-                            onClick={() => {
-                              handleAddIndicator(selectedIndicators, setSelectedIndicators);
-                              handleAddYears(years, setYears);
-                            }}
+                    <Button 
+                      variant="outlined" 
+                      sx={{maxWidth: '270px', height: '56px'}} 
+                      onClick={() => {
+                        handleAddIndicator(selectedIndicators, setSelectedIndicators);
+                        handleAddYears(years, setYears);
+                      }}
                     >
                       <AddIcon />
                     </Button>
@@ -384,7 +399,10 @@ function Dashboard() {
 
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        <Line type="monotone" dataKey="value" stroke="#8884d8" />
+                        {currentAdminInstances.map(instance => (
+                          <Line type="monotone" dataKey={currentAreaNames[instance]} stroke="#8884d8" />
+                        ))}
+                        {/* <Line type="monotone" dataKey="value" stroke="#8884d8" /> */}
                         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -392,7 +410,6 @@ function Dashboard() {
                       </LineChart>
                     </ResponsiveContainer>
                     <Box sx={{display: 'flex', justifyContent: 'center'}}>
-
                       <ActivePie data={chartData[indicator]}></ActivePie>
                     </Box>
                     {/* <ResponsiveContainer width="100%" height={400}>
