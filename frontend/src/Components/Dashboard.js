@@ -66,26 +66,6 @@ function Dashboard() {
 
   const [showVisError, setShowVisError] = useState(false);
 
-  
-
-  class Table {
-    constructor(columns, data) {
-      this.columns = columns;
-      this.data = data;
-    }
-  }
-
-  const ITEM_HEIGHT = 48;
-  const ITEM_PADDING_TOP = 8;
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        width: 250,
-      },
-    },
-  };
-
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs, setCities, cities);
@@ -167,22 +147,22 @@ function Dashboard() {
                   <Tooltip sticky>
                     <strong>{currentAreaNames[key]}</strong> <br/>
                     {selectedIndicators[ind]}:<br/>
-                    {currentAdminInstances.map(instance => (
-                      Object.entries(indicatorData[indicator][instance]).map(([year, value]) => (
+
+                    {Object.entries(indicatorData[indicator][key]).map(([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
                       </div>
-                    ))))}
+                    ))}                    
                   </Tooltip>
                   <Popup>
                     <strong>{currentAreaNames[key]}</strong> <br/>
                     {selectedIndicators[ind]}:<br/>
-                    {currentAdminInstances.map(instance => (
-                      Object.entries(indicatorData[indicator][instance]).map(([year, value]) => (
+
+                    {Object.entries(indicatorData[indicator][key]).map(([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
                       </div>
-                    ))))}
+                    ))}
                   </Popup>
                 </>
             }   
@@ -426,18 +406,9 @@ function Dashboard() {
                       </BarChart>
                     </ResponsiveContainer> */}
                   </Grid>
-
-
-                  
-
-
-
-
                 </Grid>
               </Stack>
             </Paper>
-
-            
           ))}
         </Stack>
       }
