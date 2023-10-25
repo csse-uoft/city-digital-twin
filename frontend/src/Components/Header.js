@@ -9,7 +9,7 @@ export function Header() {
     <div>
       <Stack direction="row" spacing={1} style={{borderBottomWidth:2, borderBottomStyle:"solid", paddingBottom:5}}>
         {/* <Logo style={{height:60}}/> */}
-        <InsertChartRoundedIcon style={{paddingTop:6, fontSize:55, color:"royalblue"}} />
+        <InsertChartRoundedIcon style={{paddingTop:6, fontSize:55, color:"navy"}} />
         <Typography variant="h5" style={{paddingTop:7, paddingLeft:5, fontWeight:"bold", fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:40}}>City Indicator Dashboard</Typography>
         <Stack direction="row" spacing={1}>
 
