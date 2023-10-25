@@ -272,7 +272,12 @@ function Dashboard() {
                         id="select-admin-instances"
                         multiple
                         value={currentSelectedAreas}
-                        renderValue={(selected) => selected.join(', ')}
+                        renderValue={(selected) => 
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                              <Chip key={value} label={value} />
+                            ))}
+                          </Box>}
                         onChange={(event, newValue) => {
                           handleChangeAreas(event);
                           // setCurrentAdminInstance(areaURLs[newValue]);
