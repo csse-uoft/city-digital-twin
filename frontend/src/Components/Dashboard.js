@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, Container, Grid, Paper, Stack, TextField, Typography, ThemeProvider, createTheme } from "@mui/material";
+import { Autocomplete, Box, Button, Container, Chip, Checkbox, FormControl, Grid, InputLabel, MenuItem, OutlinedInput, Paper, Stack, Select, TextField, Typography, ThemeProvider, createTheme } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
@@ -56,6 +56,9 @@ function Dashboard() {
 
   const [currentAdminType, setCurrentAdminType] = useState("");
   const [currentAdminInstance, setCurrentAdminInstance] = useState("");
+  const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
+  const [currentAreaNames, setCurrentAreaNames] = useState({});
+  const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
 
   const [tableColumns, setTableColumns] = useState({});
   const [tableData, setTableData] = useState({});
@@ -63,16 +66,6 @@ function Dashboard() {
   const [chartData, setChartData] = useState({});
 
   const [showVisError, setShowVisError] = useState(false);
-
-  
-
-  class Table {
-    constructor(columns, data) {
-      this.columns = columns;
-      this.data = data;
-    }
-  }
-
 
   // Upon initial page load, fetch list of cities
   useEffect(() => {
@@ -91,7 +84,7 @@ function Dashboard() {
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
     if (beginGeneration && Object.keys(indicatorData).length === Object.keys(selectedIndicators).length) {
-      const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
+      // const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
       const currentIndicatorNames = Object.fromEntries(Object.entries(indicatorURLs).map(([key, value]) => [value, key]));
       const indicatorIndices = Object.fromEntries(Object.entries(selectedIndicators).map(([key, value]) => [value, key]));
 
@@ -122,10 +115,24 @@ function Dashboard() {
         }));
 
         // Set chart information
-        const tempChartData = yearRange.map(year => ({
-          name: year,
-          value: indicatorData[indicator][currentAdminInstance][year]
-        }));
+        const tempChartData = yearRange.map(year => {
+          const res = {name: year};
+
+          const val = Object.fromEntries(currentAdminInstances.map(instance => (
+            [currentAreaNames[instance], indicatorData[indicator][instance][year]]
+          )))
+          
+          return {...res, ...val};
+        }
+        // ({
+        //   name: year,
+          
+        //   value: currentAdminInstances.map(instance => indicatorData[indicator][instance][year])
+        // })
+        );
+
+        // value: indicatorData[indicator][currentAdminInstance[0]][year]
+
         setChartData(oldData => ({
           ...oldData,
           [indicator]: tempChartData
@@ -141,7 +148,6 @@ function Dashboard() {
           }
         }
 
-
         const newPolygons = Object.keys(locationURLs).map(key => (
           <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
             {
@@ -155,16 +161,18 @@ function Dashboard() {
                   <Tooltip sticky>
                     <strong>{currentAreaNames[key]}</strong> <br/>
                     {selectedIndicators[ind]}:<br/>
-                    {Object.entries(indicatorData[indicator][currentAdminInstance]).map(([year, value]) => (
+
+                    {Object.entries(indicatorData[indicator][key]).map(([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
                       </div>
-                    ))}
+                    ))}                    
                   </Tooltip>
                   <Popup>
                     <strong>{currentAreaNames[key]}</strong> <br/>
                     {selectedIndicators[ind]}:<br/>
-                    {Object.entries(indicatorData[indicator][currentAdminInstance]).map(([year, value]) => (
+
+                    {Object.entries(indicatorData[indicator][key]).map(([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
                       </div>
@@ -187,13 +195,30 @@ function Dashboard() {
     }
   }, [indicatorData]); 
 
+  const handleChangeAreas = (event) => {
+    // const {
+    //   target: { value },
+    // } = event;
+    setCurrentAdminInstances(
+      String(event.target.value).split(',').map(value => areaURLs[value])
+      // On autofill we get a stringified value.
+      // typeof value === 'string' ? value.split(',') : value,
+    );
+    setCurrentSelectedAreas(String(event.target.value).split(','));
+  };
+
   return (
     <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
       {/* Input Form */}
       <Stack spacing={3}>
+      <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '20px', }}>
+        <Typography sx={{align: 'center'}} variant='h3'>Indicator Visualization Dashboard</Typography>
+      </Box>
+
         <Box sx={{marginBottom: '50px'}}>
           <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
-            <Typography variant="h5">location & area type</Typography>
+            
+            <Typography variant="h5">Location & Area Type</Typography>
           </Box>
           <Paper sx={{paddingBottom: '50px'}}>
             <Grid container>
@@ -223,7 +248,7 @@ function Dashboard() {
                     <Autocomplete
                       disablePortal
                       onChange={(event, newValue) => {
-                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea);
+                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames);
                         fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
                         setCurrentAdminType(adminURLs[newValue]);
                       }}
@@ -231,16 +256,42 @@ function Dashboard() {
                       sx={{ maxWidth: 270, minWidth: 220 }}
                       renderInput={(params) => <TextField {...params} label="Select Administrative Type:*" />}
                     />
-                    <Autocomplete
+                    <FormControl sx={{ maxWidth: 270, minWidth: 220 }}>
+                      <InputLabel id="demo-multiple-name-label">Specific Area(s):</InputLabel>
+                      <Select
+                        labelId="select-admin-instances-label"
+                        id="select-admin-instances"
+                        multiple
+                        value={currentSelectedAreas}
+                        renderValue={(selected) => selected.join(', ')}
+                        onChange={(event, newValue) => {
+                          handleChangeAreas(event);
+                          // setCurrentAdminInstance(areaURLs[newValue]);
+                          console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
+                        }}
+                        input={<OutlinedInput label="Specific Area(s)" />}
+                        // MenuProps={MenuProps}
+                      >
+                        {area.map(a => (
+                          <MenuItem key={a} value={a}>
+                            <Checkbox checked={currentSelectedAreas.indexOf(a) > -1} />
+                            {a}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    {/* <Autocomplete
                       disablePortal
                       options={area}
                       sx={{ maxWidth: 270, minWidth: 220 }}
+                      renderValue={(selected) => selected.join(', ')}
                       onChange={(event, newValue) => {
+                        handleChangeAreas(event);
                         setCurrentAdminInstance(areaURLs[newValue]);
                         console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
                       }}
-                      renderInput={(params) => <TextField {...params} label="Specific Area:" />}
-                    />
+                      renderInput={(params) => <TextField {...params} label="Specific Area(s):" />}
+                    /> */}
                   </Stack>
                 </Box>
               </Grid>
@@ -271,11 +322,13 @@ function Dashboard() {
                         )}
                       /> 
                     ))} 
-                    <Button variant="outlined" sx={{maxWidth: '270px', height: '56px'}} 
-                            onClick={() => {
-                              handleAddIndicator(selectedIndicators, setSelectedIndicators);
-                              handleAddYears(years, setYears);
-                            }}
+                    <Button 
+                      variant="outlined" 
+                      sx={{maxWidth: '270px', height: '56px'}} 
+                      onClick={() => {
+                        handleAddIndicator(selectedIndicators, setSelectedIndicators);
+                        handleAddYears(years, setYears);
+                      }}
                     >
                       <AddIcon />
                     </Button>
@@ -297,7 +350,7 @@ function Dashboard() {
         </Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
           <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} 
-          onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstance, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button>
+          onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button>
         </Box>
       </Stack>
 
@@ -346,7 +399,10 @@ function Dashboard() {
 
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        <Line type="monotone" dataKey="value" stroke="#8884d8" />
+                        {currentAdminInstances.map(instance => (
+                          <Line type="monotone" dataKey={currentAreaNames[instance]} stroke="#8884d8" />
+                        ))}
+                        {/* <Line type="monotone" dataKey="value" stroke="#8884d8" /> */}
                         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -354,7 +410,6 @@ function Dashboard() {
                       </LineChart>
                     </ResponsiveContainer>
                     <Box sx={{display: 'flex', justifyContent: 'center'}}>
-
                       <ActivePie data={chartData[indicator]}></ActivePie>
                     </Box>
                     {/* <ResponsiveContainer width="100%" height={400}>
@@ -368,18 +423,9 @@ function Dashboard() {
                       </BarChart>
                     </ResponsiveContainer> */}
                   </Grid>
-
-
-                  
-
-
-
-
                 </Grid>
               </Stack>
             </Paper>
-
-            
           ))}
         </Stack>
       }

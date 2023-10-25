@@ -73,8 +73,9 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
     }
   }
 
-  export const fetchArea= async (admin, cityURLs, adminURLs, setAreaURLs, setArea) => {
+  export const fetchArea= async (admin, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames) => {
     setAreaURLs({});
+    setCurrentAreaNames({});
     setArea([]);
     if (admin){
       try {
@@ -90,6 +91,10 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
           }));
         
           setArea(prevArea => [...prevArea, Instance['areaName']]);
+          setCurrentAreaNames(prevCurrent => ({
+            ...prevCurrent,
+            [Instance['adminAreaInstance']]: Instance['areaName']
+          }));
         });
       } catch (error) {
         console.error('POST Error:', error);
@@ -97,6 +102,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
     } else {
       setAreaURLs({});
       setArea([]);
+      setCurrentAreaNames({});
     }
   }
 
@@ -185,12 +191,13 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
   };
 
 
-  export const handleGenerateVisualization = async (years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstance, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization) => {
+  export const handleGenerateVisualization = async (years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization) => {
     const checkIfInputsFilled = () => {
       return (
         typeof(adminURLs['currCity']) !== 'undefined' &&
         typeof(currentAdminType) === 'string' && currentAdminType !== '' &&
-        typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
+        currentAdminInstances.every(instance => {return typeof(instance) === 'string' && instance !== ''}) &&
+        // typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
         Object.keys(selectedIndicators).every(index => {return selectedIndicators[index] !== ''}) &&
         years.every((item) => {return item.value1 > 0 && item.value2 > 0})
       );
@@ -210,7 +217,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
           const response = await axios.post('http://localhost:3000/api/4', {
             cityName: cityURLs[adminURLs['currCity']],
             adminType: currentAdminType,
-            adminInstance: [currentAdminInstance],
+            adminInstance: currentAdminInstances,
             indicatorName: indicatorURLs[selectedIndicators[index]],
             startTime: years[parseInt(index)].value1,
             endTime: years[parseInt(index)].value2
@@ -230,5 +237,12 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
       setShowVisError(true);
       console.log("Can't generate visualization: missing data");
       setShowingVisualization(false);
+
+      console.log(typeof(adminURLs['currCity']) !== 'undefined' + ' ' +
+      typeof(currentAdminType) === 'string' && currentAdminType !== '' + ' ' +
+      currentAdminInstances.every(instance => {return typeof(instance) === 'string' && instance !== ''}) + " " +
+      // typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
+      Object.keys(selectedIndicators).every(index => {return selectedIndicators[index] !== ''}) + " " +
+      years.every((item) => {return item.value1 > 0 && item.value2 > 0}));
     }
   }
