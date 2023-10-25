@@ -4,14 +4,17 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import Dashboard from "./Dashboard";
 
+import {ReactComponent as Logo} from "../LOGO-SoC-RGB.svg";
+
 // Vertical Navbar component
 function Nav() {
     return ( 
         <Stack spacing={3} sx={{marginTop: '10%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-            <Button variant="text" sx={{color: 'text.primary', width: '100%'}} ><InsertChartIcon></InsertChartIcon>Dashboard</Button>
-            <Button variant="text" sx={{color: 'text.primary', width: '100%'}} ><DashboardIcon></DashboardIcon>Edit Widgets</Button>
+            <Logo style={{height:50}}/>
+            <Button variant="text" sx={{color: 'text.primary', width: '100%', fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontWeight:"normal", fontSize:18}} ><InsertChartIcon></InsertChartIcon>Dashboard</Button>
+            <Button variant="text" sx={{color: 'text.primary', width: '100%', fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontWeight:"normal", fontSize:18}} ><DashboardIcon></DashboardIcon>Edit Widgets</Button>
             <Divider sx={{ width: '75%', height: '1px'}} />
-            <Button variant="text" sx={{color: 'text.primary', width: '100%'}} ><HelpOutlineIcon></HelpOutlineIcon>FAQ</Button>
+            <Button variant="text" sx={{color: 'text.primary', width: '100%', fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontWeight:"normal", fontSize:18}} ><HelpOutlineIcon></HelpOutlineIcon>FAQ</Button>
         </Stack>
     );
 }

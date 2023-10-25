@@ -17,7 +17,6 @@ import ActivePie from "./ActivePie";
 import { Header } from "./Header";
 
 
-
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
