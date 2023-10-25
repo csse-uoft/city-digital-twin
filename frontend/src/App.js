@@ -21,6 +21,12 @@ function App() {
         primary: "#020301",
       },
     },
+    typography: {
+      fontFamily: [
+        'Noto Sans',
+        'sans-serif'
+      ]
+    }
   });
   return (
     <Box className="App" sx={{margin: '0px'}}>
@@ -34,3 +40,4 @@ function App() {
 }
 
 export default App;
+

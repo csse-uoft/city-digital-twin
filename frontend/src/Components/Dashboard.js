@@ -14,6 +14,7 @@ import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLoca
 import MapView from "./MapView";
 import IndicatorTable from "./Table";
 import ActivePie from "./ActivePie";
+import { Header } from "./Header";
 
 
 
@@ -66,6 +67,9 @@ function Dashboard() {
   const [chartData, setChartData] = useState({});
 
   const [showVisError, setShowVisError] = useState(false);
+
+  const [citySelected, setCitySelected] = useState(false);
+  const [adminTypeSelected, setAdminTypeSelected] = useState(false);
 
   // Upon initial page load, fetch list of cities
   useEffect(() => {
@@ -211,14 +215,15 @@ function Dashboard() {
     <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
       {/* Input Form */}
       <Stack spacing={3}>
-      <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '20px', }}>
-        <Typography sx={{align: 'center'}} variant='h3'>Indicator Visualization Dashboard</Typography>
-      </Box>
+        <Header></Header>
+        {/* <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '20px', }}>
+          <Typography sx={{align: 'center'}} variant='h3'>Indicator Visualization Dashboard</Typography>
+        </Box> */}
 
         <Box sx={{marginBottom: '50px'}}>
           <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
             
-            <Typography variant="h5">Location & Area Type</Typography>
+            <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}}>Location & Area Type</Typography>
           </Box>
           <Paper sx={{paddingBottom: '50px'}}>
             <Grid container>
@@ -232,6 +237,7 @@ function Dashboard() {
                         (event, newValue) => {
                           fetchAdministration(newValue, cityURLs, setAdminURLs, setAdmin);
                           fetchIndicators(newValue, cityURLs, setIndicatorURLs, setIndicators, indicators);
+                          setCitySelected(true);
                         }
                       }
                       options={cities}
@@ -246,11 +252,13 @@ function Dashboard() {
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
                   <Stack spacing={5}>
                     <Autocomplete
+                      disabled={!citySelected}
                       disablePortal
                       onChange={(event, newValue) => {
                         fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames);
                         fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
                         setCurrentAdminType(adminURLs[newValue]);
+                        setAdminTypeSelected(true);
                       }}
                       options={admin}
                       sx={{ maxWidth: 270, minWidth: 220 }}
@@ -259,6 +267,7 @@ function Dashboard() {
                     <FormControl sx={{ maxWidth: 270, minWidth: 220 }}>
                       <InputLabel id="demo-multiple-name-label">Specific Area(s):</InputLabel>
                       <Select
+                        disabled={!adminTypeSelected}
                         labelId="select-admin-instances-label"
                         id="select-admin-instances"
                         multiple
@@ -300,7 +309,7 @@ function Dashboard() {
         </Box>
         <Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
-          <Typography variant="h5">Indicator Information</Typography>
+          <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}}>Indicator Information</Typography>
         </Box>
           <Paper sx={{paddingBottom: '50px'}}>
             <Grid container>
@@ -310,6 +319,7 @@ function Dashboard() {
                     {Object.entries(selectedIndicators).map(([ index, value ]) => (
                       <Autocomplete
                         disablePortal
+                        disabled={!adminTypeSelected}
                         onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
                         key={index}
                         options={indicators}
@@ -339,8 +349,8 @@ function Dashboard() {
                 <Stack spacing={5} sx={{}}>
                   {years.map(({ id, value1, value2 }) => (
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                      <TextField type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
-                      <TextField type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)} variant="outlined" sx={{width: '130px'}}/>
+                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
+                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)} variant="outlined" sx={{width: '130px'}}/>
                     </Box>
                   ))}
                 </Stack>
@@ -349,7 +359,7 @@ function Dashboard() {
           </Paper>
         </Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-          <Button color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} 
+          <Button disabled={!adminTypeSelected} color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black'}} 
           onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button>
         </Box>
       </Stack>
@@ -365,7 +375,7 @@ function Dashboard() {
           {Object.keys(mapPolygons).map(indicator => (
             <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
               <Stack spacing={3}>
-                <Typography variant="h4" align="center" sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
+                <Typography variant="h4" align="center" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}} sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
                 <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
 
                 {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
