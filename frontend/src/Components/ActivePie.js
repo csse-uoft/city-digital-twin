@@ -3,7 +3,7 @@ import React, { useCallback, useState } from "react";
 import { PieChart, Pie, Sector } from "recharts";
 
 
-const renderActiveShape = (props: any) => {
+const renderActiveShape = (props) => {
   const RADIAN = Math.PI / 180;
   const {
     cx,
@@ -30,7 +30,7 @@ const renderActiveShape = (props: any) => {
 
   return (
     <g>
-      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
+      <text x={200} y={50} dy={8} textAnchor="middle" fill='black'>
         {payload.name}
       </text>
       <Sector
