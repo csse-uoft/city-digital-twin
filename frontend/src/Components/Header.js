@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Typography, Stack } from "@mui/material";
-import {ReactComponent as Logo} from "../LOGO-SoC-RGB.svg";
+// import {ReactComponent as Logo} from "../LOGO-SoC-RGB.svg";
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import InsertChartRoundedIcon from '@mui/icons-material/InsertChartRounded';
 

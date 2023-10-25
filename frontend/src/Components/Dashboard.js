@@ -69,7 +69,10 @@ function Dashboard() {
 
   const [citySelected, setCitySelected] = useState(false);
   const [adminTypeSelected, setAdminTypeSelected] = useState(false);
-
+  //--------------------------------------------------------------------------------
+  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ffc0cb', '#ff7f50', '#ff69b4', '#9acd32'];
+  const [graphTypes, setGraphTypes] = useState({});
+ 
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs, setCities, cities);
@@ -78,11 +81,38 @@ function Dashboard() {
   useEffect(() => {
     // console.log('city url', cityURLs);
     // console.log('admin url', adminURLs);
-    console.log('areaurl', areaURLs);
-  }, [cityURLs, adminURLs, areaURLs]);
+    console.log('cdata', chartData);
+
+
+  }, [chartData]);
 
   
-  
+  const handleAggregation = (indicator) => {
+    let data = chartData[indicator];
+    const aggregatedData = {};
+
+    // Iterate through the data
+    data.forEach(entry => {
+      for (const location in entry) {
+        if (location !== 'name') {
+          // Initialize the aggregatedData object if it doesn't exist
+          if (!aggregatedData[location]) {
+            aggregatedData[location] = { name: location, uv: 0, value: 0 };
+          }
+          // Add the value to the location's total
+          const value = entry[location];
+          if (value !== null) {
+            aggregatedData[location].uv += 1; // Increment the "uv" value by 1
+            aggregatedData[location].value += value;
+          }
+        }
+      }
+    });
+
+    // Convert aggregatedData to an array
+    const aggregatedArray = Object.values(aggregatedData);
+    return aggregatedArray;
+  };
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
@@ -383,23 +413,23 @@ function Dashboard() {
                 <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
 
                 {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                      <Autocomplete
-                        disablePortal
-                        id="change-graph"
-                        options={['Bar', 'Pie', 'Line']}
-                        sx={{ maxWidth: 260, minWidth: 190 }}
-                        renderInput={(params) => <TextField {...params} label="Select Graph 1 Type" />}
-                      />
-                      <Box sx={{margin: '20px'}}></Box>
-                      <Autocomplete
-                        disablePortal
-                        id="change-graph"
-                        options={['Bar', 'Pie', 'Line']}
-                        sx={{ maxWidth: 260, minWidth: 190 }}
-                        renderInput={(params) => <TextField {...params} label="Select Graph 2 Type" />}
-                      />
-                    </Box>
+                <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                    <Autocomplete
+                      disablePortal
+                      id={`change-graph-${indicator}-1`}
+                      options={['Bar','Line']}
+                      value={graphTypes[indicator] || 'Bar'} // Default to 'Bar'
+                      onChange={(event, newValue) => {
+                        setGraphTypes((prevGraphTypes) => ({
+                          ...prevGraphTypes,
+                          [indicator]: newValue,
+                        }));
+                      }}
+                      sx={{ maxWidth: 260, minWidth: 190 }}
+                      renderInput={(params) => <TextField {...params} label={`Select Graph 1 Type for ${indicator}`} />}
+                    />
+                    
+                  </Box>
                     
                 <Grid container >
                   
@@ -411,21 +441,53 @@ function Dashboard() {
                   </Grid>
                   <Grid sm='6'>
 
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        {currentAdminInstances.map(instance => (
-                          <Line type="monotone" dataKey={currentAreaNames[instance]} stroke="#8884d8" />
-                        ))}
-                        {/* <Line type="monotone" dataKey="value" stroke="#8884d8" /> */}
-                        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <ChartTooltip/>
-                      </LineChart>
-                    </ResponsiveContainer>
-                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                      <ActivePie data={chartData[indicator]}></ActivePie>
-                    </Box>
+                      <ResponsiveContainer width="100%" height={300}>
+                        {graphTypes[indicator] === 'Line' ? (
+                          // Render LineChart based on graphTypes[indicator]
+                          <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                            {currentAdminInstances.map((instance, index) => (
+                              <Line
+                                key={instance} // Add a unique key for each Line
+                                type="monotone"
+                                dataKey={currentAreaNames[instance]}
+                                stroke={colors[index % colors.length]} // Use colors[index] to assign a color
+                              />
+                            ))}
+                            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <ChartTooltip />
+                          </LineChart>
+                          
+                        ) : (
+                    
+
+                          <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                            {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
+                            <ResponsiveContainer width="100%" height={300}>
+                              <BarChart width={730} height={250} data={chartData[indicator]}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <ChartTooltip />
+                                <Legend />
+                                
+                                {currentAdminInstances.map((instance, index)=> (
+                                  <Bar dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]}  />
+                                ))}
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </Box>
+                          
+                        )}
+                      </ResponsiveContainer>
+
+
+                      <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                            <ActivePie data={handleAggregation(indicator)} ></ActivePie>
+                            
+                          </Box>
+                    
                     {/* <ResponsiveContainer width="100%" height={400}>
                       <BarChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
