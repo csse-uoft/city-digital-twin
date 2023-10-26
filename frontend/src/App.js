@@ -5,6 +5,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import Main from './Components/Main';
 import { Box, ThemeProvider, createTheme } from '@mui/material';
+import '@fontsource/inter';
 
 function App() {
   // Creates the theme for the web app
@@ -23,7 +24,7 @@ function App() {
     },
     typography: {
       fontFamily: [
-        'Noto Sans',
+        'Inter',
         'sans-serif'
       ]
     }
