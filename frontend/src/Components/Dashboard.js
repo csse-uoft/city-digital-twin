@@ -17,9 +17,11 @@ import ActivePie from "./ActivePie";
 import { Header } from "./Header";
 
 import { Button as JoyButton } from "@mui/joy";
+import { Sheet as JoySheet } from "@mui/joy";
 import { NewDropdown } from "./NewDropdown";
 import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
 import { NumberInput } from "./NumberInput";
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -32,7 +34,7 @@ L.Icon.Default.mergeOptions({
 function Dashboard() {
   const defaultTheme = createTheme();
 
-  const [years, setYears] = useState([{value1: -1, value2: -1, id: 0}]);
+  const [years, setYears] = useState([{value1: 0, value2: 0, id: 0}]);
 
   const [cities, setCities] = useState([]);
   const [cityURLs, setCityURLs] = useState({});
@@ -256,9 +258,10 @@ function Dashboard() {
         <Box sx={{marginBottom: '50px'}}>
           <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
             
-            <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}}>Location & Area Type</Typography>
+            <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Location & Area Type</Typography>
           </Box>
-          <Paper sx={{paddingBottom: '50px'}}>
+          {/* <Paper sx={{paddingBottom: '50px'}}> */}
+          <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
             <Grid container>
               <Grid xs='12' md='6'>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
@@ -394,13 +397,15 @@ function Dashboard() {
                 </Box>
               </Grid>
             </Grid>
-          </Paper>
+          </JoySheet>
+          {/* </Paper> */}
         </Box>
         <Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
-          <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}}>Indicator Information</Typography>
+          <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Indicator Information</Typography>
         </Box>
-          <Paper sx={{paddingBottom: '50px'}}>
+          <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
+          {/* <Paper sx={{paddingBottom: '50px'}}> */}
             <Grid container>
               <Grid xs='12' md='6'>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
@@ -482,7 +487,8 @@ function Dashboard() {
                 </Stack>
               </Grid>
             </Grid>
-          </Paper>
+          {/* </Paper> */}
+          </JoySheet>
         </Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
           <JoyButton 

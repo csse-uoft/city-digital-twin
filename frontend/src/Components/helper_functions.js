@@ -61,7 +61,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
             [indName]: URL
           }));
 
-          
+
           // .map(item => {return parseInt(item.slice(-4)) != NaN ? item.slice(-4)}).filter((item, index) => indicators.indexOf(item) === index)
           setIndicators(prevIndicator => [...prevIndicator, indName]);
         });
@@ -154,8 +154,8 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
   export const handleAddYears = (years, setYears) => {
     const temp = [...years];
     temp.push({
-      value1: -1,
-      value2: -1,
+      value1: 0,
+      value2: 0,
       id: years.length
     });
     setYears(temp);
