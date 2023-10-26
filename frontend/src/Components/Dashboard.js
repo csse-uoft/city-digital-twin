@@ -16,6 +16,10 @@ import IndicatorTable from "./Table";
 import ActivePie from "./ActivePie";
 import { Header } from "./Header";
 
+import { Button as JoyButton } from "@mui/joy";
+import { NewDropdown } from "./NewDropdown";
+import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
+import { NumberInput } from "./NumberInput";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -244,7 +248,7 @@ function Dashboard() {
     <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
       {/* Input Form */}
       <Stack spacing={3}>
-        <Header></Header>
+        <Header/>
         {/* <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '20px', }}>
           <Typography sx={{align: 'center'}} variant='h3'>Indicator Visualization Dashboard</Typography>
         </Box> */}
@@ -259,7 +263,24 @@ function Dashboard() {
               <Grid xs='12' md='6'>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                   <Stack spacing={5}>
-                    <Autocomplete
+
+                    <NewDropdown 
+                      id="city-input"
+                      label="City"
+                      disabled={false}
+                      onChange={
+                        (event, newValue) => {
+                          fetchAdministration(newValue, cityURLs, setAdminURLs, setAdmin);
+                          fetchIndicators(newValue, cityURLs, setIndicatorURLs, setIndicators, indicators);
+                          setCitySelected(true);
+                        }
+                      }
+                      options={cities}
+                      desc={"Select the city which you want the indicator data for."}
+                    />
+                    
+                    
+                    {/* <Autocomplete
                       disablePortal
                       id="city-input"
                       onChange={
@@ -272,7 +293,7 @@ function Dashboard() {
                       options={cities}
                       sx={{ maxWidth: 270, minWidth: 220 }}
                       renderInput={(params) => <TextField {...params} label="Select City:*" />}
-                    />
+                    /> */}
                   </Stack>
                 </Box>
               </Grid>
@@ -280,7 +301,21 @@ function Dashboard() {
               <Grid xs='12' md='6'>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
                   <Stack spacing={5}>
-                    <Autocomplete
+                    <NewDropdown
+                      id="admin-type-input"
+                      label="Administrative Area Type"
+                      disabled={!citySelected}
+                      onChange={(event, newValue) => {
+                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames);
+                        fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
+                        setCurrentAdminType(adminURLs[newValue]);
+                        setAdminTypeSelected(true);
+                      }}
+                      options={admin}
+                      desc="Select the demarcation type for analysis."
+                    />
+
+                    {/* <Autocomplete
                       disabled={!citySelected}
                       disablePortal
                       onChange={(event, newValue) => {
@@ -292,8 +327,27 @@ function Dashboard() {
                       options={admin}
                       sx={{ maxWidth: 270, minWidth: 220 }}
                       renderInput={(params) => <TextField {...params} label="Select Administrative Type:*" />}
+                    /> */}
+                    <NewDropdownMultiSelect 
+                      id="admin-instances-multiinput"
+                      disabled={!adminTypeSelected}
+                      label="Administrative Area Instances"
+                      options={area}
+                      onChange={(event, newValue) => {
+                        setCurrentAdminInstances(
+                          String(newValue).split(',').map(value => areaURLs[value])
+                          // On autofill we get a stringified value.
+                          // typeof value === 'string' ? value.split(',') : value,
+                        );
+                        setCurrentSelectedAreas(String(newValue).split(','));
+                        // handleChangeAreas(event);
+                        // // setCurrentAdminInstance(areaURLs[newValue]);
+                        // console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
+                      }}
+                      desc="Select the individual demarcation areas you want to analyze."
+                      currentlySelected={currentSelectedAreas}
                     />
-                    <FormControl sx={{ maxWidth: 270, minWidth: 220 }}>
+                    {/* <FormControl sx={{ maxWidth: 270, minWidth: 220 }}>
                       <InputLabel id="demo-multiple-name-label">Specific Area(s):</InputLabel>
                       <Select
                         disabled={!adminTypeSelected}
@@ -308,6 +362,7 @@ function Dashboard() {
                             ))}
                           </Box>}
                         onChange={(event, newValue) => {
+
                           handleChangeAreas(event);
                           // setCurrentAdminInstance(areaURLs[newValue]);
                           console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
@@ -322,7 +377,7 @@ function Dashboard() {
                           </MenuItem>
                         ))}
                       </Select>
-                    </FormControl>
+                    </FormControl> */}
                     {/* <Autocomplete
                       disablePortal
                       options={area}
@@ -350,23 +405,33 @@ function Dashboard() {
               <Grid xs='12' md='6'>
                 <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                   <Stack spacing={5}>
+                    
                     {Object.entries(selectedIndicators).map(([ index, value ]) => (
-                      <Autocomplete
-                        disablePortal
+                      <NewDropdown 
+                        key={`indicator-${index}`}
+                        id="indicator-input"
                         disabled={!adminTypeSelected}
-                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
-                        key={index}
+                        label={`Indicator #${parseInt(index) + 1}`}
                         options={indicators}
-                        sx={{ maxWidth: 270, minWidth: 220}}
-                        renderInput={(params) => (
-                          <TextField 
-                            value={value} {...params} 
-                            label={`Select Indicator #${parseInt(index) + 1}*`} 
-                          />
-                        )}
-                      /> 
+                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
+                        desc=""
+                      />
+                      // <Autocomplete
+                      //   disablePortal
+                      //   disabled={!adminTypeSelected}
+                      //   onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
+                      //   key={index}
+                      //   options={indicators}
+                      //   sx={{ maxWidth: 270, minWidth: 220}}
+                      //   renderInput={(params) => (
+                      //     <TextField 
+                      //       value={value} {...params} 
+                      //       label={`Select Indicator #${parseInt(index) + 1}*`} 
+                      //     />
+                      //   )}
+                      // /> 
                     ))} 
-                    <Button 
+                    {/* <Button 
                       variant="outlined" 
                       sx={{maxWidth: '270px', height: '56px'}} 
                       onClick={() => {
@@ -374,17 +439,44 @@ function Dashboard() {
                         handleAddYears(years, setYears);
                       }}
                     >
+                    
                       <AddIcon />
-                    </Button>
+                    </Button> */}
+                    <JoyButton
+                      sx={{width:'100%'}}
+                      variant="soft"
+                      onClick={() => {
+                        handleAddIndicator(selectedIndicators, setSelectedIndicators);
+                        handleAddYears(years, setYears);
+                      }}
+                    >
+                      <AddIcon />
+                    </JoyButton>
                   </Stack>
                 </Box>
               </Grid>
               <Grid xs='12' md='6'>
-                <Stack spacing={5} sx={{}}>
+                <Stack spacing={5} sx={{marginTop:"40px"}}>
                   {years.map(({ id, value1, value2 }) => (
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
-                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)} variant="outlined" sx={{width: '130px'}}/>
+                      {/* <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
+                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)} variant="outlined" sx={{width: '130px'}}/> */}
+                      <NumberInput 
+                        id={`year1-${id}`}
+                        disabled={!adminTypeSelected}
+                        label={`Starting Year ${id + 1}`}
+                        onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)}
+                        value={value1}
+                        desc=""
+                      />
+                      <NumberInput 
+                        id={`year2-${id}`}
+                        disabled={!adminTypeSelected}
+                        label={`Ending Year ${id + 1}`}
+                        onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)}
+                        value={value2}
+                        desc=""
+                      />
                     </Box>
                   ))}
                 </Stack>
@@ -393,8 +485,17 @@ function Dashboard() {
           </Paper>
         </Box>
         <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-          <Button disabled={!adminTypeSelected} color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black', fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontWeight:"bold", fontSize:18, paddingBottom:1}} 
-          onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button>
+          <JoyButton 
+            disabled={!adminTypeSelected} 
+            size="lg" 
+            color="success"
+            endDecorator={<>{">"}</>}
+            onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}
+          >
+            Generate Visualization
+          </JoyButton>
+          {/* <Button disabled={!adminTypeSelected} color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black', fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontWeight:"bold", fontSize:18, paddingBottom:1}} 
+          onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button> */}
         </Box>
       </Stack>
 

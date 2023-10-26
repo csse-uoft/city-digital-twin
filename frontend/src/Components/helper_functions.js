@@ -60,7 +60,9 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
             ...prevIndicatorURLs,
             [indName]: URL
           }));
-        
+
+          
+          // .map(item => {return parseInt(item.slice(-4)) != NaN ? item.slice(-4)}).filter((item, index) => indicators.indexOf(item) === index)
           setIndicators(prevIndicator => [...prevIndicator, indName]);
         });
         console.log('indicators', indicators)
