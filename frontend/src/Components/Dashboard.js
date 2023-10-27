@@ -20,7 +20,10 @@ import { Button as JoyButton } from "@mui/joy";
 import { Sheet as JoySheet } from "@mui/joy";
 import { CircularProgress as JoyCircularProgress }from "@mui/joy";
 
-import { NewDropdown } from "./NewDropdown";
+import CloseIcon from '@mui/icons-material/Close';
+
+
+import { NewDropdown, NewDropdownStateValue } from "./NewDropdown";
 import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
 import { NumberInput } from "./NumberInput";
 
@@ -406,9 +409,22 @@ function Dashboard() {
       }
 
       {showingVisualization && 
-        <Stack spacing={3}>
-          <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close</Button>
+        <Stack spacing={3} sx={{marginTop: 5}}>
+          <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+            <JoyButton
+              size="sm"
+              variant="soft"
+              color="danger"
+              endDecorator={<CloseIcon />}
+              onClick={() => setShowingVisualization(false)}
+            >
+              Close Visualization
+            </JoyButton>
+          </Box>
+          {/* <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close Visualization</Button> */}
           
+         
+
           {Object.keys(mapPolygons).map(indicator => (
             <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
               <Stack spacing={3}>
@@ -416,23 +432,6 @@ function Dashboard() {
                 <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
 
                 {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                    <Autocomplete
-                      disablePortal
-                      id={`change-graph-${indicator}-1`}
-                      options={['Bar','Line']}
-                      value={graphTypes[indicator] || 'Bar'} // Default to 'Bar'
-                      onChange={(event, newValue) => {
-                        setGraphTypes((prevGraphTypes) => ({
-                          ...prevGraphTypes,
-                          [indicator]: newValue,
-                        }));
-                      }}
-                      sx={{ maxWidth: 260, minWidth: 190 }}
-                      renderInput={(params) => <TextField {...params} label={`Select Graph 1 Type for ${indicator}`} />}
-                    />
-                    
-                  </Box>
                     
                 <Grid container >
                   
@@ -443,46 +442,61 @@ function Dashboard() {
 
                   </Grid>
                   <Grid sm='6'>
-
-                      <ResponsiveContainer width="100%" height={300}>
-                        {graphTypes[indicator] === 'Line' ? (
-                          // Render LineChart based on graphTypes[indicator]
-                          <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                            {currentAdminInstances.map((instance, index) => (
-                              <Line
-                                key={instance} // Add a unique key for each Line
-                                type="monotone"
-                                dataKey={currentAreaNames[instance]}
-                                stroke={colors[index % colors.length]} // Use colors[index] to assign a color
-                              />
-                            ))}
-                            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <ChartTooltip />
-                          </LineChart>
-                        ) : (
-                          <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                            {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
-                            <ResponsiveContainer width="100%" height={300}>
-                              <BarChart width={730} height={250} data={chartData[indicator]}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <ChartTooltip />
-                                <Legend />
-                                
-                                {currentAdminInstances.map((instance, index)=> (
-                                  <Bar dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]}  />
-                                ))}
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </Box>
-                        )}
-                      </ResponsiveContainer>
-                      <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                        <ActivePie data={handleAggregation(indicator)} ></ActivePie>
-                      </Box>                    
+                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                      <NewDropdownStateValue 
+                        id={`change-graph-${indicator}-1`}
+                        label="Graph Type"
+                        options={['Bar', 'Line']}
+                        disabled={false}
+                        onChange={(event, newValue) => {
+                          setGraphTypes((prevGraphTypes) => ({
+                            ...prevGraphTypes,
+                            [indicator]: newValue,
+                          }));
+                        }}
+                        value={graphTypes[indicator] || 'Bar'} // Default
+                        desc=""
+                      />
+                    </Box>
+                    <ResponsiveContainer width="100%" height={300}>
+                      {graphTypes[indicator] === 'Line' ? (
+                        // Render LineChart based on graphTypes[indicator]
+                        <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                          {currentAdminInstances.map((instance, index) => (
+                            <Line
+                              key={instance} // Add a unique key for each Line
+                              type="monotone"
+                              dataKey={currentAreaNames[instance]}
+                              stroke={colors[index % colors.length]} // Use colors[index] to assign a color
+                            />
+                          ))}
+                          <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <ChartTooltip />
+                        </LineChart>
+                      ) : (
+                        <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                          {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart width={730} height={250} data={chartData[indicator]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <ChartTooltip />
+                              <Legend />
+                              
+                              {currentAdminInstances.map((instance, index)=> (
+                                <Bar dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]}  />
+                              ))}
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </Box>
+                      )}
+                    </ResponsiveContainer>
+                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                      <ActivePie data={handleAggregation(indicator)} ></ActivePie>
+                    </Box>                    
                   </Grid>
                 </Grid>
               </Stack>
