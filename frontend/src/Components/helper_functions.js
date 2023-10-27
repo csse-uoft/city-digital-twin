@@ -22,6 +22,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
   
   export const fetchAdministration = async (city, cityURLs, setAdminURLs, setAdmin) => {
     if (city){
+
       try {
         const response = await axios.post('http://localhost:3000/api/2', {
           cityName: cityURLs[city]
@@ -193,7 +194,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
   };
 
 
-  export const handleGenerateVisualization = async (years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization) => {
+  export const handleGenerateVisualization = async (years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization, setVisLoading) => {
     const checkIfInputsFilled = () => {
       return (
         typeof(adminURLs['currCity']) !== 'undefined' &&
@@ -204,7 +205,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
         years.every((item) => {return item.value1 > 0 && item.value2 > 0})
       );
     };
-
+    setVisLoading(true);
     setMapPolygons([]);
 
     if (checkIfInputsFilled()) {
@@ -240,4 +241,5 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
       console.log("Can't generate visualization: missing data");
       setShowingVisualization(false);
     }
+    setVisLoading(false);
   }
