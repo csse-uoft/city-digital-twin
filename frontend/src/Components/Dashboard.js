@@ -251,7 +251,7 @@ function Dashboard() {
   };
 
   return (
-    <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
+    <Container maxWidth='lg' sx={{marginTop: {xs:'100px', md:'30px'}, paddingBottom: '100px'}}>
       {/* Input Form */}
       <Stack spacing={3}>
         <Header/>
