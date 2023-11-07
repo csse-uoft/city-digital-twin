@@ -1,14 +1,9 @@
 import { Autocomplete, Box, Button, Container, Chip, Checkbox, FormControl, Grid, InputLabel, MenuItem, OutlinedInput, Paper, Stack, Select, TextField, Typography, ThemeProvider, createTheme } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import 'leaflet/dist/leaflet.css';
 import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet';
-import {useMap} from 'react-leaflet/hooks';
 import L from 'leaflet';
-import Wkt from 'wicket';
-import MUIDataTable from "mui-datatables";
-import { red } from "@mui/material/colors";
 import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie } from 'recharts';
 import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
 import MapView from "./MapView";
@@ -18,7 +13,7 @@ import { Header } from "./Header";
 
 import { Button as JoyButton } from "@mui/joy";
 import { Sheet as JoySheet } from "@mui/joy";
-import { CircularProgress as JoyCircularProgress }from "@mui/joy";
+import { Box as JoyBox } from "@mui/joy";
 
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -26,8 +21,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import { NewDropdown, NewDropdownStateValue } from "./NewDropdown";
 import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
 import { NumberInput } from "./NumberInput";
-
-
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -257,15 +250,15 @@ function Dashboard() {
         <Header/>
         
 
-        <Box sx={{marginBottom: '50px'}}>
-          <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
+        <JoyBox sx={{marginBottom: '50px'}}>
+          <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
             
             <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Location & Area Type</Typography>
-          </Box>
+          </JoyBox>
           <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
             <Grid container>
               <Grid xs='12' md='6'>
-                <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                   <Stack spacing={5}>
 
                     <NewDropdown 
@@ -286,11 +279,11 @@ function Dashboard() {
                       isLoading={cityLoading}
                     />
                   </Stack>
-                </Box>
+                </JoyBox>
               </Grid>
           
               <Grid xs='12' md='6'>
-                <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
+                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
                   <Stack spacing={5}>
                     <NewDropdown
                       id="admin-type-input"
@@ -323,19 +316,19 @@ function Dashboard() {
                       currentlySelected={currentSelectedAreas}
                     />
                   </Stack>
-                </Box>
+                </JoyBox>
               </Grid>
             </Grid>
           </JoySheet>
-        </Box>
-        <Box>
-        <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
+        </JoyBox>
+        <JoyBox>
+        <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
           <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Indicator Information</Typography>
-        </Box>
+        </JoyBox>
           <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
             <Grid container>
               <Grid xs='12' md='6'>
-                <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                   <Stack spacing={5}>
                     
                     {Object.entries(selectedIndicators).map(([ index, value ]) => (
@@ -360,12 +353,12 @@ function Dashboard() {
                       <AddIcon />
                     </JoyButton>
                   </Stack>
-                </Box>
+                </JoyBox>
               </Grid>
               <Grid xs='12' md='6'>
                 <Stack spacing={5} sx={{marginTop:"40px"}}>
                   {years.map(({ id, value1, value2 }) => (
-                    <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                    <JoyBox sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                       <NumberInput 
                         id={`year1-${id}`}
                         disabled={!adminTypeSelected}
@@ -382,14 +375,14 @@ function Dashboard() {
                         value={value2}
                         desc=""
                       />
-                    </Box>
+                    </JoyBox>
                   ))}
                 </Stack>
               </Grid>
             </Grid>
           </JoySheet>
-        </Box>
-        <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+        </JoyBox>
+        <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
           <JoyButton 
             disabled={!adminTypeSelected} 
             size="lg" 
@@ -401,7 +394,7 @@ function Dashboard() {
           >
             Generate Visualization
           </JoyButton>
-        </Box>
+        </JoyBox>
       </Stack>
 
       {showVisError &&
@@ -410,7 +403,7 @@ function Dashboard() {
 
       {showingVisualization && 
         <Stack spacing={3} sx={{marginTop: 5}}>
-          <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+          <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
             <JoyButton
               size="sm"
               variant="soft"
@@ -420,7 +413,7 @@ function Dashboard() {
             >
               Close Visualization
             </JoyButton>
-          </Box>
+          </JoyBox>
           {/* <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close Visualization</Button> */}
           
          
@@ -436,13 +429,13 @@ function Dashboard() {
                 <Grid container >
                   
                   <Grid sm='6'>
-                    <Box sx={{height: '100px'}}>
+                    <JoyBox sx={{height: '100px'}}>
                       <MapView mapPolygons = {mapPolygons} indicator = {indicator} />
-                    </Box>
+                    </JoyBox>
 
                   </Grid>
                   <Grid sm='6'>
-                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                    <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
                       <NewDropdownStateValue 
                         id={`change-graph-${indicator}-1`}
                         label="Graph Type"
@@ -457,7 +450,7 @@ function Dashboard() {
                         value={graphTypes[indicator] || 'Bar'} // Default
                         desc=""
                       />
-                    </Box>
+                    </JoyBox>
                     <ResponsiveContainer width="100%" height={300}>
                       {graphTypes[indicator] === 'Line' ? (
                         // Render LineChart based on graphTypes[indicator]
@@ -476,7 +469,7 @@ function Dashboard() {
                           <ChartTooltip />
                         </LineChart>
                       ) : (
-                        <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                        <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
                           {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
                           <ResponsiveContainer width="100%" height={300}>
                             <BarChart width={730} height={250} data={chartData[indicator]}>
@@ -491,12 +484,12 @@ function Dashboard() {
                               ))}
                             </BarChart>
                           </ResponsiveContainer>
-                        </Box>
+                        </JoyBox>
                       )}
                     </ResponsiveContainer>
-                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                    <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
                       <ActivePie data={handleAggregation(indicator)} ></ActivePie>
-                    </Box>                    
+                    </JoyBox>                    
                   </Grid>
                 </Grid>
               </Stack>
