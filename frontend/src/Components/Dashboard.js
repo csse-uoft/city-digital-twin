@@ -1,4 +1,6 @@
-import { Container, Grid, Paper, Stack, Typography, createTheme } from "@mui/material";
+
+import { Box, Autocomplete, TextField, Container, Grid, Paper, Stack, Typography, createTheme } from "@mui/material";
+import { AreaChart, Area } from "recharts";
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from "react";
 import 'leaflet/dist/leaflet.css';
@@ -449,10 +451,10 @@ function Dashboard() {
                 <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
 
                 {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                  <Box sx={{justifyContent: 'center', display: 'flex'}}>
+                  {/* <Box sx={{justifyContent: 'center', display: 'flex'}}> */}
 
                 
-                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                    {/* <Box sx={{display: 'flex', justifyContent: 'center'}}>
                       <Autocomplete
                         disablePortal
                         id={`change-graph-${indicator}-1`}
@@ -486,7 +488,7 @@ function Dashboard() {
                       />
                       
                     </Box>
-                  </Box>
+                  </Box> */}
 
 
                     
@@ -502,7 +504,7 @@ function Dashboard() {
                     <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
                       <NewDropdownStateValue 
                         id={`change-graph-${indicator}-1`}
-                        label="Graph Type"
+                        label="Graph Type 1"
                         options={['Bar', 'Line']}
                         disabled={false}
                         onChange={(event, newValue) => {
@@ -512,6 +514,21 @@ function Dashboard() {
                           }));
                         }}
                         value={graphTypes[indicator] || 'Bar'} // Default
+                        desc=""
+                      />
+                      <JoyBox sx={{paddingLeft:"10%"}}></JoyBox>
+                      <NewDropdownStateValue 
+                        id={`change-graph-${indicator}-2`}
+                        label="Graph Type 2"
+                        options={['Area', 'Pie']}
+                        disabled={false}
+                        onChange={(event, newValue) => {
+                          setComparisonGraphTypes((prevComparisonGraphTypes) => ({
+                            ...prevComparisonGraphTypes,
+                            [indicator]: newValue,
+                          }));
+                        }}
+                        value={comparisonGraphTypes[indicator] || 'Area'} // Default
                         desc=""
                       />
                     </JoyBox>
