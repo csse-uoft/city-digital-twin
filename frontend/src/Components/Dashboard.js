@@ -1,8 +1,8 @@
-import { Autocomplete, Box, Button, Container, Chip, Checkbox, FormControl, Grid, InputLabel, MenuItem, OutlinedInput, Paper, Stack, Select, TextField, Typography, ThemeProvider, createTheme } from "@mui/material";
+import { Container, Grid, Paper, Stack, Typography, createTheme } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from "react";
 import 'leaflet/dist/leaflet.css';
-import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet';
+import { Popup, Polygon, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie } from 'recharts';
 import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
@@ -60,7 +60,6 @@ function Dashboard() {
   const [beginGeneration, setBeginGeneration] = useState(false);
 
   const [currentAdminType, setCurrentAdminType] = useState("");
-  const [currentAdminInstance, setCurrentAdminInstance] = useState("");
   const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
   const [currentAreaNames, setCurrentAreaNames] = useState({});
   const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
