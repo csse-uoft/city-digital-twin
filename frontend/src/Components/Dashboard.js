@@ -9,7 +9,7 @@ import L from 'leaflet';
 import Wkt from 'wicket';
 import MUIDataTable from "mui-datatables";
 import { red } from "@mui/material/colors";
-import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie } from 'recharts';
+import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, AreaChart, Area } from 'recharts';
 import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
 import MapView from "./MapView";
 import IndicatorTable from "./Table";
@@ -72,6 +72,7 @@ function Dashboard() {
   //--------------------------------------------------------------------------------
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ffc0cb', '#ff7f50', '#ff69b4', '#9acd32'];
   const [graphTypes, setGraphTypes] = useState({});
+  const [comparisonGraphTypes, setComparisonGraphTypes] = useState({});
  
   // Upon initial page load, fetch list of cities
   useEffect(() => {
@@ -86,9 +87,33 @@ function Dashboard() {
 
   }, [chartData]);
 
-  
+  const handleSum = (indicator) => {
+    
+    let data = JSON.parse(JSON.stringify(chartData[indicator]));
+    console.log('beforeSUM', data)
+    for (const yearData of data) {
+      // Calculate the total for the current year
+      console.log('year', yearData)  
+      let total = 0;
+    
+      for (const key in yearData) {
+        const value = yearData[key];
+        if (key ==='total'){
+          break;
+        }
+        if (key !== 'name' && value !== null && !isNaN(value)) {
+          total += value;
+        }
+      }
+     
+      // Add the 'total' property to the current year's data
+      yearData.total = total;
+    }
+    console.log('sumDATA', data === chartData[indicator])
+    return data;
+  }
   const handleAggregation = (indicator) => {
-    let data = chartData[indicator];
+    let data = JSON.parse(JSON.stringify(chartData[indicator]));
     const aggregatedData = {};
 
     // Iterate through the data
@@ -413,23 +438,46 @@ function Dashboard() {
                 <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
 
                 {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                    <Autocomplete
-                      disablePortal
-                      id={`change-graph-${indicator}-1`}
-                      options={['Bar','Line']}
-                      value={graphTypes[indicator] || 'Bar'} // Default to 'Bar'
-                      onChange={(event, newValue) => {
-                        setGraphTypes((prevGraphTypes) => ({
-                          ...prevGraphTypes,
-                          [indicator]: newValue,
-                        }));
-                      }}
-                      sx={{ maxWidth: 260, minWidth: 190 }}
-                      renderInput={(params) => <TextField {...params} label={`Select Graph 1 Type for ${indicator}`} />}
-                    />
-                    
+                  <Box sx={{justifyContent: 'center', display: 'flex'}}>
+
+                
+                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                      <Autocomplete
+                        disablePortal
+                        id={`change-graph-${indicator}-1`}
+                        options={['Bar','Line']}
+                        value={graphTypes[indicator] || 'Bar'} // Default to 'Bar'
+                        onChange={(event, newValue) => {
+                          setGraphTypes((prevGraphTypes) => ({
+                            ...prevGraphTypes,
+                            [indicator]: newValue,
+                          }));
+                        }}
+                        sx={{ maxWidth: 260, minWidth: 190 }}
+                        renderInput={(params) => <TextField {...params} label={`Select Graph 1 Type for ${indicator}`} />}
+                      />
+                    </Box>
+                    <Box sx={{paddingLeft: '5%', paddingRight: '5%'}}></Box>
+                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                      <Autocomplete
+                        disablePortal
+                        id={`change-graph-${indicator}-1`}
+                        options={['Area','Pie']}
+                        value={comparisonGraphTypes[indicator] || 'Area'} // Default to 'Bar'
+                        onChange={(event, newValue) => {
+                          setComparisonGraphTypes((prevComparisonGraphTypes) => ({
+                            ...prevComparisonGraphTypes,
+                            [indicator]: newValue,
+                          }));
+                        }}
+                        sx={{ maxWidth: 260, minWidth: 190 }}
+                        renderInput={(params) => <TextField {...params} label={`Select Graph 2 Type for ${indicator}`} />}
+                      />
+                      
+                    </Box>
                   </Box>
+
+
                     
                 <Grid container >
                   
@@ -482,25 +530,42 @@ function Dashboard() {
                         )}
                       </ResponsiveContainer>
 
-
-                      <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                            <ActivePie data={handleAggregation(indicator)} ></ActivePie>
-                            
-                          </Box>
-                    
-                    {/* <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <ChartTooltip />
-                        <Legend />
-                        <Bar dataKey="value" fill="#8884d8" />
-                      </BarChart>
-                    </ResponsiveContainer> */}
+                      {comparisonGraphTypes[indicator] === 'Pie' ? 
+                        (
+                        <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                              <ActivePie data={handleAggregation(indicator)} ></ActivePie>
+                        </Box>
+                        )
+                        :
+                        (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <AreaChart
+                            width={500}
+                            height={400}
+                            data={handleSum(indicator)}
+                            margin={{
+                              top: 10,
+                              right: 30,
+                              left: 0,
+                              bottom: 0,
+                            }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <ChartTooltip />
+                            {currentAdminInstances.map((instance, index)=> (
+                                        <Area type="monotone" dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]} stackId={1}/>
+                            ))}
+                            <Area type="monotone" dataKey='total' fill="#000000" stackId={1}/>
+                          </AreaChart>
+                          
+                        </ResponsiveContainer>
+                        )
+                      }
                   </Grid>
                 </Grid>
-              </Stack>
+              </Stack> 
             </Paper>
           ))}
         </Stack>
