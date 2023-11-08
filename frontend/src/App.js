@@ -7,9 +7,16 @@ import Main from './Components/Main';
 import { Box, ThemeProvider, createTheme } from '@mui/material';
 import '@fontsource/inter';
 
+import {
+  experimental_extendTheme as materialExtendTheme,
+  Experimental_CssVarsProvider as MaterialCssVarsProvider,
+  THEME_ID as MATERIAL_THEME_ID,
+} from '@mui/material/styles';
+import { CssVarsProvider as JoyCssVarsProvider } from '@mui/joy/styles';
+
 function App() {
   // Creates the theme for the web app
-  const theme = createTheme({
+  const theme = materialExtendTheme({
     palette: {
       primary: { main: "#B5A197" },
       secondary: { main: "#020301" },
@@ -32,9 +39,15 @@ function App() {
   return (
     <Box className="App" sx={{margin: '0px'}}>
       {/* Allows acces to the theme in every page within ThemeProvider */}
-      <ThemeProvider theme={theme}>
+      <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: theme }}>
+        <JoyCssVarsProvider>
+          <Main />
+        </JoyCssVarsProvider>
+      </MaterialCssVarsProvider>
+      
+      {/* <ThemeProvider theme={theme}>
         <Main />
-      </ThemeProvider>
+      </ThemeProvider> */}
       
     </Box>
   );

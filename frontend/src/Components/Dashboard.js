@@ -1,21 +1,26 @@
-import { Autocomplete, Box, Button, Container, Chip, Checkbox, FormControl, Grid, InputLabel, MenuItem, OutlinedInput, Paper, Stack, Select, TextField, Typography, ThemeProvider, createTheme } from "@mui/material";
+import { Container, Grid, Paper, Stack, Typography, createTheme } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import 'leaflet/dist/leaflet.css';
-import {MapContainer, Marker, Popup, LayerGroup, TileLayer, Polygon, Tooltip} from 'react-leaflet';
-import {useMap} from 'react-leaflet/hooks';
+import { Popup, Polygon, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
-import Wkt from 'wicket';
-import MUIDataTable from "mui-datatables";
-import { red } from "@mui/material/colors";
-import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie, AreaChart, Area } from 'recharts';
+import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie } from 'recharts';
 import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
 import MapView from "./MapView";
 import IndicatorTable from "./Table";
 import ActivePie from "./ActivePie";
 import { Header } from "./Header";
 
+import { Button as JoyButton } from "@mui/joy";
+import { Sheet as JoySheet } from "@mui/joy";
+import { Box as JoyBox } from "@mui/joy";
+
+import CloseIcon from '@mui/icons-material/Close';
+
+
+import { NewDropdown, NewDropdownStateValue } from "./NewDropdown";
+import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
+import { NumberInput } from "./NumberInput";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -28,7 +33,7 @@ L.Icon.Default.mergeOptions({
 function Dashboard() {
   const defaultTheme = createTheme();
 
-  const [years, setYears] = useState([{value1: -1, value2: -1, id: 0}]);
+  const [years, setYears] = useState([{value1: 0, value2: 0, id: 0}]);
 
   const [cities, setCities] = useState([]);
   const [cityURLs, setCityURLs] = useState({});
@@ -55,7 +60,6 @@ function Dashboard() {
   const [beginGeneration, setBeginGeneration] = useState(false);
 
   const [currentAdminType, setCurrentAdminType] = useState("");
-  const [currentAdminInstance, setCurrentAdminInstance] = useState("");
   const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
   const [currentAreaNames, setCurrentAreaNames] = useState({});
   const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
@@ -73,6 +77,9 @@ function Dashboard() {
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ffc0cb', '#ff7f50', '#ff69b4', '#9acd32'];
   const [graphTypes, setGraphTypes] = useState({});
   const [comparisonGraphTypes, setComparisonGraphTypes] = useState({});
+
+  const [visLoading, setVisLoading] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
  
   // Upon initial page load, fetch list of cities
   useEffect(() => {
@@ -254,60 +261,58 @@ function Dashboard() {
   }, [indicatorData]); 
 
   const handleChangeAreas = (event) => {
-    // const {
-    //   target: { value },
-    // } = event;
     setCurrentAdminInstances(
       String(event.target.value).split(',').map(value => areaURLs[value])
-      // On autofill we get a stringified value.
-      // typeof value === 'string' ? value.split(',') : value,
     );
     setCurrentSelectedAreas(String(event.target.value).split(','));
   };
 
   return (
-    <Container maxWidth='lg' sx={{marginTop: '30px', paddingBottom: '100px'}}>
+    <Container maxWidth='lg' sx={{marginTop: {xs:'100px', md:'30px'}, paddingBottom: '100px'}}>
       {/* Input Form */}
       <Stack spacing={3}>
-        <Header></Header>
-        {/* <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '20px', }}>
-          <Typography sx={{align: 'center'}} variant='h3'>Indicator Visualization Dashboard</Typography>
-        </Box> */}
+        <Header/>
+        
 
-        <Box sx={{marginBottom: '50px'}}>
-          <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
+        <JoyBox sx={{marginBottom: '50px'}}>
+          <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
             
-            <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}}>Location & Area Type</Typography>
-          </Box>
-          <Paper sx={{paddingBottom: '50px'}}>
+            <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Location & Area Type</Typography>
+          </JoyBox>
+          <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
             <Grid container>
               <Grid xs='12' md='6'>
-                <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                   <Stack spacing={5}>
-                    <Autocomplete
-                      disablePortal
+
+                    <NewDropdown 
                       id="city-input"
+                      label="City"
+                      disabled={false}
                       onChange={
                         (event, newValue) => {
+                          setCityLoading(true);
                           fetchAdministration(newValue, cityURLs, setAdminURLs, setAdmin);
                           fetchIndicators(newValue, cityURLs, setIndicatorURLs, setIndicators, indicators);
                           setCitySelected(true);
+                          setCityLoading(false);
                         }
                       }
                       options={cities}
-                      sx={{ maxWidth: 270, minWidth: 220 }}
-                      renderInput={(params) => <TextField {...params} label="Select City:*" />}
+                      desc={"Select the city which you want the indicator data for."}
+                      isLoading={cityLoading}
                     />
                   </Stack>
-                </Box>
+                </JoyBox>
               </Grid>
           
               <Grid xs='12' md='6'>
-                <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
+                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
                   <Stack spacing={5}>
-                    <Autocomplete
+                    <NewDropdown
+                      id="admin-type-input"
+                      label="Administrative Area Type"
                       disabled={!citySelected}
-                      disablePortal
                       onChange={(event, newValue) => {
                         fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames);
                         fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
@@ -315,112 +320,105 @@ function Dashboard() {
                         setAdminTypeSelected(true);
                       }}
                       options={admin}
-                      sx={{ maxWidth: 270, minWidth: 220 }}
-                      renderInput={(params) => <TextField {...params} label="Select Administrative Type:*" />}
+                      desc="Select the demarcation type for analysis."
                     />
-                    <FormControl sx={{ maxWidth: 270, minWidth: 220 }}>
-                      <InputLabel id="demo-multiple-name-label">Specific Area(s):</InputLabel>
-                      <Select
-                        disabled={!adminTypeSelected}
-                        labelId="select-admin-instances-label"
-                        id="select-admin-instances"
-                        multiple
-                        value={currentSelectedAreas}
-                        renderValue={(selected) => 
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value) => (
-                              <Chip key={value} label={value} />
-                            ))}
-                          </Box>}
-                        onChange={(event, newValue) => {
-                          handleChangeAreas(event);
-                          // setCurrentAdminInstance(areaURLs[newValue]);
-                          console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
-                        }}
-                        input={<OutlinedInput label="Specific Area(s)" />}
-                        // MenuProps={MenuProps}
-                      >
-                        {area.map(a => (
-                          <MenuItem key={a} value={a}>
-                            <Checkbox checked={currentSelectedAreas.indexOf(a) > -1} />
-                            {a}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    {/* <Autocomplete
-                      disablePortal
+
+                    <NewDropdownMultiSelect 
+                      id="admin-instances-multiinput"
+                      disabled={!adminTypeSelected}
+                      label="Administrative Area Instances"
                       options={area}
-                      sx={{ maxWidth: 270, minWidth: 220 }}
-                      renderValue={(selected) => selected.join(', ')}
                       onChange={(event, newValue) => {
-                        handleChangeAreas(event);
-                        setCurrentAdminInstance(areaURLs[newValue]);
-                        console.log("NEW ADMIN INSTANCE:", areaURLs[newValue]);
+                        setCurrentAdminInstances(
+                          String(newValue).split(',').map(value => areaURLs[value])
+                          // On autofill we get a stringified value.
+                          // typeof value === 'string' ? value.split(',') : value,
+                        );
+                        setCurrentSelectedAreas(String(newValue).split(','));
                       }}
-                      renderInput={(params) => <TextField {...params} label="Specific Area(s):" />}
-                    /> */}
+                      desc="Select the individual demarcation areas you want to analyze."
+                      currentlySelected={currentSelectedAreas}
+                    />
                   </Stack>
-                </Box>
+                </JoyBox>
               </Grid>
             </Grid>
-          </Paper>
-        </Box>
-        <Box>
-        <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
-          <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}}>Indicator Information</Typography>
-        </Box>
-          <Paper sx={{paddingBottom: '50px'}}>
+          </JoySheet>
+        </JoyBox>
+        <JoyBox>
+        <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
+          <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Indicator Information</Typography>
+        </JoyBox>
+          <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
             <Grid container>
               <Grid xs='12' md='6'>
-                <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
                   <Stack spacing={5}>
+                    
                     {Object.entries(selectedIndicators).map(([ index, value ]) => (
-                      <Autocomplete
-                        disablePortal
+                      <NewDropdown 
+                        key={`indicator-${index}`}
+                        id="indicator-input"
                         disabled={!adminTypeSelected}
-                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
-                        key={index}
+                        label={`Indicator #${parseInt(index) + 1}`}
                         options={indicators}
-                        sx={{ maxWidth: 270, minWidth: 220}}
-                        renderInput={(params) => (
-                          <TextField 
-                            value={value} {...params} 
-                            label={`Select Indicator #${parseInt(index) + 1}*`} 
-                          />
-                        )}
-                      /> 
+                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
+                        desc=""
+                      />
                     ))} 
-                    <Button 
-                      variant="outlined" 
-                      sx={{maxWidth: '270px', height: '56px'}} 
+                    <JoyButton
+                      sx={{width:'100%'}}
+                      variant="soft"
                       onClick={() => {
                         handleAddIndicator(selectedIndicators, setSelectedIndicators);
                         handleAddYears(years, setYears);
                       }}
                     >
                       <AddIcon />
-                    </Button>
+                    </JoyButton>
                   </Stack>
-                </Box>
+                </JoyBox>
               </Grid>
               <Grid xs='12' md='6'>
-                <Stack spacing={5} sx={{}}>
+                <Stack spacing={5} sx={{marginTop:"40px"}}>
                   {years.map(({ id, value1, value2 }) => (
-                    <Box sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value1} label={`Starting Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)} variant="outlined" sx={{paddingRight: '10px', width: '130px'}}/>
-                      <TextField disabled={!adminTypeSelected} type="number" id="outlined-basic" value={value2} label={`Ending Year #${id + 1}*`} onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)} variant="outlined" sx={{width: '130px'}}/>
-                    </Box>
+                    <JoyBox sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+                      <NumberInput 
+                        id={`year1-${id}`}
+                        disabled={!adminTypeSelected}
+                        label={`Starting Year ${id + 1}`}
+                        onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)}
+                        value={value1}
+                        desc=""
+                      />
+                      <NumberInput 
+                        id={`year2-${id}`}
+                        disabled={!adminTypeSelected}
+                        label={`Ending Year ${id + 1}`}
+                        onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)}
+                        value={value2}
+                        desc=""
+                      />
+                    </JoyBox>
                   ))}
                 </Stack>
               </Grid>
             </Grid>
-          </Paper>
-        </Box>
-        <Box sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-          <Button disabled={!adminTypeSelected} color="primary" variant="contained" sx={{width: '220px', height: '50px', borderRadius: '15px', border: '1px solid black', fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontWeight:"bold", fontSize:18, paddingBottom:1}} 
-          onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization)}>Generate Visualization</Button>
-        </Box>
+          </JoySheet>
+        </JoyBox>
+        <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+          <JoyButton 
+            disabled={!adminTypeSelected} 
+            size="lg" 
+            color="success"
+            endDecorator={<>{">"}</>}
+            onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization, setVisLoading)}
+            loading={visLoading}
+            loadingPosition="start"
+          >
+            Generate Visualization
+          </JoyButton>
+        </JoyBox>
       </Stack>
 
       {showVisError &&
@@ -428,9 +426,22 @@ function Dashboard() {
       }
 
       {showingVisualization && 
-        <Stack spacing={3}>
-          <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close</Button>
+        <Stack spacing={3} sx={{marginTop: 5}}>
+          <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+            <JoyButton
+              size="sm"
+              variant="soft"
+              color="danger"
+              endDecorator={<CloseIcon />}
+              onClick={() => setShowingVisualization(false)}
+            >
+              Close Visualization
+            </JoyButton>
+          </JoyBox>
+          {/* <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close Visualization</Button> */}
           
+         
+
           {Object.keys(mapPolygons).map(indicator => (
             <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
               <Stack spacing={3}>
@@ -482,55 +493,66 @@ function Dashboard() {
                 <Grid container >
                   
                   <Grid sm='6'>
-                    <Box sx={{height: '100px'}}>
+                    <JoyBox sx={{height: '100px'}}>
                       <MapView mapPolygons = {mapPolygons} indicator = {indicator} />
-                    </Box>
+                    </JoyBox>
 
                   </Grid>
                   <Grid sm='6'>
-
-                      <ResponsiveContainer width="100%" height={300}>
-                        {graphTypes[indicator] === 'Line' ? (
-                          // Render LineChart based on graphTypes[indicator]
-                          <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                            {currentAdminInstances.map((instance, index) => (
-                              <Line
-                                key={instance} // Add a unique key for each Line
-                                type="monotone"
-                                dataKey={currentAreaNames[instance]}
-                                stroke={colors[index % colors.length]} // Use colors[index] to assign a color
-                              />
-                            ))}
-                            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <ChartTooltip />
-                          </LineChart>
-                          
-                        ) : (
-                    
-
-                          <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                            {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
-                            <ResponsiveContainer width="100%" height={300}>
-                              <BarChart width={730} height={250} data={chartData[indicator]}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <ChartTooltip />
-                                <Legend />
-                                
-                                {currentAdminInstances.map((instance, index)=> (
-                                  <Bar dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]}  />
-                                ))}
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </Box>
-                          
-                        )}
-                      </ResponsiveContainer>
-
-                      {comparisonGraphTypes[indicator] === 'Pie' ? 
+                    <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
+                      <NewDropdownStateValue 
+                        id={`change-graph-${indicator}-1`}
+                        label="Graph Type"
+                        options={['Bar', 'Line']}
+                        disabled={false}
+                        onChange={(event, newValue) => {
+                          setGraphTypes((prevGraphTypes) => ({
+                            ...prevGraphTypes,
+                            [indicator]: newValue,
+                          }));
+                        }}
+                        value={graphTypes[indicator] || 'Bar'} // Default
+                        desc=""
+                      />
+                    </JoyBox>
+                    <ResponsiveContainer width="100%" height={300}>
+                      {graphTypes[indicator] === 'Line' ? (
+                        // Render LineChart based on graphTypes[indicator]
+                        <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                          {currentAdminInstances.map((instance, index) => (
+                            <Line
+                              key={instance} // Add a unique key for each Line
+                              type="monotone"
+                              dataKey={currentAreaNames[instance]}
+                              stroke={colors[index % colors.length]} // Use colors[index] to assign a color
+                            />
+                          ))}
+                          <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <ChartTooltip />
+                        </LineChart>
+                      ) : (
+                        <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
+                          {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart width={730} height={250} data={chartData[indicator]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <ChartTooltip />
+                              <Legend />
+                              
+                              {currentAdminInstances.map((instance, index)=> (
+                                <Bar dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]}  />
+                              ))}
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </JoyBox>
+                      )}
+                    </ResponsiveContainer>
+                    <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
+                    {comparisonGraphTypes[indicator] === 'Pie' ? 
                         (
                         <Box sx={{display: 'flex', justifyContent: 'center'}}>
                               <ActivePie data={handleAggregation(indicator)} ></ActivePie>
@@ -563,6 +585,7 @@ function Dashboard() {
                         </ResponsiveContainer>
                         )
                       }
+                    </JoyBox>                    
                   </Grid>
                 </Grid>
               </Stack> 
