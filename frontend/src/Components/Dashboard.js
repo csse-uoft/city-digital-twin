@@ -1,13 +1,49 @@
-
-import { Box, Autocomplete, TextField, Container, Grid, Paper, Stack, Typography, createTheme } from "@mui/material";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  Container,
+  Grid,
+  Paper,
+  Stack,
+  Typography,
+  createTheme,
+} from "@mui/material";
 import { AreaChart, Area } from "recharts";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 import { useEffect, useState } from "react";
-import 'leaflet/dist/leaflet.css';
-import { Popup, Polygon, Tooltip } from 'react-leaflet';
-import L from 'leaflet';
-import { Legend, BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, PieChart, Pie } from 'recharts';
-import { fetchCities, fetchAdministration, fetchIndicators, fetchArea, fetchLocations, handleUpdateIndicators, handleAddIndicator, handleAddYears, handleUpdateYear, handleGenerateVisualization } from "./helper_functions";
+import "leaflet/dist/leaflet.css";
+import { Popup, Polygon, Tooltip } from "react-leaflet";
+import L from "leaflet";
+import {
+  Legend,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip as ChartTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+} from "recharts";
+import {
+  fetchCities,
+  fetchAdministration,
+  fetchIndicators,
+  fetchArea,
+  fetchLocations,
+  handleUpdateIndicators,
+  handleAddIndicator,
+  handleAddYears,
+  handleUpdateYear,
+  handleGenerateVisualization,
+  handleSum,
+  handleAggregation,
+  handleChangeAreas,
+} from "./helper_functions";
 import MapView from "./MapView";
 import IndicatorTable from "./Table";
 import ActivePie from "./ActivePie";
@@ -17,8 +53,7 @@ import { Button as JoyButton } from "@mui/joy";
 import { Sheet as JoySheet } from "@mui/joy";
 import { Box as JoyBox } from "@mui/joy";
 
-import CloseIcon from '@mui/icons-material/Close';
-
+import CloseIcon from "@mui/icons-material/Close";
 
 import { NewDropdown, NewDropdownStateValue } from "./NewDropdown";
 import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
@@ -27,15 +62,16 @@ import { NumberInput } from "./NumberInput";
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png')
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
 function Dashboard() {
   const defaultTheme = createTheme();
+  // Refer to the documentation to understand each state and their purpose
 
-  const [years, setYears] = useState([{value1: 0, value2: 0, id: 0}]);
+  const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
 
   const [cities, setCities] = useState([]);
   const [cityURLs, setCityURLs] = useState({});
@@ -52,7 +88,7 @@ function Dashboard() {
 
   const [locationURLs, setLocationURLs] = useState({});
 
-  const [selectedIndicators, setSelectedIndicators] = useState({'0': ''});
+  const [selectedIndicators, setSelectedIndicators] = useState({ 0: "" });
 
   const [indicatorData, setIndicatorData] = useState({});
 
@@ -75,183 +111,158 @@ function Dashboard() {
 
   const [citySelected, setCitySelected] = useState(false);
   const [adminTypeSelected, setAdminTypeSelected] = useState(false);
-  //--------------------------------------------------------------------------------
-  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ffc0cb', '#ff7f50', '#ff69b4', '#9acd32'];
+  
   const [graphTypes, setGraphTypes] = useState({});
   const [comparisonGraphTypes, setComparisonGraphTypes] = useState({});
 
   const [visLoading, setVisLoading] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
- 
+
+  // Colour wheel for the visualizations
+  const colors = [
+    "#8884d8",
+    "#82ca9d",
+    "#ffc658",
+    "#ffc0cb",
+    "#ff7f50",
+    "#ff69b4",
+    "#9acd32",
+  ];
+
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs, setCities, cities);
   }, []);
 
+  // This useEffect is for testing and developement purposes
   useEffect(() => {
-    // console.log('city url', cityURLs);
-    // console.log('admin url', adminURLs);
-    console.log('cdata', chartData);
-
-
-  }, [chartData]);
-
-  const handleSum = (indicator) => {
-    
-    let data = JSON.parse(JSON.stringify(chartData[indicator]));
-    console.log('beforeSUM', data)
-    for (const yearData of data) {
-      // Calculate the total for the current year
-      console.log('year', yearData)  
-      let total = 0;
-    
-      for (const key in yearData) {
-        const value = yearData[key];
-        if (key ==='total'){
-          break;
-        }
-        if (key !== 'name' && value !== null && !isNaN(value)) {
-          total += value;
-        }
-      }
-     
-      // Add the 'total' property to the current year's data
-      yearData.total = total;
-    }
-    console.log('sumDATA', data === chartData[indicator])
-    return data;
-  }
-  const handleAggregation = (indicator) => {
-    let data = JSON.parse(JSON.stringify(chartData[indicator]));
-    const aggregatedData = {};
-
-    // Iterate through the data
-    data.forEach(entry => {
-      for (const location in entry) {
-        if (location !== 'name') {
-          // Initialize the aggregatedData object if it doesn't exist
-          if (!aggregatedData[location]) {
-            aggregatedData[location] = { name: location, uv: 0, value: 0 };
-          }
-          // Add the value to the location's total
-          const value = entry[location];
-          if (value !== null) {
-            aggregatedData[location].uv += 1; // Increment the "uv" value by 1
-            aggregatedData[location].value += value;
-          }
-        }
-      }
-    });
-
-    // Convert aggregatedData to an array
-    const aggregatedArray = Object.values(aggregatedData);
-    return aggregatedArray;
-  };
+    console.log("testing", currentAreaNames);
+  }, [currentAreaNames]);
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
-    if (beginGeneration && Object.keys(indicatorData).length === Object.keys(selectedIndicators).length) {
+    if (
+      beginGeneration &&
+      Object.keys(indicatorData).length ===
+        Object.keys(selectedIndicators).length
+    ) {
       // const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
-      const currentIndicatorNames = Object.fromEntries(Object.entries(indicatorURLs).map(([key, value]) => [value, key]));
-      const indicatorIndices = Object.fromEntries(Object.entries(selectedIndicators).map(([key, value]) => [value, key]));
+      const currentIndicatorNames = Object.fromEntries(
+        Object.entries(indicatorURLs).map(([key, value]) => [value, key])
+      );
+      const indicatorIndices = Object.fromEntries(
+        Object.entries(selectedIndicators).map(([key, value]) => [value, key])
+      );
 
       setMapPolygons({});
       setTableColumns({});
       setTableData({});
       setChartData({});
 
-      Object.keys(indicatorData).forEach(indicator => {
+      Object.keys(indicatorData).forEach((indicator) => {
         var yearRange = [];
-        const ind = parseInt(indicatorIndices[currentIndicatorNames[indicator]]);
+        const ind = parseInt(
+          indicatorIndices[currentIndicatorNames[indicator]]
+        );
         for (let i = years[ind].value1; i <= years[ind].value2; ++i) {
           yearRange.push(i.toString());
         }
 
         // Set table information: column names and data
-        setTableColumns(prevColumns => ({
+        setTableColumns((prevColumns) => ({
           ...prevColumns,
-          [indicator]: ["Admin Area Name"].concat(yearRange)
+          [indicator]: ["Admin Area Name"].concat(yearRange),
         }));
 
-
-        setTableData(prevData => ({
+        setTableData((prevData) => ({
           ...prevData,
-          [indicator]: Object.entries(indicatorData[indicator]).map(([instanceURL, data]) => (
-            [currentAreaNames[instanceURL]].concat(Object.entries(data).map(([year, value]) => value))
-          ))
+          [indicator]: Object.entries(indicatorData[indicator]).map(
+            ([instanceURL, data]) =>
+              [currentAreaNames[instanceURL]].concat(
+                Object.entries(data).map(([year, value]) => value)
+              )
+          ),
         }));
 
         // Set chart information
-        const tempChartData = yearRange.map(year => {
-          const res = {name: year};
+        const tempChartData = yearRange.map(
+          (year) => {
+            const res = { name: year };
 
-          const val = Object.fromEntries(currentAdminInstances.map(instance => (
-            [currentAreaNames[instance], indicatorData[indicator][instance][year]]
-          )))
-          
-          return {...res, ...val};
-        }
-        // ({
-        //   name: year,
-          
-        //   value: currentAdminInstances.map(instance => indicatorData[indicator][instance][year])
-        // })
+            const val = Object.fromEntries(
+              currentAdminInstances.map((instance) => [
+                currentAreaNames[instance],
+                indicatorData[indicator][instance][year],
+              ])
+            );
+
+            return { ...res, ...val };
+          }
         );
 
-        // value: indicatorData[indicator][currentAdminInstance[0]][year]
-
-        setChartData(oldData => ({
+        setChartData((oldData) => ({
           ...oldData,
-          [indicator]: tempChartData
+          [indicator]: tempChartData,
         }));
-        
+
         // Set map information
 
         const itemColor = (key) => {
           if (Object.keys(indicatorData[indicator]).indexOf(key) !== -1) {
-            return 'green'; 
+            return "green";
           } else {
-            return 'red';
+            return "red";
           }
-        }
+        };
 
-        const newPolygons = Object.keys(locationURLs).map(key => (
-          <Polygon key={key} pathOptions={{color: itemColor(key)}} positions={locationURLs[key].coordinates}>
-            {
-              Object.keys(indicatorData[indicator]).indexOf(key) === -1 ? 
-                <>
-                  <Tooltip sticky><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Tooltip>
-                  <Popup><strong>{currentAreaNames[key]}</strong> <br/>Area was not selected</Popup>
-                </>
-              :
-                <>
-                  <Tooltip sticky>
-                    <strong>{currentAreaNames[key]}</strong> <br/>
-                    {selectedIndicators[ind]}:<br/>
-
-                    {Object.entries(indicatorData[indicator][key]).map(([year, value]) => (
+        const newPolygons = Object.keys(locationURLs).map((key) => (
+          <Polygon
+            key={key}
+            pathOptions={{ color: itemColor(key) }}
+            positions={locationURLs[key].coordinates}
+          >
+            {Object.keys(indicatorData[indicator]).indexOf(key) === -1 ? (
+              <>
+                <Tooltip sticky>
+                  <strong>{currentAreaNames[key]}</strong> <br />
+                  Area was not selected
+                </Tooltip>
+                <Popup>
+                  <strong>{currentAreaNames[key]}</strong> <br />
+                  Area was not selected
+                </Popup>
+              </>
+            ) : (
+              <>
+                <Tooltip sticky>
+                  <strong>{currentAreaNames[key]}</strong> <br />
+                  {selectedIndicators[ind]}:<br />
+                  {Object.entries(indicatorData[indicator][key]).map(
+                    ([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
                       </div>
-                    ))}                    
-                  </Tooltip>
-                  <Popup>
-                    <strong>{currentAreaNames[key]}</strong> <br/>
-                    {selectedIndicators[ind]}:<br/>
-
-                    {Object.entries(indicatorData[indicator][key]).map(([year, value]) => (
+                    )
+                  )}
+                </Tooltip>
+                <Popup>
+                  <strong>{currentAreaNames[key]}</strong> <br />
+                  {selectedIndicators[ind]}:<br />
+                  {Object.entries(indicatorData[indicator][key]).map(
+                    ([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
                       </div>
-                    ))}
-                  </Popup>
-                </>
-            }   
+                    )
+                  )}
+                </Popup>
+              </>
+            )}
           </Polygon>
         ));
-        setMapPolygons(oldPolygons => ({
+        setMapPolygons((oldPolygons) => ({
           ...oldPolygons,
-          [indicator]: {polygons:newPolygons, index:ind}
+          [indicator]: { polygons: newPolygons, index: ind },
         }));
       });
 
@@ -260,64 +271,116 @@ function Dashboard() {
       }
       setBeginGeneration(false);
     }
-  }, [indicatorData]); 
-
-  const handleChangeAreas = (event) => {
-    setCurrentAdminInstances(
-      String(event.target.value).split(',').map(value => areaURLs[value])
-    );
-    setCurrentSelectedAreas(String(event.target.value).split(','));
-  };
+  }, [indicatorData]);
 
   return (
-    <Container maxWidth='lg' sx={{marginTop: {xs:'100px', md:'30px'}, paddingBottom: '100px'}}>
+    <Container
+      maxWidth="lg"
+      sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}
+    >
       {/* Input Form */}
       <Stack spacing={3}>
-        <Header/>
-        
+        <Header />
 
-        <JoyBox sx={{marginBottom: '50px'}}>
-          <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '20px'}}>
-            
-            <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Location & Area Type</Typography>
+        <JoyBox sx={{ marginBottom: "50px" }}>
+          <JoyBox
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "40px",
+              marginBottom: "20px",
+            }}
+          >
+            <Typography
+              variant="h5"
+              style={{
+                fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
+                fontSize: 35,
+                fontWeight: "bold",
+                color: "#0b2f4e",
+              }}
+            >
+              Location & Area Type
+            </Typography>
           </JoyBox>
-          <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
+          <JoySheet
+            variant="outlined"
+            sx={{ p: 2, borderRadius: "sm", paddingBottom: "50px" }}
+          >
             <Grid container>
-              <Grid xs='12' md='6'>
-                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+              <Grid xs="12" md="6">
+                <JoyBox
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: "40px",
+                  }}
+                >
                   <Stack spacing={5}>
-
-                    <NewDropdown 
+                    <NewDropdown
                       id="city-input"
                       label="City"
                       disabled={false}
-                      onChange={
-                        (event, newValue) => {
-                          setCityLoading(true);
-                          fetchAdministration(newValue, cityURLs, setAdminURLs, setAdmin);
-                          fetchIndicators(newValue, cityURLs, setIndicatorURLs, setIndicators, indicators);
-                          setCitySelected(true);
-                          setCityLoading(false);
-                        }
-                      }
+                      onChange={(event, newValue) => {
+                        setCityLoading(true);
+                        fetchAdministration(
+                          newValue,
+                          cityURLs,
+                          setAdminURLs,
+                          setAdmin
+                        );
+                        fetchIndicators(
+                          newValue,
+                          cityURLs,
+                          setIndicatorURLs,
+                          setIndicators,
+                          indicators
+                        );
+                        setCitySelected(true);
+                        setCityLoading(false);
+                      }}
                       options={cities}
-                      desc={"Select the city which you want the indicator data for."}
+                      desc={
+                        "Select the city which you want the indicator data for."
+                      }
                       isLoading={cityLoading}
                     />
                   </Stack>
                 </JoyBox>
               </Grid>
-          
-              <Grid xs='12' md='6'>
-                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px',}}>
+
+              <Grid xs="12" md="6">
+                <JoyBox
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: "40px",
+                  }}
+                >
                   <Stack spacing={5}>
                     <NewDropdown
                       id="admin-type-input"
                       label="Administrative Area Type"
                       disabled={!citySelected}
                       onChange={(event, newValue) => {
-                        fetchArea(newValue, cityURLs, adminURLs, setAreaURLs, setArea, setCurrentAreaNames);
-                        fetchLocations(newValue, cityURLs, adminURLs, locationURLs, setLocationURLs);
+                        fetchArea(
+                          newValue,
+                          cityURLs,
+                          adminURLs,
+                          setAreaURLs,
+                          setArea,
+                          setCurrentAreaNames
+                        );
+                        fetchLocations(
+                          newValue,
+                          cityURLs,
+                          adminURLs,
+                          locationURLs,
+                          setLocationURLs
+                        );
                         setCurrentAdminType(adminURLs[newValue]);
                         setAdminTypeSelected(true);
                       }}
@@ -325,18 +388,20 @@ function Dashboard() {
                       desc="Select the demarcation type for analysis."
                     />
 
-                    <NewDropdownMultiSelect 
+                    <NewDropdownMultiSelect
                       id="admin-instances-multiinput"
                       disabled={!adminTypeSelected}
                       label="Administrative Area Instances"
                       options={area}
                       onChange={(event, newValue) => {
                         setCurrentAdminInstances(
-                          String(newValue).split(',').map(value => areaURLs[value])
+                          String(newValue)
+                            .split(",")
+                            .map((value) => areaURLs[value])
                           // On autofill we get a stringified value.
                           // typeof value === 'string' ? value.split(',') : value,
                         );
-                        setCurrentSelectedAreas(String(newValue).split(','));
+                        setCurrentSelectedAreas(String(newValue).split(","));
                       }}
                       desc="Select the individual demarcation areas you want to analyze."
                       currentlySelected={currentSelectedAreas}
@@ -348,31 +413,68 @@ function Dashboard() {
           </JoySheet>
         </JoyBox>
         <JoyBox>
-        <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
-          <Typography variant="h5" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold", color:"#0b2f4e"}}>Indicator Information</Typography>
-        </JoyBox>
-          <JoySheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px' }}>
+          <JoyBox
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <Typography
+              variant="h5"
+              style={{
+                fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
+                fontSize: 35,
+                fontWeight: "bold",
+                color: "#0b2f4e",
+              }}
+            >
+              Indicator Information
+            </Typography>
+          </JoyBox>
+          <JoySheet
+            variant="outlined"
+            sx={{ p: 2, borderRadius: "sm", paddingBottom: "50px" }}
+          >
             <Grid container>
-              <Grid xs='12' md='6'>
-                <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+              <Grid xs="12" md="6">
+                <JoyBox
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: "40px",
+                  }}
+                >
                   <Stack spacing={5}>
-                    
-                    {Object.entries(selectedIndicators).map(([ index, value ]) => (
-                      <NewDropdown 
-                        key={`indicator-${index}`}
-                        id="indicator-input"
-                        disabled={!adminTypeSelected}
-                        label={`Indicator #${parseInt(index) + 1}`}
-                        options={indicators}
-                        onChange={(event, newValue) => handleUpdateIndicators(parseInt(index), newValue, setSelectedIndicators)}
-                        desc=""
-                      />
-                    ))} 
+                    {Object.entries(selectedIndicators).map(
+                      ([index, value]) => (
+                        <NewDropdown
+                          key={`indicator-${index}`}
+                          id="indicator-input"
+                          disabled={!adminTypeSelected}
+                          label={`Indicator #${parseInt(index) + 1}`}
+                          options={indicators}
+                          onChange={(event, newValue) =>
+                            handleUpdateIndicators(
+                              parseInt(index),
+                              newValue,
+                              setSelectedIndicators
+                            )
+                          }
+                          desc=""
+                        />
+                      )
+                    )}
                     <JoyButton
-                      sx={{width:'100%'}}
+                      sx={{ width: "100%" }}
                       variant="soft"
                       onClick={() => {
-                        handleAddIndicator(selectedIndicators, setSelectedIndicators);
+                        handleAddIndicator(
+                          selectedIndicators,
+                          setSelectedIndicators
+                        );
                         handleAddYears(years, setYears);
                       }}
                     >
@@ -381,23 +483,33 @@ function Dashboard() {
                   </Stack>
                 </JoyBox>
               </Grid>
-              <Grid xs='12' md='6'>
-                <Stack spacing={5} sx={{marginTop:"40px"}}>
+              <Grid xs="12" md="6">
+                <Stack spacing={5} sx={{ marginTop: "40px" }}>
                   {years.map(({ id, value1, value2 }) => (
-                    <JoyBox sx={{display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-                      <NumberInput 
+                    <JoyBox
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        marginTop: "40px",
+                      }}
+                    >
+                      <NumberInput
                         id={`year1-${id}`}
                         disabled={!adminTypeSelected}
                         label={`Starting Year ${id + 1}`}
-                        onChange={(event) => handleUpdateYear(id, "start", event, years, setYears)}
+                        onChange={(event) =>
+                          handleUpdateYear(id, "start", event, years, setYears)
+                        }
                         value={value1}
                         desc=""
                       />
-                      <NumberInput 
+                      <NumberInput
                         id={`year2-${id}`}
                         disabled={!adminTypeSelected}
                         label={`Ending Year ${id + 1}`}
-                        onChange={(event) => handleUpdateYear(id, "end", event, years, setYears)}
+                        onChange={(event) =>
+                          handleUpdateYear(id, "end", event, years, setYears)
+                        }
                         value={value2}
                         desc=""
                       />
@@ -408,13 +520,37 @@ function Dashboard() {
             </Grid>
           </JoySheet>
         </JoyBox>
-        <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
-          <JoyButton 
-            disabled={!adminTypeSelected} 
-            size="lg" 
+        <JoyBox
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "40px",
+          }}
+        >
+          <JoyButton
+            disabled={!adminTypeSelected}
+            size="lg"
             color="success"
             endDecorator={<>{">"}</>}
-            onClick={() => handleGenerateVisualization(years, cityURLs, adminURLs, indicatorURLs, selectedIndicators, currentAdminType, currentAdminInstances, showVisError, setMapPolygons, setShowVisError, setIndicatorData, setBeginGeneration, setShowingVisualization, setVisLoading)}
+            onClick={() =>
+              handleGenerateVisualization(
+                years,
+                cityURLs,
+                adminURLs,
+                indicatorURLs,
+                selectedIndicators,
+                currentAdminType,
+                currentAdminInstances,
+                showVisError,
+                setMapPolygons,
+                setShowVisError,
+                setIndicatorData,
+                setBeginGeneration,
+                setShowingVisualization,
+                setVisLoading
+              )
+            }
             loading={visLoading}
             loadingPosition="start"
           >
@@ -423,13 +559,24 @@ function Dashboard() {
         </JoyBox>
       </Stack>
 
-      {showVisError &&
-        <Typography variant="h6" align="center" sx={{color:"red"}}>ERROR: Could not generate visualization due to missing/improper data.<br/>Please check form inputs.</Typography>  
-      }
+      {showVisError && (
+        <Typography variant="h6" align="center" sx={{ color: "red" }}>
+          ERROR: Could not generate visualization due to missing/improper data.
+          <br />
+          Please check form inputs.
+        </Typography>
+      )}
 
-      {showingVisualization && 
-        <Stack spacing={3} sx={{marginTop: 5}}>
-          <JoyBox sx={{width: '100%', display: 'flex', justifyContent: 'center', marginTop: '40px'}}>
+      {showingVisualization && (
+        <Stack spacing={3} sx={{ marginTop: 5 }}>
+          <JoyBox
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "40px",
+            }}
+          >
             <JoyButton
               size="sm"
               variant="soft"
@@ -441,71 +588,45 @@ function Dashboard() {
             </JoyButton>
           </JoyBox>
           {/* <Button variant="outlined" size="small" sx={{width:'200px'}} onClick={() => setShowingVisualization(false)}>Close Visualization</Button> */}
-          
-         
 
-          {Object.keys(mapPolygons).map(indicator => (
-            <Paper sx={{padding:'20px', paddingBottom: '50px'}}>
+          {Object.keys(mapPolygons).map((indicator) => (
+            <Paper sx={{ padding: "20px", paddingBottom: "50px" }}>
               <Stack spacing={3}>
-                <Typography variant="h4" align="center" style={{fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:35, fontWeight:"bold"}} sx={{}}>{selectedIndicators[mapPolygons[indicator].index]}</Typography>  
-                <IndicatorTable defaultTheme = {defaultTheme} selectedIndicators = {selectedIndicators} mapPolygons = {mapPolygons} indicator = {indicator} tableColumns = {tableColumns} tableData = {tableData}/>
-
-                {/* Custom theme breaks MUIDataTable somehow, so override back to default theme */}
-                  {/* <Box sx={{justifyContent: 'center', display: 'flex'}}> */}
-
-                
-                    {/* <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                      <Autocomplete
-                        disablePortal
-                        id={`change-graph-${indicator}-1`}
-                        options={['Bar','Line']}
-                        value={graphTypes[indicator] || 'Bar'} // Default to 'Bar'
-                        onChange={(event, newValue) => {
-                          setGraphTypes((prevGraphTypes) => ({
-                            ...prevGraphTypes,
-                            [indicator]: newValue,
-                          }));
-                        }}
-                        sx={{ maxWidth: 260, minWidth: 190 }}
-                        renderInput={(params) => <TextField {...params} label={`Select Graph 1 Type for ${indicator}`} />}
+                <Typography
+                  variant="h4"
+                  align="center"
+                  style={{
+                    fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
+                    fontSize: 35,
+                    fontWeight: "bold",
+                  }}
+                  sx={{}}
+                >
+                  {selectedIndicators[mapPolygons[indicator].index]}
+                </Typography>
+                <IndicatorTable
+                  defaultTheme={defaultTheme}
+                  selectedIndicators={selectedIndicators}
+                  mapPolygons={mapPolygons}
+                  indicator={indicator}
+                  tableColumns={tableColumns}
+                  tableData={tableData}
+                />
+                <Grid container>
+                  <Grid sm="6">
+                    <JoyBox sx={{ height: "100px" }}>
+                      <MapView
+                        mapPolygons={mapPolygons}
+                        indicator={indicator}
                       />
-                    </Box>
-                    <Box sx={{paddingLeft: '5%', paddingRight: '5%'}}></Box>
-                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                      <Autocomplete
-                        disablePortal
-                        id={`change-graph-${indicator}-1`}
-                        options={['Area','Pie']}
-                        value={comparisonGraphTypes[indicator] || 'Area'} // Default to 'Bar'
-                        onChange={(event, newValue) => {
-                          setComparisonGraphTypes((prevComparisonGraphTypes) => ({
-                            ...prevComparisonGraphTypes,
-                            [indicator]: newValue,
-                          }));
-                        }}
-                        sx={{ maxWidth: 260, minWidth: 190 }}
-                        renderInput={(params) => <TextField {...params} label={`Select Graph 2 Type for ${indicator}`} />}
-                      />
-                      
-                    </Box>
-                  </Box> */}
-
-
-                    
-                <Grid container >
-                  
-                  <Grid sm='6'>
-                    <JoyBox sx={{height: '100px'}}>
-                      <MapView mapPolygons = {mapPolygons} indicator = {indicator} />
                     </JoyBox>
-
                   </Grid>
-                  <Grid sm='6'>
-                    <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
-                      <NewDropdownStateValue 
+                  <Grid sm="6">
+                    <JoyBox sx={{ display: "flex", justifyContent: "center" }}>
+                      <NewDropdownStateValue
                         id={`change-graph-${indicator}-1`}
                         label="Graph Type 1"
-                        options={['Bar', 'Line']}
+                        options={["Bar", "Line"]}
                         disabled={false}
                         onChange={(event, newValue) => {
                           setGraphTypes((prevGraphTypes) => ({
@@ -513,29 +634,34 @@ function Dashboard() {
                             [indicator]: newValue,
                           }));
                         }}
-                        value={graphTypes[indicator] || 'Bar'} // Default
+                        value={graphTypes[indicator] || "Bar"} // Default
                         desc=""
                       />
-                      <JoyBox sx={{paddingLeft:"10%"}}></JoyBox>
-                      <NewDropdownStateValue 
+                      <JoyBox sx={{ paddingLeft: "10%" }}></JoyBox>
+                      <NewDropdownStateValue
                         id={`change-graph-${indicator}-2`}
                         label="Graph Type 2"
-                        options={['Area', 'Pie']}
+                        options={["Area", "Pie"]}
                         disabled={false}
                         onChange={(event, newValue) => {
-                          setComparisonGraphTypes((prevComparisonGraphTypes) => ({
-                            ...prevComparisonGraphTypes,
-                            [indicator]: newValue,
-                          }));
+                          setComparisonGraphTypes(
+                            (prevComparisonGraphTypes) => ({
+                              ...prevComparisonGraphTypes,
+                              [indicator]: newValue,
+                            })
+                          );
                         }}
-                        value={comparisonGraphTypes[indicator] || 'Area'} // Default
+                        value={comparisonGraphTypes[indicator] || "Area"} // Default
                         desc=""
                       />
                     </JoyBox>
                     <ResponsiveContainer width="100%" height={300}>
-                      {graphTypes[indicator] === 'Line' ? (
+                      {graphTypes[indicator] === "Line" ? (
                         // Render LineChart based on graphTypes[indicator]
-                        <LineChart data={chartData[indicator]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <LineChart
+                          data={chartData[indicator]}
+                          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                        >
                           {currentAdminInstances.map((instance, index) => (
                             <Line
                               key={instance} // Add a unique key for each Line
@@ -550,38 +676,46 @@ function Dashboard() {
                           <ChartTooltip />
                         </LineChart>
                       ) : (
-                        <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
+                        <JoyBox
+                          sx={{ display: "flex", justifyContent: "center" }}
+                        >
                           {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
                           <ResponsiveContainer width="100%" height={300}>
-                            <BarChart width={730} height={250} data={chartData[indicator]}>
+                            <BarChart
+                              width={730}
+                              height={250}
+                              data={chartData[indicator]}
+                            >
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="name" />
                               <YAxis />
                               <ChartTooltip />
                               <Legend />
-                              
-                              {currentAdminInstances.map((instance, index)=> (
-                                <Bar dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]}  />
+
+                              {currentAdminInstances.map((instance, index) => (
+                                <Bar
+                                  dataKey={currentAreaNames[instance]}
+                                  fill={colors[index % colors.length]}
+                                />
                               ))}
                             </BarChart>
                           </ResponsiveContainer>
                         </JoyBox>
                       )}
                     </ResponsiveContainer>
-                    <JoyBox sx={{display: 'flex', justifyContent: 'center'}}>
-                    {comparisonGraphTypes[indicator] === 'Pie' ? 
-                        (
-                        <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                              <ActivePie data={handleAggregation(indicator)} ></ActivePie>
+                    <JoyBox sx={{ display: "flex", justifyContent: "center" }}>
+                      {comparisonGraphTypes[indicator] === "Pie" ? (
+                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                          <ActivePie
+                            data={handleAggregation(indicator, chartData)}
+                          ></ActivePie>
                         </Box>
-                        )
-                        :
-                        (
+                      ) : (
                         <ResponsiveContainer width="100%" height={300}>
                           <AreaChart
                             width={500}
                             height={400}
-                            data={handleSum(indicator)}
+                            data={handleSum(indicator, chartData)}
                             margin={{
                               top: 10,
                               right: 30,
@@ -593,23 +727,31 @@ function Dashboard() {
                             <XAxis dataKey="name" />
                             <YAxis />
                             <ChartTooltip />
-                            {currentAdminInstances.map((instance, index)=> (
-                                        <Area type="monotone" dataKey={currentAreaNames[instance]} fill={colors[index % colors.length]} stackId={1}/>
+                            {currentAdminInstances.map((instance, index) => (
+                              <Area
+                                type="monotone"
+                                dataKey={currentAreaNames[instance]}
+                                fill={colors[index % colors.length]}
+                                stackId={1}
+                              />
                             ))}
-                            <Area type="monotone" dataKey='total' fill="#000000" stackId={1}/>
+                            <Area
+                              type="monotone"
+                              dataKey="total"
+                              fill="#000000"
+                              stackId={1}
+                            />
                           </AreaChart>
-                          
                         </ResponsiveContainer>
-                        )
-                      }
-                    </JoyBox>                    
+                      )}
+                    </JoyBox>
                   </Grid>
                 </Grid>
-              </Stack> 
+              </Stack>
             </Paper>
           ))}
         </Stack>
-      }
+      )}
     </Container>
   );
 }
