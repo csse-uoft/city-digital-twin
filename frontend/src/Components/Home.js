@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Box } from "@mui/joy";
+import { Container, Typography } from "@mui/material";
+import { Select, Option } from "@mui/joy";
+import { Box, Stack } from "@mui/joy";
 import axios from "axios";
 
 export default function Home({data, setData}) {
@@ -29,8 +31,25 @@ export default function Home({data, setData}) {
   }, []);
 
   return (
-    <>
-      <h1>Hello World!</h1>
-    </>
+    <Container
+      maxWidth="lg"
+      sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}
+    >
+      <Stack spacing={3}>
+        <header>
+          <Typography variant="h4" sx={{fontWeight: "bold"}}>Dashboard</Typography>
+          <Select placeholder="Select City" sx={{maxWidth:"250px"}}>
+            <Option value="City1">City1</Option>
+            <Option value="City2">City2</Option>
+          </Select>
+        </header>
+
+        <Box>
+          <h1>Hello!</h1>
+        </Box>
+      </Stack>
+      
+      
+    </Container>
   );
 }

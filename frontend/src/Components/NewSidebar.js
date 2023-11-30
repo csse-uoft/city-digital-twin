@@ -135,7 +135,7 @@ export default function NewSidebar({activePage, setActivePage}) {
             "--ListItem-radius": theme => theme.vars.radius.sm
           }}
         >
-          <ListItem>
+          <ListItem sx={{userSelect: "none"}}>
             <ListItemButton onClick={() => setActivePage("dashboard")}>
               <InsertChartRoundedIcon />
               <ListItemContent>
@@ -144,7 +144,7 @@ export default function NewSidebar({activePage, setActivePage}) {
             </ListItemButton>
           </ListItem>
 
-          <ListItem>
+          <ListItem sx={{userSelect: "none"}}>
             <ListItemButton onClick={() => setActivePage("search")}>
               <DashboardRoundedIcon />
               <ListItemContent>
@@ -155,7 +155,7 @@ export default function NewSidebar({activePage, setActivePage}) {
 
           <Divider />
 
-          <ListItem>
+          <ListItem sx={{userSelect: "none"}}>
             <ListItemButton>
               <HelpOutlineRoundedIcon />
               <ListItemContent>
