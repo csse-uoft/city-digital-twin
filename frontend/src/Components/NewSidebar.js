@@ -48,7 +48,7 @@ function Toggler({ defaultExpanded = false, renderToggle, children }) {
   )
 }
 
-export default function NewSidebar() {
+export default function NewSidebar({activePage, setActivePage}) {
   return (
     <Sheet
       className="Sidebar"
@@ -136,19 +136,19 @@ export default function NewSidebar() {
           }}
         >
           <ListItem>
-            <ListItemButton>
+            <ListItemButton onClick={() => setActivePage("dashboard")}>
               <InsertChartRoundedIcon />
               <ListItemContent>
-                <Typography level="title-sm">Dashboard</Typography>
+                <Typography level="title-sm" sx={{...(activePage === "dashboard" && {fontWeight:"bold"})}}>Dashboard</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>
 
           <ListItem>
-            <ListItemButton>
+            <ListItemButton onClick={() => setActivePage("search")}>
               <DashboardRoundedIcon />
               <ListItemContent>
-                <Typography level="title-sm">Widgets</Typography>
+                <Typography level="title-sm" sx={{...(activePage === "search" && {fontWeight:"bold"})}}>Search Indicators</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>
