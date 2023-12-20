@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Container, Typography } from "@mui/material";
 import { Select, Option } from "@mui/joy";
-import { Box, Stack } from "@mui/joy";
+import { Stack } from "@mui/joy";
 import axios from "axios";
+import TopBarIndicator from "./HomeDashboardComponents/TopBarIndicator";
+import PermanentIndicator from "./HomeDashboardComponents/PermanentIndicator";
+import TemporaryIndicator from "./HomeDashboardComponents/TemporaryIndicator";
 
 export default function Home({data, setData}) {
   const fetchCities = async () => {
@@ -35,21 +38,29 @@ export default function Home({data, setData}) {
       maxWidth="lg"
       sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}
     >
-      <Stack spacing={3}>
+      <Stack spacing={5}>
         <header>
-          <Typography variant="h4" sx={{fontWeight: "bold"}}>Dashboard</Typography>
-          <Select placeholder="Select City" sx={{maxWidth:"250px"}}>
+          <Typography variant="h4" sx={{textAlign:"center", marginBottom:"10px", fontWeight:"bold", fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:40}}>Indicator Dashboard</Typography>
+          <Select placeholder="Select City" sx={{margin:"auto", maxWidth:"250px", marginBottom:"10px"}}>
             <Option value="City1">City1</Option>
             <Option value="City2">City2</Option>
           </Select>
+          <TopBarIndicator />
         </header>
 
-        <Box>
-          <h1>Hello!</h1>
-        </Box>
+        <Stack id="permanentIndicators" spacing={1}direction="row" justifyContent="space-around" sx={{flexWrap:"wrap", rowGap:"20px"}}>
+          <PermanentIndicator/>
+          <PermanentIndicator/>
+          <PermanentIndicator/>
+        </Stack>
+
+        <Stack id="temporaryIndicators" spacing={1}direction="row" justifyContent="space-around" sx={{flexWrap:"wrap", rowGap:"20px"}}>
+          <TemporaryIndicator />
+          <TemporaryIndicator />
+          <TemporaryIndicator />
+        </Stack>
+        
       </Stack>
-      
-      
     </Container>
   );
 }
