@@ -19,7 +19,7 @@ export default function TemporaryIndicator({data, visibility}) {
               <Typography sx={{textAlign:"center"}}>Graph/Visualization</Typography>
             </Card>
             <Typography level="body-sm" sx={{fontFamily:"Inter", textAlign:"center", marginTop:"8px"}}>Sort By: <strong>Ward</strong></Typography>
-            <Stack direction="column">
+            <Stack id="subdividedValues" direction="column" sx={{ overflowY:"scroll", maxHeight:"105px"}}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography level="body-md" sx={{fontFamily:"Inter", fontWeight:600 }}>Area 1</Typography>
                 <Typography level="body-md" sx={{fontFamily:"Inter"}}>100</Typography>
@@ -30,6 +30,22 @@ export default function TemporaryIndicator({data, visibility}) {
               </Stack>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography level="body-md" sx={{fontFamily:"Inter", fontWeight:600 }}>Area 3</Typography>
+                <Typography level="body-md" sx={{fontFamily:"Inter"}}>100</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography level="body-md" sx={{fontFamily:"Inter", fontWeight:600 }}>Area 4</Typography>
+                <Typography level="body-md" sx={{fontFamily:"Inter"}}>100</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography level="body-md" sx={{fontFamily:"Inter", fontWeight:600 }}>Area 5</Typography>
+                <Typography level="body-md" sx={{fontFamily:"Inter"}}>100</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography level="body-md" sx={{fontFamily:"Inter", fontWeight:600 }}>Area 6</Typography>
+                <Typography level="body-md" sx={{fontFamily:"Inter"}}>100</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography level="body-md" sx={{fontFamily:"Inter", fontWeight:600 }}>Area 7</Typography>
                 <Typography level="body-md" sx={{fontFamily:"Inter"}}>100</Typography>
               </Stack>
             </Stack>
