@@ -30,14 +30,12 @@ export default function Home({data, setData}) {
   };
 
   useEffect(() => {
+    // TODO: Change to own city-getting logic
     fetchCities();
   }, []);
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}
-    >
+    <Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
       <Stack spacing={5}>
         <header>
           <Typography variant="h4" sx={{textAlign:"center", marginBottom:"10px", fontWeight:"bold", fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:40}}>Indicator Dashboard</Typography>
@@ -59,7 +57,6 @@ export default function Home({data, setData}) {
           <TemporaryIndicator />
           <TemporaryIndicator />
         </Stack>
-        
       </Stack>
     </Container>
   );

@@ -9,10 +9,7 @@ export function Header() {
         {/* <Logo style={{height:60}}/> */}
         {/* <InsertChartRoundedIcon style={{paddingTop:6, fontSize:55, color:"navy"}} /> */}
         <Typography variant="h5" style={{paddingTop:7, paddingLeft:5, fontWeight:"bold", fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:40}}>Search Indicators</Typography>
-
-
       </Stack>
-
     </div>
   );
 }

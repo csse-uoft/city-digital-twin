@@ -2,8 +2,8 @@ import Dashboard from "./Dashboard";
 import Home from "./Home";
 import FAQ from "./FAQ";
 
-import MobileHeader from "./MobileHeader";
-import NewSidebar from "./NewSidebar";
+import MobileHeader from "./MainComponents/MobileHeader";
+import NewSidebar from "./MainComponents/NewSidebar";
 import {Box as JoyBox } from "@mui/joy";
 import { useState } from "react";
 

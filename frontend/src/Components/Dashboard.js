@@ -43,11 +43,11 @@ import {
   handleSum,
   handleAggregation,
   handleChangeAreas,
-} from "./helper_functions";
-import MapView from "./MapView";
-import IndicatorTable from "./Table";
-import ActivePie from "./ActivePie";
-import { Header } from "./Header";
+} from "./SearchPageComponents/helper_functions";
+import MapView from "./DataVisComponents/MapView";
+import IndicatorTable from "./DataVisComponents/Table";
+import ActivePie from "./DataVisComponents/ActivePie";
+import { Header } from "./SearchPageComponents/Header";
 
 import { Button as JoyButton } from "@mui/joy";
 import { Sheet as JoySheet } from "@mui/joy";
@@ -55,9 +55,9 @@ import { Box as JoyBox } from "@mui/joy";
 
 import CloseIcon from "@mui/icons-material/Close";
 
-import { NewDropdown, NewDropdownStateValue } from "./NewDropdown";
-import { NewDropdownMultiSelect } from "./NewDropdownMultiSelect";
-import { NumberInput } from "./NumberInput";
+import { NewDropdown, NewDropdownStateValue } from "./SearchPageComponents/NewDropdown";
+import { NewDropdownMultiSelect } from "./SearchPageComponents/NewDropdownMultiSelect";
+import { NumberInput } from "./SearchPageComponents/NumberInput";
 
 delete L.Icon.Default.prototype._getIconUrl;
 

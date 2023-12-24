@@ -17,7 +17,7 @@ import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import InsertChartRoundedIcon from '@mui/icons-material/InsertChartRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 
-import {ReactComponent as Logo} from "../LOGO-SoC-RGB.svg";
+import {ReactComponent as Logo} from "../../LOGO-SoC-RGB.svg";
 
 
 export const closeSidebar = () => {
