@@ -156,10 +156,10 @@ export default function NewSidebar({activePage, setActivePage}) {
           <Divider />
 
           <ListItem sx={{userSelect: "none"}}>
-            <ListItemButton>
+            <ListItemButton onClick={() => setActivePage("faq")}>
               <HelpOutlineRoundedIcon />
               <ListItemContent>
-                <Typography level="title-sm">FAQ</Typography>
+                <Typography level="title-sm" sx={{...(activePage === "faq" && {fontWeight:"bold"})}}>FAQ</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>

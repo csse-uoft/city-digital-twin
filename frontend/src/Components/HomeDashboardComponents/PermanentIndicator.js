@@ -1,6 +1,5 @@
 import { Card, Stack, Typography } from "@mui/joy";
 
-
 export default function PermanentIndicator({data, visibility}) {
   return (
     <>

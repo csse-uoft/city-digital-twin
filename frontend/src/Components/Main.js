@@ -1,5 +1,6 @@
 import Dashboard from "./Dashboard";
 import Home from "./Home";
+import FAQ from "./FAQ";
 
 import MobileHeader from "./MobileHeader";
 import NewSidebar from "./NewSidebar";
@@ -27,6 +28,8 @@ function Main() {
                 return <Home data={dashboardData} setData={setDashboardData} />;
             case "search":
                 return <Dashboard />;
+            case "faq":
+                return <FAQ />;
             default:
                 break;
         }
