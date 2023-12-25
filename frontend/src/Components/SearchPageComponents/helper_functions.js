@@ -12,7 +12,7 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
       ...prevCityURLs,
       [cityName]: URL,
     }));
-
+    
     setCities([...cities, cityName]);
   });
 };

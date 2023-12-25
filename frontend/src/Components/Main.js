@@ -5,7 +5,8 @@ import FAQ from "./FAQ";
 import MobileHeader from "./MainComponents/MobileHeader";
 import NewSidebar from "./MainComponents/NewSidebar";
 import {Box as JoyBox } from "@mui/joy";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 // The main display that shows the navbar and the indicator dashboard pages
 function Main() {
@@ -13,11 +14,28 @@ function Main() {
 
     const [ dashboardData, setDashboardData ] = useState({
         currentCity: {
+            id: -1,
             name: "",
             URI: ""
         },
         availableCities: {},
-        permanentCards: [],
+        permanentCards: [
+            {
+                id: 1,
+                name: "Test",
+
+                allowedGraphTypes: [],
+                currentGraphType: "line",
+
+                indicatorData: {},
+                mainValue: 0,
+                dataSPARQLQuery: "",
+
+                allowedSubdivisions: [],
+                currentSubdivision: "",
+                currentSubDividedData: {}
+            }
+        ],
         savedCards: [],
         initialCityChosen: false
     });
@@ -34,6 +52,8 @@ function Main() {
                 break;
         }
     };
+
+    
 
     return (
         <JoyBox sx={{ display: 'flex', minHeight: '100dvh' }}>

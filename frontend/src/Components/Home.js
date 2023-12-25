@@ -2,36 +2,16 @@ import { useEffect } from "react";
 import { Container, Typography } from "@mui/material";
 import { Select, Option } from "@mui/joy";
 import { Stack } from "@mui/joy";
-import axios from "axios";
+
 import TopBarIndicator from "./HomeDashboardComponents/TopBarIndicator";
 import PermanentIndicator from "./HomeDashboardComponents/PermanentIndicator";
 import TemporaryIndicator from "./HomeDashboardComponents/TemporaryIndicator";
+import { fetchCities, fetchPermanentIndicatorData, fetchSavedIndicatorData } from "./HomeDashboardComponents/dashboard_helper_functions";
 
 export default function Home({data, setData}) {
-  const fetchCities = async () => {
-    const response = await axios.get(`http://localhost:3000/api/0`);
-
-    response.data.cityNames.forEach((URL, index) => {
-      const [, cityName] = URL.split("#");
-      const dataCopy = data;
-      
-      dataCopy.availableCities[cityName] = URL;
-
-      setData(dataCopy);
-    });
-  };
-
-  const fetchPermanentIndicatorData = async () => {
-    
-  };
-
-  const fetchSavedIndicatorData = async () => {
-
-  };
-
   useEffect(() => {
-    // TODO: Change to own city-getting logic
-    fetchCities();
+    fetchCities(data, setData);
+    console.log(data.availableCities);
   }, []);
 
   return (
@@ -39,9 +19,28 @@ export default function Home({data, setData}) {
       <Stack spacing={5}>
         <header>
           <Typography variant="h4" sx={{textAlign:"center", marginBottom:"10px", fontWeight:"bold", fontFamily:"Trade Gothic Next LT Pro Cn, sans-serif", fontSize:40}}>Indicator Dashboard</Typography>
-          <Select placeholder="Select City" sx={{margin:"auto", maxWidth:"250px", marginBottom:"10px"}}>
-            <Option value="City1">City1</Option>
-            <Option value="City2">City2</Option>
+          <Select 
+            placeholder="Select City" 
+            sx={{margin:"auto", maxWidth:"250px", marginBottom:"10px"}}
+            onChange={(_, newValue) => {
+              const tempDashData = {...data};
+              tempDashData.currentCity.id = newValue;
+              tempDashData.currentCity.name = tempDashData.availableCities[newValue].name;
+              tempDashData.currentCity.URI = tempDashData.availableCities[newValue].URI;
+
+              if (!tempDashData.initialCityChosen) {
+                tempDashData.initialCityChosen = true;
+              }
+              
+              setData(tempDashData);
+
+              fetchPermanentIndicatorData(data, setData);
+              fetchSavedIndicatorData(data, setData);
+            }}
+          >
+            {Object.entries(data.availableCities).map(([cityID, cityData]) => (
+              <Option value={cityID}>{cityData.name}</Option>
+            ))}
           </Select>
           <TopBarIndicator />
         </header>
