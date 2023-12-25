@@ -37,7 +37,10 @@ function Main() {
             }
         ],
         savedCards: [],
-        initialCityChosen: false
+        initialCityChosen: false,
+        userSettings: {
+            numYearsForGraphs: 5
+        }
     });
 
     const choosePage = () => {
@@ -52,8 +55,6 @@ function Main() {
                 break;
         }
     };
-
-    
 
     return (
         <JoyBox sx={{ display: 'flex', minHeight: '100dvh' }}>

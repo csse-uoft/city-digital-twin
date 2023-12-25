@@ -15,7 +15,7 @@ import {
   Pie,
 } from "recharts";
 
-export default function IndicatorGraph({graphData, graphType}) {
+export default function GraphSelector({graphData, graphType}) {
   const selectGraph = () => {
     switch (graphType) {
       case "line":
