@@ -147,9 +147,20 @@ export const fetchLocations = async (
 
         // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
         // The code requires Lat/Lon, so flip it back.
-        flipped.coordinates = flipped.coordinates.map((innerArray) =>
-          innerArray.map((coords) => [coords[1], coords[0]])
-        );
+
+        if (flipped.type === "Polygon") {
+          flipped.coordinates = flipped.coordinates.map((innerArray) =>
+            innerArray.map((coords) => [coords[1], coords[0]])
+          );
+        } else {
+          // flipped is a MULTIpolygon
+          flipped.coordinates = flipped.coordinates.map((firstInnerArray) => 
+            firstInnerArray.map((secondInnerArray) => 
+              secondInnerArray.map((coords) => [coords[1], coords[0]])
+            )
+          );
+        }
+        
         updatedLocationURLs[Instance["adminAreaInstance"]] = flipped;
       });
       setLocationURLs(updatedLocationURLs);
