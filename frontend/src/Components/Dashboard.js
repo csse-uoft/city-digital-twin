@@ -605,7 +605,7 @@ function Dashboard() {
                   {selectedIndicators[mapPolygons[indicator].index]}
                 </Typography>
                 <IndicatorTable
-                  defaultTheme={defaultTheme}
+                  // defaultTheme={defaultTheme}
                   selectedIndicators={selectedIndicators}
                   mapPolygons={mapPolygons}
                   indicator={indicator}

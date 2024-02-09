@@ -16,12 +16,26 @@ import {
 } from "recharts";
 import { Stack, Select, Option } from "@mui/joy";
 
-export default function GraphSelector({graphData, graphType, setGraphType}) {
+export default function GraphSelector({graphData, graphType, setGraphType, selectedAreas}) {
   const selectGraph = () => {
     switch (graphType) {
       case "line":
         return (
-          <LineChart>
+          <LineChart
+            data={graphData}
+          >
+            {selectedAreas.map((instance, index) => (
+              <Line
+                key={instance} // Add a unique key for each Line
+                type="monotone"
+                dataKey={currentAreaNames[instance]}
+                stroke={colors[index % colors.length]} // Use colors[index] to assign a color
+              />
+            ))}
+            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <ChartTooltip />
 
           </LineChart>
         );
