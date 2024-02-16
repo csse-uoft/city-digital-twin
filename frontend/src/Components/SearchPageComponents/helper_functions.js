@@ -297,7 +297,10 @@ export const handleAddYears = (years, setYears) => {
 };
 
 export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
+  console.log("checking  years before temp is initialized", years);
   var temp = years.slice(0, id);
+  console.log("initial temp value", temp)
+  console.log("years when it is sliced", years)
   if (startOrEnd === "start") {
     temp.push({
       value1: event.target.value,
@@ -311,11 +314,14 @@ export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
       id: id,
     });
   }
-
-  if (years.slice(id + 1).length !== 0) {
-    temp.push(years.slice(id + 1));
+  var sliced_years = years.slice(id + 1);
+  if (sliced_years.length !== 0) {
+    for(var y in sliced_years){
+      temp.push(sliced_years[y]);
+    }
+    // temp.push(years.slice(id + 1));
   }
-
+  console.log("final temp value", temp)
   setYears(temp);
 };
 
