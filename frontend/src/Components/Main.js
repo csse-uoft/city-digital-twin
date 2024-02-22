@@ -40,7 +40,8 @@ function Main() {
         initialCityChosen: false,
         userSettings: {
             numYearsForGraphs: 5
-        }
+        },
+        savedIndicators: { num: 0 }
     });
 
     const choosePage = () => {
@@ -48,7 +49,7 @@ function Main() {
             case "dashboard":
                 return <Home data={dashboardData} setData={setDashboardData} />;
             case "search":
-                return <Dashboard />;
+                return <Dashboard savedIndicators={dashboardData.savedIndicators} setDashboardData={setDashboardData}/>;
             case "faq":
                 return <FAQ />;
             default:

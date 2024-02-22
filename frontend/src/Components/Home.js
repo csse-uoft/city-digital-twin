@@ -13,7 +13,7 @@ export default function Home({data, setData}) {
     fetchCities(data, setData);
     console.log(data.availableCities);
   }, []);
-
+  
   return (
     <Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
       <Stack spacing={5}>

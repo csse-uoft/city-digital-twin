@@ -54,6 +54,7 @@ import { Sheet as JoySheet } from "@mui/joy";
 import { Box as JoyBox } from "@mui/joy";
 
 import CloseIcon from "@mui/icons-material/Close";
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 
 import { NewDropdown, NewDropdownStateValue } from "./SearchPageComponents/NewDropdown";
 import { NewDropdownMultiSelect } from "./SearchPageComponents/NewDropdownMultiSelect";
@@ -67,7 +68,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-function Dashboard() {
+function Dashboard(savedIndicators, setDashboardData) {
   const defaultTheme = createTheme();
   // Refer to the documentation to understand each state and their purpose
 
@@ -592,6 +593,7 @@ function Dashboard() {
           {Object.keys(mapPolygons).map((indicator) => (
             <Paper sx={{ padding: "20px", paddingBottom: "50px" }}>
               <Stack spacing={3}>
+              
                 <Typography
                   variant="h4"
                   align="center"
@@ -604,6 +606,25 @@ function Dashboard() {
                 >
                   {selectedIndicators[mapPolygons[indicator].index]}
                 </Typography>
+                <JoyBox
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <JoyButton
+                    size="sm"
+                    sx={{width:"50%"}}
+                    variant="solid"
+                    color="primary"
+                    endDecorator={<SaveAsIcon />}
+                    onClick={() => setShowingVisualization(false)}
+                  >
+                    Save Visualization
+                  </JoyButton>
+                </JoyBox>
+                
                 <IndicatorTable
                   defaultTheme={defaultTheme}
                   selectedIndicators={selectedIndicators}

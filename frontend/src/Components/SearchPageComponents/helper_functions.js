@@ -369,3 +369,7 @@ export const handleGenerateVisualization = async (
   }
   setVisLoading(false);
 };
+
+export const addSavedIndicator = () => {
+
+};
