@@ -368,6 +368,54 @@ export const handleGenerateVisualization = async (
   setVisLoading(true);
   setMapPolygons([]);
 
+  const fetchData = async () => {
+    const promises = Object.keys(selectedIndicators).map(async (index) => {
+      const response = await axios.post("http://localhost:3000/api/4", {
+        cityName: cityURLs[adminURLs["currCity"]],
+        adminType: currentAdminType,
+        adminInstance: currentAdminInstances,
+        indicatorName: indicatorURLs[selectedIndicators[index]],
+        startTime: years[parseInt(index)].value1,
+        endTime: years[parseInt(index)].value2,
+      });
+  
+      const unitType = await axios.post("http://localhost:3000/api/5", {
+        subject: indicatorURLs[selectedIndicators[index]],
+        predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit"
+      });
+  
+      if (unitType.data["propertyValue"].length === 0) {
+        console.log("GOT IN");
+        unitType.data["propertyValue"].push("NONE");
+      }
+  
+      console.log(
+        "final data",
+        index,
+        unitType.data["propertyValue"],
+        response.data["indicatorDataValues"],
+      );
+  
+      return {
+        indicator: indicatorURLs[selectedIndicators[index]],
+        data: response.data["indicatorDataValues"],
+        unit: unitType.data["propertyValue"]
+      };
+    });
+  
+    const results = await Promise.all(promises);
+  
+    const newData = results.reduce((acc, { indicator, data, unit }) => {
+      acc[indicator] = { data, unit };
+      return acc;
+    }, {});
+  
+    setIndicatorData((prevData) => ({
+      ...prevData,
+      ...newData
+    }));
+  }
+
   if (checkIfInputsFilled()) {
     if (showVisError) {
       setShowVisError(false);
@@ -376,29 +424,46 @@ export const handleGenerateVisualization = async (
     setIndicatorData({});
 
     try {
-      await Promise.all(
-        Object.keys(selectedIndicators).map(async (index) => {
-          const response = await axios.post("http://localhost:3000/api/4", {
-            cityName: cityURLs[adminURLs["currCity"]],
-            adminType: currentAdminType,
-            adminInstance: currentAdminInstances,
-            indicatorName: indicatorURLs[selectedIndicators[index]],
-            startTime: years[parseInt(index)].value1,
-            endTime: years[parseInt(index)].value2,
-          });
+      // await Promise.all(
+      //   Object.keys(selectedIndicators).map(async (index) => {
+      //     const response = await axios.post("http://localhost:3000/api/4", {
+      //       cityName: cityURLs[adminURLs["currCity"]],
+      //       adminType: currentAdminType,
+      //       adminInstance: currentAdminInstances,
+      //       indicatorName: indicatorURLs[selectedIndicators[index]],
+      //       startTime: years[parseInt(index)].value1,
+      //       endTime: years[parseInt(index)].value2,
+      //     });
 
-          console.log(
-            "final data",
-            index,
-            response.data["indicatorDataValues"]
-          );
-          setIndicatorData((prevData) => ({
-            ...prevData,
-            [indicatorURLs[selectedIndicators[index]]]:
-              response.data["indicatorDataValues"],
-          }));
-        })
-      );
+      //     const unitType = await axios.post("http://localhost:3000/api/5", {
+      //       subject: indicatorURLs[selectedIndicators[index]],
+      //       predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit"
+      //     });
+
+      //     if (!unitType.data["propertyValue"]) {
+      //       unitType.data["propertyValue"] = "NONE";
+      //     }
+
+      //     console.log(
+      //       "final data",
+      //       index,
+      //       response.data["indicatorDataValues"],
+      //       unitType.data["propertyValue"]
+      //     );
+      //     // setIndicatorData((prevData) => ({
+      //     //   ...prevData,
+      //     //   [indicatorURLs[selectedIndicators[index]]]:
+      //     //     response.data["indicatorDataValues"],
+      //     // }));
+
+      //     setIndicatorData((prevData) => ({
+      //       ...prevData,
+      //       [indicatorURLs[selectedIndicators[index]]]:
+      //         {data: response.data["indicatorDataValues"], unit: unitType.data["propertyValue"]},
+      //     }));
+      //   })
+      // );
+      await fetchData();
       setBeginGeneration(true);
     } catch (error) {
       console.error("POST Error:", error);

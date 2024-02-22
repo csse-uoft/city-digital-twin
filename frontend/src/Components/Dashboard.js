@@ -177,7 +177,7 @@ function Dashboard(savedIndicators, setDashboardData) {
 
         setTableData((prevData) => ({
           ...prevData,
-          [indicator]: Object.entries(indicatorData[indicator]).map(
+          [indicator]: Object.entries(indicatorData[indicator].data).map(
             ([instanceURL, data]) =>
               [currentAreaNames[instanceURL]].concat(
                 Object.entries(data).map(([year, value]) => value)
@@ -193,7 +193,7 @@ function Dashboard(savedIndicators, setDashboardData) {
             const val = Object.fromEntries(
               currentAdminInstances.map((instance) => [
                 currentAreaNames[instance],
-                indicatorData[indicator][instance][year],
+                indicatorData[indicator].data[instance][year],
               ])
             );
 
@@ -209,7 +209,7 @@ function Dashboard(savedIndicators, setDashboardData) {
         // Set map information
 
         const itemColor = (key) => {
-          if (Object.keys(indicatorData[indicator]).indexOf(key) !== -1) {
+          if (Object.keys(indicatorData[indicator].data).indexOf(key) !== -1) {
             return "green";
           } else {
             return "red";
@@ -222,7 +222,7 @@ function Dashboard(savedIndicators, setDashboardData) {
             pathOptions={{ color: itemColor(key) }}
             positions={locationURLs[key].coordinates}
           >
-            {Object.keys(indicatorData[indicator]).indexOf(key) === -1 ? (
+            {Object.keys(indicatorData[indicator].data).indexOf(key) === -1 ? (
               <>
                 <Tooltip sticky>
                   <strong>{currentAreaNames[key]}</strong> <br />
@@ -238,7 +238,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                 <Tooltip sticky>
                   <strong>{currentAreaNames[key]}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator][key]).map(
+                  {Object.entries(indicatorData[indicator].data[key]).map(
                     ([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
@@ -249,7 +249,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                 <Popup>
                   <strong>{currentAreaNames[key]}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator][key]).map(
+                  {Object.entries(indicatorData[indicator].data[key]).map(
                     ([year, value]) => (
                       <div key={currentAreaNames[key]}>
                         {value} ({year})
