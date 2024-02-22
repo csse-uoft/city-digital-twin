@@ -28,6 +28,13 @@ export const fetchAdministration = async (
       const response = await axios.post("http://localhost:3000/api/2", {
         cityName: cityURLs[city],
       });
+
+      if (response.data === undefined) {
+        response = await axios.post("http://localhost:3000/api/2", {
+          cityName: cityURLs[city],
+        });
+      }
+
       setAdminURLs({ currCity: city }); //The current city is stored in the adminURL['currCity']
       response.data.adminAreaTypeNames.forEach((URL, index) => {
         const [, adminName] = URL.split("#");
@@ -60,7 +67,16 @@ export const fetchIndicators = async (
       const response = await axios.post("http://localhost:3000/api/1", {
         cityName: cityURLs[city],
       });
-      console.log("response", response.data.indicatorNames);
+      console.log("indicators", response.data.indicatorNames);
+
+      if (response.data === undefined) {
+        // If database returns nothing, try again
+        response = await axios.post("http://localhost:3000/api/1", {
+          cityName: cityURLs[city],
+        });
+        console.log("indicators, attempt 2", response.data.indicatorNames);
+      }
+
       response.data.indicatorNames.forEach((URL, index) => {
         const [, indName] = URL.split("#");
 
@@ -100,6 +116,16 @@ export const fetchArea = async (
         adminType: adminURLs[admin],
       });
       console.log("admin instances", response.data["adminAreaInstanceNames"]);
+
+      if (response.data === undefined) {
+        // If the database failed to return anything, try again
+        response = await axios.post("http://localhost:3000/api/3", {
+          cityName: cityURLs[adminURLs["currCity"]],
+          adminType: adminURLs[admin],
+        });
+        console.log("admin instances attempt 2", response.data["adminAreaInstanceNames"]);
+      }
+
       response.data["adminAreaInstanceNames"].forEach((Instance, index) => {
         setAreaURLs((prevAreaURLs) => ({
           ...prevAreaURLs,
@@ -136,7 +162,16 @@ export const fetchLocations = async (
         cityName: cityURLs[adminURLs["currCity"]],
         adminType: adminURLs[admin],
       });
-      console.log("admin instances", response.data["adminAreaInstanceNames"]);
+      console.log("list of all admin instances", response.data["adminAreaInstanceNames"]);
+
+      if (response.data === undefined) {
+        // If the database failed to return anything, try again
+        response = await axios.post("http://localhost:3000/api/6", {
+          cityName: cityURLs[adminURLs["currCity"]],
+          adminType: adminURLs[admin],
+        });
+        console.log("list of all admin instances, attempt 2", response.data["adminAreaInstanceNames"]);
+      }
 
       const updatedLocationURLs = { ...locationURLs };
       response.data["adminAreaInstanceNames"].forEach((Instance, index) => {
@@ -262,7 +297,10 @@ export const handleAddYears = (years, setYears) => {
 };
 
 export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
+  console.log("checking  years before temp is initialized", years);
   var temp = years.slice(0, id);
+  console.log("initial temp value", temp)
+  console.log("years when it is sliced", years)
   if (startOrEnd === "start") {
     temp.push({
       value1: event.target.value,
@@ -276,11 +314,14 @@ export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
       id: id,
     });
   }
-
-  if (years.slice(id + 1).length !== 0) {
-    temp.push(years.slice(id + 1));
+  var sliced_years = years.slice(id + 1);
+  if (sliced_years.length !== 0) {
+    for(var y in sliced_years){
+      temp.push(sliced_years[y]);
+    }
+    // temp.push(years.slice(id + 1));
   }
-
+  console.log("final temp value", temp)
   setYears(temp);
 };
 

@@ -11,7 +11,7 @@ import {
 } from '@mui/material/styles';
 
 // [{name:NAME, data:DATA, coord:COORDS}]
-function IndicatorTable({defaultTheme, selectedIndicators, mapPolygons, indicator, tableColumns, tableData}) {
+function IndicatorTable({selectedIndicators, mapPolygons, indicator, tableColumns, tableData}) {
   // const defaultTheme = createTheme();
   const theme = materialExtendTheme();
   return (

@@ -626,7 +626,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                 </JoyBox>
                 
                 <IndicatorTable
-                  defaultTheme={defaultTheme}
+                  // defaultTheme={defaultTheme}
                   selectedIndicators={selectedIndicators}
                   mapPolygons={mapPolygons}
                   indicator={indicator}
