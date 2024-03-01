@@ -59,6 +59,7 @@ import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { NewDropdown, NewDropdownStateValue } from "./SearchPageComponents/NewDropdown";
 import { NewDropdownMultiSelect } from "./SearchPageComponents/NewDropdownMultiSelect";
 import { NumberInput } from "./SearchPageComponents/NumberInput";
+import ComparisonGraph from "./DataVisComponents/ComparisonGraph";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -137,8 +138,8 @@ function Dashboard(savedIndicators, setDashboardData) {
 
   // This useEffect is for testing and developement purposes
   useEffect(() => {
-    console.log("testing", currentAreaNames);
-  }, [currentAreaNames]);
+    console.log("chartData", chartData);
+  }, [chartData]);
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
@@ -771,6 +772,10 @@ function Dashboard(savedIndicators, setDashboardData) {
               </Stack>
             </Paper>
           ))}
+          <JoyBox sx={{ display: "flex", justifyContent: "center", paddingTop: "150px"}}>
+            <ComparisonGraph data={indicatorData} colors={colors}/>
+          </JoyBox>
+            
         </Stack>
       )}
     </Container>

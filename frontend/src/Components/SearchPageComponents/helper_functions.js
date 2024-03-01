@@ -2,7 +2,7 @@ import Wkt from "wicket";
 import axios from "axios";
 
 export const fetchCities = async (setCityURLs, setCities, cities) => {
-  console.log("hello world");
+  
   const response = await axios.get(`http://localhost:3000/api/0`);
 
   response.data.cityNames.forEach((URL, index) => {
@@ -74,7 +74,6 @@ export const fetchIndicators = async (
         response = await axios.post("http://localhost:3000/api/1", {
           cityName: cityURLs[city],
         });
-        console.log("indicators, attempt 2", response.data.indicatorNames);
       }
 
       response.data.indicatorNames.forEach((URL, index) => {
@@ -123,7 +122,6 @@ export const fetchArea = async (
           cityName: cityURLs[adminURLs["currCity"]],
           adminType: adminURLs[admin],
         });
-        console.log("admin instances attempt 2", response.data["adminAreaInstanceNames"]);
       }
 
       response.data["adminAreaInstanceNames"].forEach((Instance, index) => {
@@ -170,7 +168,6 @@ export const fetchLocations = async (
           cityName: cityURLs[adminURLs["currCity"]],
           adminType: adminURLs[admin],
         });
-        console.log("list of all admin instances, attempt 2", response.data["adminAreaInstanceNames"]);
       }
 
       const updatedLocationURLs = { ...locationURLs };
@@ -209,10 +206,8 @@ export const fetchLocations = async (
 };
 export const handleSum = (indicator, chartData) => {
   let data = JSON.parse(JSON.stringify(chartData[indicator]));
-  console.log("beforeSUM", data);
   for (const yearData of data) {
     // Calculate the total for the current year
-    console.log("year", yearData);
     let total = 0;
 
     for (const key in yearData) {
@@ -228,7 +223,6 @@ export const handleSum = (indicator, chartData) => {
     // Add the 'total' property to the current year's data
     yearData.total = total;
   }
-  console.log("sumDATA", data === chartData[indicator]);
   return data;
 };
 
@@ -297,10 +291,7 @@ export const handleAddYears = (years, setYears) => {
 };
 
 export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
-  console.log("checking  years before temp is initialized", years);
   var temp = years.slice(0, id);
-  console.log("initial temp value", temp)
-  console.log("years when it is sliced", years)
   if (startOrEnd === "start") {
     temp.push({
       value1: event.target.value,
@@ -321,7 +312,6 @@ export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
     }
     // temp.push(years.slice(id + 1));
   }
-  console.log("final temp value", temp)
   setYears(temp);
 };
 
@@ -385,7 +375,7 @@ export const handleGenerateVisualization = async (
       });
   
       if (unitType.data["propertyValue"].length === 0) {
-        console.log("GOT IN");
+        
         unitType.data["propertyValue"].push("NONE");
       }
   
