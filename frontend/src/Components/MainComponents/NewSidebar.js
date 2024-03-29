@@ -127,6 +127,7 @@ export default function NewSidebar({activePage, setActivePage}) {
           }
         }}
       >
+        {/* This is where to set the pages on the sidebar (Home, Search, etc.) */}
         <List
           size="sm"
           sx={{

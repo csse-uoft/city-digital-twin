@@ -2,6 +2,11 @@ import { Typography, Stack, AccordionGroup } from "@mui/joy";
 import { Container } from "@mui/material";
 import FAQQuestion from "./FAQComponents/FAQQuestion";
 
+/*
+ * This function implements the FAQ page, a location for frequently asked questions.
+ * Each FAQQuestion component is a standalone question and answer accordion section (dropdown). You can copy and paste them inside the AccordionGroup to add new questions.
+ * Insert the question into the 'question' property and the answer into the 'answer' property, as the examples show.
+ */
 export default function FAQ() {
   return (
     <Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
