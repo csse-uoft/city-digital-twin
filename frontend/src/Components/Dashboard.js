@@ -143,11 +143,29 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [indicatorURLs, setIndicatorURLs] = useState({});
 
-  
+  /*
+   * Contains the coordinates for each specific area instance mapped to the area’s URI.
+   * Format: An object, with each key-value pair representing an the location of an area. The key is the URI and the value is the coordinates in an array.
+   * Parameters: N/A
+   */
   const [locationURLs, setLocationURLs] = useState({});
 
   const [selectedIndicators, setSelectedIndicators] = useState({ 0: "" });
 
+  /*
+   * Contains the data for each selected indicator.
+   * Format: An object with all selected indicators as its child objects. Each child object (selected indicator) is a URI that maps to the selected area’s URI. Finally, the selected Area’s URI maps to the each year and its desired data/value.
+   * Example Data: 
+      {
+        "http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": {
+          "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood82": {
+            "2016": 51,
+            "2017": 35,
+            "2018": 42
+          }
+        }
+      }
+   */
   const [indicatorData, setIndicatorData] = useState({});
 
   /*
@@ -166,21 +184,58 @@ function Dashboard(savedIndicators, setDashboardData) {
    * Example: lol
    */
   const [showingVisualization, setShowingVisualization] = useState(false);
+
+  /*
+   * Whether the visualization generation functions should activate.
+   * Format: A boolean value, true if the program is ready for the visualization to generate, false otherwise.
+   * Parameters: N/A
+   * Example: lol
+   */
   const [beginGeneration, setBeginGeneration] = useState(false);
 
-  
+  /*
+   * The URI of the current selected administrative area type.
+   */
   const [currentAdminType, setCurrentAdminType] = useState("");
+
+  /*
+   * The URIs of the currently selected administrative area instances.
+   * Format: Array (ordered list).
+   */
   const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
-  const [currentAreaNames, setCurrentAreaNames] = useState({});
+
+  /*
+   * The NAMES of the currently selected administrative area instances.
+   * Format: Array (ordered list).
+   */
   const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
 
+  /*
+   * The names of all the administrative areas.
+   * Format: Key-value pairs, where the key is the URI of the admin area instance and the value is the name
+   * Example: {"http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood77":"Waterfront Communities-The Island (77)"}
+   */
+  const [currentAreaNames, setCurrentAreaNames] = useState({});
+
+  /*
+   * The relevant table column names for each indicator.
+   * The first column is always "Admin Area Name", followed by the year range that the user has selected for the current indicator
+   * Format: Key-value pairs, where the key is the URI of the indicator and the value is an array of strings representing the years selected for the data
+   * Example: {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016":["Admin Area Name", "2016", "2017", "2018"]}
+   */
   const [tableColumns, setTableColumns] = useState({});
 
-  
+  /*
+   * The indicators data, formatted for display on the table.
+   * Format: Key-value pairs, where the key is the URI of the indicator and the value is an array of arrays, each representing a row on the 
+   *         table; the first element of the innermost sub-array is the name of the administrative area instance, followed by a list of NUMERICAL (not string) values
+   *         for the year range, as determined in tableColumns for that indicator.
+   * Example: {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016":[["Waterfront Communities-The Island (77)", 20, 30, 40], ["Atlantis", 0, 0, 0]]}
+   */
   const [tableData, setTableData] = useState({});
 
   /*
-   * Data for the graphs. This one is easier to explain with an example.
+   * The indicators data, formatted for display on the graphs.
    * Example: 
       {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": [
           {
@@ -236,7 +291,7 @@ function Dashboard(savedIndicators, setDashboardData) {
    * Each visualization has two customizable graphs, with various types available: bar, line, etc.
    * Format: key-value pairs, where the key is the indicator URI and the value is the graph type (bar, line, etc.)
    * Parameters: N/A
-   * Example: {'http://ontology.eil.utoronto.ca/Toronto/Toronto#Something': 'bar'}
+   * Example: {'http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016': 'bar'}
    */
   const [graphTypes, setGraphTypes] = useState({});
 
@@ -245,7 +300,7 @@ function Dashboard(savedIndicators, setDashboardData) {
    * Each visualization has two customizable graphs, with various types available: bar, line, etc.
    * Format: key-value pairs, where the key is the indicator URI and the value is the graph type (bar, line, etc.)
    * Parameters: N/A
-   * Example: {'http://ontology.eil.utoronto.ca/Toronto/Toronto#Something': 'bar'}
+   * Example: {'http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016': 'bar'}
    */
   const [comparisonGraphTypes, setComparisonGraphTypes] = useState({});
 
@@ -287,6 +342,10 @@ function Dashboard(savedIndicators, setDashboardData) {
   useEffect(() => {
     console.log("chartData", chartData);
   }, [chartData]);
+
+  useEffect(() => {
+    console.log("tableData", tableData);
+  }, [tableData]);
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
