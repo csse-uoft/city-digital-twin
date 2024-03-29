@@ -150,6 +150,11 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [locationURLs, setLocationURLs] = useState({});
 
+  /*
+   * The URIs of the indicators that are currently selected from each dropdown.
+   * Format: Key-value pairs, where the key is the index of the dropdown (0-->first dropdown) and the value is the NAME of the indicator selected.
+   * Example: {0:"TheftOverCrime2016", 1:"TheftOverCrimeRate2016"}
+   */
   const [selectedIndicators, setSelectedIndicators] = useState({ 0: "" });
 
   /*
