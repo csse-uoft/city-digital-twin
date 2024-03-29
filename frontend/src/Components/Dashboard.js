@@ -144,14 +144,14 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
-   * Contains the coordinates for each specific area instance mapped to the area’s URI.
+   * The coordinates for each specific area instance mapped to the area’s URI.
    * Format: An object, with each key-value pair representing an the location of an area. The key is the URI and the value is the coordinates in an array.
    * Parameters: N/A
    */
   const [locationURLs, setLocationURLs] = useState({});
 
   /*
-   * The URIs of the indicators that are currently selected from each dropdown.
+   * The names of the indicators that are currently selected from each dropdown.
    * Format: Key-value pairs, where the key is the index of the dropdown (0-->first dropdown) and the value is the NAME of the indicator selected.
    * Example: {0:"TheftOverCrime2016", 1:"TheftOverCrimeRate2016"}
    */
