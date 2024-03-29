@@ -158,9 +158,9 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [selectedIndicators, setSelectedIndicators] = useState({ 0: "" });
 
   /*
-   * Contains the data for each selected indicator.
+   * The data for each selected indicator.
    * Format: An object with all selected indicators as its child objects. Each child object (selected indicator) is a URI that maps to the selected area’s URI. Finally, the selected Area’s URI maps to the each year and its desired data/value.
-   * Example Data: 
+   * Example: 
       {
         "http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": {
           "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood82": {
@@ -177,8 +177,9 @@ function Dashboard(savedIndicators, setDashboardData) {
    * The polygons used to draw the administrative area instances on the map.
    * Format: key-value pairs, where the key is the URI of the desired indicator and the value is an object containing all the polygons of the 
    *         selected administrative area type, including those not selected as well as the indicator data of the selected areas
-   * Parameters: N/A
-   * Example: (TODO)
+   * Parameters: 
+   *   - index: the index of the indicator (which box in the form it's a part of)
+   * Example: {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2018":{index:0, polygons:[THE POLYGONS, IN AN ARRAY.]}
    */
   const [mapPolygons, setMapPolygons] = useState({});
 
@@ -285,7 +286,7 @@ function Dashboard(savedIndicators, setDashboardData) {
   /*
    * Indicates if an administrative area type has been selected from its dropdown.
    * While false, dependent dropdowns in the menu will be disabled.
-   * Format: A boolean value, true if loading or false otherwise
+   * Format: A boolean value, true if selected or false otherwise
    * Parameters: N/A
    * Example: lol
    */
@@ -351,6 +352,10 @@ function Dashboard(savedIndicators, setDashboardData) {
   useEffect(() => {
     console.log("tableData", tableData);
   }, [tableData]);
+
+  useEffect(() => {
+    console.log("mapPolygons", mapPolygons);
+  }, [mapPolygons]);
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
@@ -1016,3 +1021,4 @@ function Dashboard(savedIndicators, setDashboardData) {
 }
 
 export default Dashboard;
+
