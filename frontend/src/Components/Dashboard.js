@@ -103,6 +103,7 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
   const [currentAreaNames, setCurrentAreaNames] = useState({});
   const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
+  const [currentSelectedMultiIndicators, setCurrentSelectedMultiIndicators] = useState([]);
 
   const [tableColumns, setTableColumns] = useState({});
   const [tableData, setTableData] = useState({});
@@ -134,12 +135,13 @@ function Dashboard(savedIndicators, setDashboardData) {
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs, setCities, cities);
+    
   }, []);
 
   // This useEffect is for testing and developement purposes
   useEffect(() => {
-    console.log("chartData", chartData);
-  }, [chartData]);
+    console.log("selected Indicators", currentSelectedMultiIndicators);
+  }, [currentSelectedMultiIndicators]);
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
@@ -635,48 +637,51 @@ function Dashboard(savedIndicators, setDashboardData) {
                   tableData={tableData}
                 />
                 <Grid container>
-                  <Grid sm="6">
-                    <JoyBox sx={{ height: "100px" }}>
+                  <Grid sm="12" md="6">
+                    <JoyBox sx={{ minHeight: "100px", alignItems: 'center'}}>
                       <MapView
                         mapPolygons={mapPolygons}
                         indicator={indicator}
                       />
                     </JoyBox>
                   </Grid>
-                  <Grid sm="6">
-                    <JoyBox sx={{ display: "flex", justifyContent: "center" }}>
-                      <NewDropdownStateValue
-                        id={`change-graph-${indicator}-1`}
-                        label="Graph Type 1"
-                        options={["Bar", "Line"]}
-                        disabled={false}
-                        onChange={(event, newValue) => {
-                          setGraphTypes((prevGraphTypes) => ({
-                            ...prevGraphTypes,
-                            [indicator]: newValue,
-                          }));
-                        }}
-                        value={graphTypes[indicator] || "Bar"} // Default
-                        desc=""
-                      />
-                      <JoyBox sx={{ paddingLeft: "10%" }}></JoyBox>
-                      <NewDropdownStateValue
-                        id={`change-graph-${indicator}-2`}
-                        label="Graph Type 2"
-                        options={["Area", "Pie"]}
-                        disabled={false}
-                        onChange={(event, newValue) => {
-                          setComparisonGraphTypes(
-                            (prevComparisonGraphTypes) => ({
-                              ...prevComparisonGraphTypes,
+                  <Grid sm="12" md="6">
+                    <Grid container sx={{ display: "flex", justifyContent: "center", textAlign: 'center', alignItems: 'center'}}>
+                      <Grid sm='6' md='12' lg='6'  sx={{maxWidth: '140px', display: 'flex', justifyContent: 'center'}}>
+                        <NewDropdownStateValue 
+                          id={`change-graph-${indicator}-1`}
+                          label="Graph Type 1"
+                          options={["Bar", "Line"]}
+                          disabled={false}
+                          onChange={(event, newValue) => {
+                            setGraphTypes((prevGraphTypes) => ({
+                              ...prevGraphTypes,
                               [indicator]: newValue,
-                            })
-                          );
-                        }}
-                        value={comparisonGraphTypes[indicator] || "Area"} // Default
-                        desc=""
-                      />
-                    </JoyBox>
+                            }));
+                          }}
+                          value={graphTypes[indicator] || "Bar"} // Default
+                          desc=""
+                        />
+                      </Grid>
+                      <Grid sm='6' md='12' lg='6' sx={{maxWidth: '140px' , display: 'flex', justifyContent: 'center'}}>
+                        <NewDropdownStateValue
+                          id={`change-graph-${indicator}-2`}
+                          label="Graph Type 2"
+                          options={["Area", "Pie"]}
+                          disabled={false}
+                          onChange={(event, newValue) => {
+                            setComparisonGraphTypes(
+                              (prevComparisonGraphTypes) => ({
+                                ...prevComparisonGraphTypes,
+                                [indicator]: newValue,
+                              })
+                            );
+                          }}
+                          value={comparisonGraphTypes[indicator] || "Area"} // Default
+                          desc=""
+                        />
+                      </Grid>
+                    </Grid>
                     <ResponsiveContainer width="100%" height={300}>
                       {graphTypes[indicator] === "Line" ? (
                         // Render LineChart based on graphTypes[indicator]
@@ -699,13 +704,13 @@ function Dashboard(savedIndicators, setDashboardData) {
                         </LineChart>
                       ) : (
                         <JoyBox
-                          sx={{ display: "flex", justifyContent: "center" }}
+                          sx={{ display: "flex", justifyContent: "center", minHeight: '550px'}}
                         >
                           {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
-                          <ResponsiveContainer width="100%" height={300}>
+                          <ResponsiveContainer width="100%" height={500}>
                             <BarChart
                               width={730}
-                              height={250}
+                              height={350}
                               data={chartData[indicator]}
                             >
                               <CartesianGrid strokeDasharray="3 3" />
@@ -772,9 +777,34 @@ function Dashboard(savedIndicators, setDashboardData) {
               </Stack>
             </Paper>
           ))}
-          <JoyBox sx={{ display: "flex", justifyContent: "center", paddingTop: "150px"}}>
-            <ComparisonGraph data={indicatorData} colors={colors}/>
-          </JoyBox>
+          <Grid container spacing={2} sx={{ paddingTop: "150px"}}>
+            <Grid item xs={12} md={12} lg={3}>
+              <JoyBox sx={{paddingTop: '15%', display: 'flex', justifyContent: 'center'}}>
+                <NewDropdownMultiSelect
+                    id="multiple-indicator-select"
+                    label="Select Indicators"
+                    options={Object.values(selectedIndicators)}
+                    onChange={(event, newValue) => {
+                      setCurrentSelectedMultiIndicators(
+                        String(newValue)
+                          .split(",")
+                        // On autofill we get a stringified value.
+                        // typeof value === 'string' ? value.split(',') : value,
+                      );
+                      setCurrentSelectedMultiIndicators(String(newValue).split(","));
+                    }}
+                    desc="Select the indicators you wish to compare."
+                    currentlySelected={currentSelectedMultiIndicators}
+                  />
+                </JoyBox>
+            </Grid>
+            <Grid item xs={12} md={12} lg={9}>
+              
+                <JoyBox>
+                <ComparisonGraph data={indicatorData} indicators={currentSelectedMultiIndicators} colors={colors}/>
+              </JoyBox>
+            </Grid>
+          </Grid>
             
         </Stack>
       )}

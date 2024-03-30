@@ -134,9 +134,10 @@ export default function NewSidebar({activePage, setActivePage}) {
             "--List-nestedInsetStart": "30px",
             "--ListItem-radius": theme => theme.vars.radius.sm
           }}
+          // Disable the Dashboard page for now
         >
           <ListItem sx={{userSelect: "none"}}>
-            <ListItemButton onClick={() => setActivePage("dashboard")}>
+            <ListItemButton onClick={() => setActivePage("dashboard")} disabled={true}>  
               <InsertChartRoundedIcon />
               <ListItemContent>
                 <Typography level="title-sm" sx={{...(activePage === "dashboard" && {fontWeight:"bold"})}}>Dashboard</Typography>

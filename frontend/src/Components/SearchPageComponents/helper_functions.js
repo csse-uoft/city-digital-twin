@@ -4,10 +4,10 @@ import axios from "axios";
 export const fetchCities = async (setCityURLs, setCities, cities) => {
   
   const response = await axios.get(`http://localhost:3000/api/0`);
-
+  console.log("City Response", response.data)
   response.data.cityNames.forEach((URL, index) => {
     const [, cityName] = URL.split("#");
-
+    
     setCityURLs((prevCityURLs) => ({
       ...prevCityURLs,
       [cityName]: URL,
@@ -75,7 +75,7 @@ export const fetchIndicators = async (
           cityName: cityURLs[city],
         });
       }
-
+      
       response.data.indicatorNames.forEach((URL, index) => {
         const [, indName] = URL.split("#");
 

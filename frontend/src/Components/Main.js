@@ -10,7 +10,7 @@ import axios from "axios";
 
 // The main display that shows the navbar and the indicator dashboard pages
 function Main() {
-    const [ activePage, setActivePage ] = useState("dashboard");
+    const [ activePage, setActivePage ] = useState("search");
 
     const [ dashboardData, setDashboardData ] = useState({
         currentCity: {
