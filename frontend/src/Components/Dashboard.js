@@ -339,7 +339,12 @@ function Dashboard(savedIndicators, setDashboardData) {
     "#ff69b4",
     "#9acd32",
   ];
-
+  const handleDropdownChange = (event, newValue) => {
+    if (newValue.length <= 7) {
+      setCurrentSelectedAreas(newValue);
+    }
+    // Optionally, you can provide a feedback to the user if they exceed the limit
+  };
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs, setCities, cities);
@@ -351,13 +356,6 @@ function Dashboard(savedIndicators, setDashboardData) {
     console.log("selected Indicators", currentSelectedMultiIndicators);
   }, [currentSelectedMultiIndicators]);
 
-  useEffect(() => {
-    console.log("tableData", tableData);
-  }, [tableData]);
-
-  useEffect(() => {
-    console.log("mapPolygons", mapPolygons);
-  }, [mapPolygons]);
 
   useEffect(() => {
     // Also checks if number of keys in indicatorData is equal to length of selectedIndicators - will indicate if completely done previous step
@@ -616,14 +614,17 @@ function Dashboard(savedIndicators, setDashboardData) {
                       label="Administrative Area Instances"
                       options={area}
                       onChange={(event, newValue) => {
-                        setCurrentAdminInstances(
-                          String(newValue)
-                            .split(",")
-                            .map((value) => areaURLs[value])
-                          // On autofill we get a stringified value.
-                          // typeof value === 'string' ? value.split(',') : value,
-                        );
-                        setCurrentSelectedAreas(String(newValue).split(","));
+                          setCurrentAdminInstances(
+                            String(newValue)
+                              .split(",")
+                              .map((value) => areaURLs[value])
+                            // On autofill we get a stringified value.
+                            // typeof value === 'string' ? value.split(',') : value,
+                          );
+                          setCurrentSelectedAreas(String(newValue).split(","));
+
+
+                        
                       }}
                       desc="Select the individual demarcation areas you want to analyze."
                       currentlySelected={currentSelectedAreas}
@@ -939,10 +940,10 @@ function Dashboard(savedIndicators, setDashboardData) {
                           sx={{ display: "flex", justifyContent: "center", minHeight: '550px'}}
                         >
                           {/* <ActivePie data={chartData[indicator]}></ActivePie> */}
-                          <ResponsiveContainer width="100%" height={500}>
+                          <ResponsiveContainer width="100%" height={300}>
                             <BarChart
                               width={730}
-                              height={350}
+                              height={250}
                               data={chartData[indicator]}
                             >
                               <CartesianGrid strokeDasharray="3 3" />
