@@ -88,7 +88,6 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [years, setYears] = useState([{ start: 0, end: 0, id: 0 }]);
 
-
   /*
    * City names mapped to their unique URIs.
    * Format: A dictionary (js object). 
@@ -114,23 +113,15 @@ function Dashboard(savedIndicators, setDashboardData) {
   /*
    * The unique URIs for each administrative area instances, mapped to their names.
    * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
-   * Parameters: N/A
    */
   const [areaURLs, setAreaURLs] = useState({});
 
-  /*
-   * The names of all of the indicators from a selected city.
-   * Format: An array of strings, each representing the name of an indicator.
-   * Parameters: N/A
-   * Example: [“TheftOverCrime2014”,”TheftOverCrime2015”,”TheftOverCrime2016”]
-   */
-  const [indicators, setIndicators] = useState([]);
 
   /*
    * The unique URIs for each indicator, mapped to their names.
    * Format: An object, with each key-value pair representing an indicator. The key is the name of the indicator and the value is the URL.
-   * Parameters: N/A
-   */
+   * Example: {“TheftOverCrime2014”: “http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrime2014”} 
+  */
   const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
@@ -344,7 +335,6 @@ function Dashboard(savedIndicators, setDashboardData) {
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
     console.log("selected Indicators", currentSelectedMultiIndicators);
-    console.log("indicators:", indicators);
     console.log("indicatorURLs:", indicatorURLs);
     console.log("locationURLs:", locationURLs);
     console.log("selectedIndicators:", selectedIndicators);
@@ -369,11 +359,14 @@ function Dashboard(savedIndicators, setDashboardData) {
     console.log("cityLoading:", cityLoading);
     console.log("adminURLs:", adminURLs);
     console.log("cityURLs:", cityURLs);
+
+    // console.log("area:", area); //TOO HARD
+    // console.log("areaURLs:", areaURLs);
     
 
     console.log("End of state list");
 
-  }, [currentSelectedMultiIndicators, indicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, citySelected, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
+  }, [area, areaURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, citySelected, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
 
 
   useEffect(() => {
@@ -572,9 +565,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         fetchIndicators(
                           newValue,
                           cityURLs,
-                          setIndicatorURLs,
-                          setIndicators,
-                          indicators
+                          setIndicatorURLs
                         );
                         setCitySelected(true);
                         setCityLoading(false);
@@ -696,7 +687,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                           id="indicator-input"
                           disabled={!adminTypeSelected}
                           label={`Indicator #${parseInt(index) + 1}`}
-                          options={indicators}
+                          options={Object.keys(indicatorURLs)}
                           onChange={(event, newValue) =>
                             handleUpdateIndicators(
                               parseInt(index),

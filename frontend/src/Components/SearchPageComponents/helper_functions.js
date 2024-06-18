@@ -54,16 +54,14 @@ export const fetchAdministration = async (
 export const fetchIndicators = async (
   city,
   cityURLs,
-  setIndicatorURLs,
-  setIndicators,
-  indicators
+  setIndicatorURLs
 ) => {
   if (city) {
     try {
       const response = await axios.post("http://localhost:3000/api/1", {
         cityName: cityURLs[city],
       });
-      console.log("indicators", response.data.indicatorNames);
+      // console.log("indicators", response.data.indicatorNames);
 
       if (response.data === undefined) {
         // If database returns nothing, try again
@@ -79,17 +77,12 @@ export const fetchIndicators = async (
           ...prevIndicatorURLs,
           [indName]: URL,
         }));
-
-        // .map(item => {return parseInt(item.slice(-4)) != NaN ? item.slice(-4)}).filter((item, index) => indicators.indexOf(item) === index)
-        setIndicators((prevIndicator) => [...prevIndicator, indName]);
       });
-      console.log("indicators", indicators);
     } catch (error) {
       console.error("POST Error:", error);
     }
   } else {
     setIndicatorURLs({});
-    setIndicators([]);
   }
 };
 
