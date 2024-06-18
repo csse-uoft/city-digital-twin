@@ -1,10 +1,10 @@
 import Wkt from "wicket";
 import axios from "axios";
 
-export const fetchCities = async (setCityURLs, setCities, cities) => {
+export const fetchCities = async (setCityURLs) => {
   
   const response = await axios.get(`http://localhost:3000/api/0`);
-  console.log("City Response", response.data)
+  // console.log("City Response", response.data)
   response.data.cityNames.forEach((URL, index) => {
     const [, cityName] = URL.split("#");
     
@@ -13,15 +13,13 @@ export const fetchCities = async (setCityURLs, setCities, cities) => {
       [cityName]: URL,
     }));
     
-    setCities([...cities, cityName]);
   });
 };
 
 export const fetchAdministration = async (
   city,
   cityURLs,
-  setAdminURLs,
-  setAdmin
+  setAdminURLs
 ) => {
   if (city) {
     try {
@@ -44,14 +42,12 @@ export const fetchAdministration = async (
           [adminName]: URL,
         }));
 
-        setAdmin((prevAdmin) => [...prevAdmin, adminName]);
       });
     } catch (error) {
       console.error("POST Error:", error);
     }
   } else {
     setAdminURLs({});
-    setAdmin([]);
   }
 };
 

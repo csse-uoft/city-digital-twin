@@ -77,41 +77,31 @@ function Dashboard(savedIndicators, setDashboardData) {
 
   /*
    * The time ranges being considered for the indicators.
-   * Format: An array of objects, each containing a time range for a corresponding indicator. Years[0], the first entry, gives the year range for indicator 1.
-   * Parameters: For each array entry, value1 = start year for year range, value2 = end year for year range, id = the corresponding indicator the time range is for (id = 0 → first indicator)
+   * Format: An array of objects, each containing a time range for a 
+   *   corresponding indicator. Years[0], the first entry, gives the 
+   *   year range for indicator 1.
+   * Parameters for each array entry: 
+   *   start = start year for year range, 
+   *   end = end year for year range, 
+   *   id = the corresponding indicator the time range is for (id = 0 → first indicator)
    * Example: [{value1:2016, value2:2018, id:0}]
    */
-  const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
+  const [years, setYears] = useState([{ start: 0, end: 0, id: 0 }]);
+
 
   /*
-   * The names of the cities available in the database.
-   * Format: An array of strings, each representing the name of a city in the database.
-   * Parameters: N/A
-   * Example: [“toronto”]
-   */
-  const [cities, setCities] = useState([]);
-
-  /*
-   * The unique URIs of the cities available in the database, mapped with the names of the cities.
-   * Format: An object, with each key value pair representing a city. The key is the city name, the city name, the value is the city’s URI.
-   * Parameters: N/A
-   * Example: {“toronto”:”url.com/uniqueuri”}
+   * City names mapped to their unique URIs.
+   * Format: A dictionary (js object). 
+   * Example: { toronto : "url.com/uniqueuri" }
   */
   const [cityURLs, setCityURLs] = useState({});
 
   /*
-   * The names of all administrative area types.
-   * Format: An array of strings, each representing the name of an administrative area type.
-   * Parameters: N/A
-   * Example: [“Ward”, ”Neighbourhood”, ”Census Tract”]
-   */
-  const [admin, setAdmin] = useState([]);
-
-  /*
-   * The unique URIs for each administrative area type, mapped to their names. 
+   * Administrative area types mapped to their URIs. Includes current city. 
    * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
    * Parameters: The “currCity” key contains the name of the current selected city.
-   */
+   * Example: { currCity: "toronto", CensusTract: "http://ontology.eil.utoronto.ca/Toronto/Toronto#CensusTract", Neighbourhood: "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood"} 
+  */
   const [adminURLs, setAdminURLs] = useState({});
 
   /*
@@ -347,14 +337,43 @@ function Dashboard(savedIndicators, setDashboardData) {
   };
   // Upon initial page load, fetch list of cities
   useEffect(() => {
-    fetchCities(setCityURLs, setCities, cities);
+    fetchCities(setCityURLs);
     
   }, []);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
     console.log("selected Indicators", currentSelectedMultiIndicators);
-  }, [currentSelectedMultiIndicators]);
+    console.log("indicators:", indicators);
+    console.log("indicatorURLs:", indicatorURLs);
+    console.log("locationURLs:", locationURLs);
+    console.log("selectedIndicators:", selectedIndicators);
+    console.log("indicatorData:", indicatorData);
+    console.log("mapPolygons:", mapPolygons);
+    console.log("showingVisualization:", showingVisualization);
+    console.log("beginGeneration:", beginGeneration);
+    console.log("currentAdminType:", currentAdminType);
+    console.log("currentAdminInstances:", currentAdminInstances);
+    console.log("currentSelectedAreas:", currentSelectedAreas);
+    console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+    console.log("currentAreaNames:", currentAreaNames);
+    console.log("tableColumns:", tableColumns);
+    console.log("tableData:", tableData);
+    console.log("chartData:", chartData);
+    console.log("showVisError:", showVisError);
+    console.log("citySelected:", citySelected);
+    console.log("adminTypeSelected:", adminTypeSelected);
+    console.log("graphTypes:", graphTypes);
+    console.log("comparisonGraphTypes:", comparisonGraphTypes);
+    console.log("visLoading:", visLoading);
+    console.log("cityLoading:", cityLoading);
+    console.log("adminURLs:", adminURLs);
+    console.log("cityURLs:", cityURLs);
+    
+
+    console.log("End of state list");
+
+  }, [currentSelectedMultiIndicators, indicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, citySelected, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
 
 
   useEffect(() => {
@@ -548,8 +567,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         fetchAdministration(
                           newValue,
                           cityURLs,
-                          setAdminURLs,
-                          setAdmin
+                          setAdminURLs
                         );
                         fetchIndicators(
                           newValue,
@@ -561,7 +579,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         setCitySelected(true);
                         setCityLoading(false);
                       }}
-                      options={cities}
+                      options={Object.keys(cityURLs)}
                       desc={
                         "Select the city which you want the indicator data for."
                       }
@@ -603,10 +621,10 @@ function Dashboard(savedIndicators, setDashboardData) {
                         );
                         setCurrentAdminType(adminURLs[newValue]);
                         setAdminTypeSelected(true);
-                      }}
-                      options={admin}
-                      desc="Select the demarcation type for analysis."
-                    />
+                        }}
+                        options={Object.keys(adminURLs).filter(key => key !== 'currCity')}
+                        desc="Select the demarcation type for analysis."
+                      />
 
                     <NewDropdownMultiSelect
                       id="admin-instances-multiinput"
@@ -708,7 +726,7 @@ function Dashboard(savedIndicators, setDashboardData) {
               </Grid>
               <Grid xs="12" md="6">
                 <Stack spacing={5} sx={{ marginTop: "40px" }}>
-                  {years.map(({ id, value1, value2 }) => (
+                  {years.map(({ id, start, end }) => (
                     <JoyBox
                       sx={{
                         display: "flex",
@@ -723,7 +741,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         onChange={(event) =>
                           handleUpdateYear(id, "start", event, years, setYears)
                         }
-                        value={value1}
+                        value={start}
                         desc=""
                       />
                       <NumberInput
@@ -733,7 +751,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         onChange={(event) =>
                           handleUpdateYear(id, "end", event, years, setYears)
                         }
-                        value={value2}
+                        value={end}
                         desc=""
                       />
                     </JoyBox>
