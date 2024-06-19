@@ -118,16 +118,16 @@ function Dashboard(savedIndicators, setDashboardData) {
 
 
   /*
-   * The unique URIs for each indicator, mapped to their names.
-   * Format: An object, with each key-value pair representing an indicator. The key is the name of the indicator and the value is the URL.
+   * Indicator names mapped to their unique URIs.
+   * Format: An object. The key is the name of the indicator and the value is the URL.
    * Example: {“TheftOverCrime2014”: “http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrime2014”} 
   */
   const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
    * The coordinates for each specific area instance mapped to the area’s URI.
-   * Format: An object, with each key-value pair representing an the location of an area. The key is the URI and the value is the coordinates in an array.
-   * Parameters: N/A
+   * Format: An object, with each key-value pair representing an the location of an area.
+   * The key is the URI and the value is the coordinates in an array.
    */
   const [locationURLs, setLocationURLs] = useState({});
 
@@ -164,19 +164,12 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [mapPolygons, setMapPolygons] = useState({});
 
-  /*
-   * Whether the visualizations should be shown or not.
-   * Format: A boolean value, true if the visualizations should show or false if they should not.
-   * Parameters: N/A
-   * Example: lol
-   */
+
   const [showingVisualization, setShowingVisualization] = useState(false);
 
   /*
    * Whether the visualization generation functions should activate.
-   * Format: A boolean value, true if the program is ready for the visualization to generate, false otherwise.
-   * Parameters: N/A
-   * Example: lol
+   * True if the program is ready for the visualization to generate, false otherwise.
    */
   const [beginGeneration, setBeginGeneration] = useState(false);
 
@@ -256,14 +249,6 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [showVisError, setShowVisError] = useState(false);
 
-  /*
-   * Indicates if a city has been selected from its dropdown.
-   * While false, all other dropdowns in the menu will be disabled (as they require a city to determine their values)
-   * Format: A boolean value, true if a city has been selected or false otherwise
-   * Parameters: N/A
-   * Example: lol
-   */
-  const [citySelected, setCitySelected] = useState(false);
 
   /*
    * Indicates if an administrative area type has been selected from its dropdown.
@@ -335,7 +320,6 @@ function Dashboard(savedIndicators, setDashboardData) {
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
     console.log("selected Indicators", currentSelectedMultiIndicators);
-    console.log("indicatorURLs:", indicatorURLs);
     console.log("locationURLs:", locationURLs);
     console.log("selectedIndicators:", selectedIndicators);
     console.log("indicatorData:", indicatorData);
@@ -351,14 +335,11 @@ function Dashboard(savedIndicators, setDashboardData) {
     console.log("tableData:", tableData);
     console.log("chartData:", chartData);
     console.log("showVisError:", showVisError);
-    console.log("citySelected:", citySelected);
     console.log("adminTypeSelected:", adminTypeSelected);
     console.log("graphTypes:", graphTypes);
     console.log("comparisonGraphTypes:", comparisonGraphTypes);
     console.log("visLoading:", visLoading);
     console.log("cityLoading:", cityLoading);
-    console.log("adminURLs:", adminURLs);
-    console.log("cityURLs:", cityURLs);
 
     // console.log("area:", area); //TOO HARD
     // console.log("areaURLs:", areaURLs);
@@ -366,7 +347,7 @@ function Dashboard(savedIndicators, setDashboardData) {
 
     console.log("End of state list");
 
-  }, [area, areaURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, citySelected, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
+  }, [area, areaURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
 
 
   useEffect(() => {
@@ -380,9 +361,11 @@ function Dashboard(savedIndicators, setDashboardData) {
       const currentIndicatorNames = Object.fromEntries(
         Object.entries(indicatorURLs).map(([key, value]) => [value, key])
       );
+      console.log("currentIndicatorNames", currentIndicatorNames);
       const indicatorIndices = Object.fromEntries(
         Object.entries(selectedIndicators).map(([key, value]) => [value, key])
       );
+      console.log("indicatorIndices", indicatorIndices);
 
       setMapPolygons({});
       setTableColumns({});
@@ -567,7 +550,6 @@ function Dashboard(savedIndicators, setDashboardData) {
                           cityURLs,
                           setIndicatorURLs
                         );
-                        setCitySelected(true);
                         setCityLoading(false);
                       }}
                       options={Object.keys(cityURLs)}
@@ -593,7 +575,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                     <NewDropdown
                       id="admin-type-input"
                       label="Administrative Area Type"
-                      disabled={!citySelected}
+                      disabled={!(Object.keys(adminURLs).includes('currCity'))}
                       onChange={(event, newValue) => {
                         fetchArea(
                           newValue,
