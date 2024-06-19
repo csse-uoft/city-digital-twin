@@ -117,7 +117,6 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [locationURLs, setLocationURLs] = useState({});
 
-
   /*
    * Indicator names mapped to their unique URIs.
    * Format: An object. The key is the name of the indicator and the value is the URL.
@@ -134,7 +133,9 @@ function Dashboard(savedIndicators, setDashboardData) {
 
   /*
    * The data for each selected indicator.
-   * Format: An object with all selected indicators as its child objects. Each child object (selected indicator) is a URI that maps to the selected area’s URI. Finally, the selected Area’s URI maps to the each year and its desired data/value.
+   * Format: An object with all selected indicators as its child objects. 
+   *   Each child object (selected indicator) is a URI that maps to the selected area’s URI. 
+   *   Finally, the selected Area’s URI maps to the each year and its desired data/value.
    * Example: 
       {
         "http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": {
