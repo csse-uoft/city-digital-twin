@@ -104,17 +104,18 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [adminURLs, setAdminURLs] = useState({});
 
   /*
-   * The names of all administrative area instances matching the selected admin area type.
-   * Format: An array of strings, each representing the name of an administrative area instance.
-   * Parameters: N/A
-   */
-  const [area, setArea] = useState([]);
-
-  /*
    * The unique URIs for each administrative area instances, mapped to their names.
    * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
    */
   const [areaURLs, setAreaURLs] = useState({});
+
+  /*
+   * Area's URIs mapped to 
+   * Format: The key is the Administrative Area Instance URL.
+   *   The value is an object with the key "coordinates" mapping to an array of arrays of coordinates.
+   * Example: { http://ontology.eil.utoronto.ca/Toronto/Toronto#ward17 : { coordinates: [[[x, y], [x, y], [x, y]], [[j,k] [j,k], [j,k]]] }}
+   */
+  const [locationURLs, setLocationURLs] = useState({});
 
 
   /*
@@ -122,14 +123,7 @@ function Dashboard(savedIndicators, setDashboardData) {
    * Format: An object. The key is the name of the indicator and the value is the URL.
    * Example: {“TheftOverCrime2014”: “http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrime2014”} 
   */
-  const [indicatorURLs, setIndicatorURLs] = useState({});
-
-  /*
-   * The coordinates for each specific area instance mapped to the area’s URI.
-   * Format: An object, with each key-value pair representing an the location of an area.
-   * The key is the URI and the value is the coordinates in an array.
-   */
-  const [locationURLs, setLocationURLs] = useState({});
+    const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
    * The names of the indicators that are currently selected from each dropdown.
@@ -341,13 +335,12 @@ function Dashboard(savedIndicators, setDashboardData) {
     console.log("visLoading:", visLoading);
     console.log("cityLoading:", cityLoading);
 
-    // console.log("area:", area); //TOO HARD
-    // console.log("areaURLs:", areaURLs);
+    console.log("areaURLs:", areaURLs);
     
 
     console.log("End of state list");
 
-  }, [area, areaURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
+  }, [areaURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
 
 
   useEffect(() => {
@@ -582,7 +575,6 @@ function Dashboard(savedIndicators, setDashboardData) {
                           cityURLs,
                           adminURLs,
                           setAreaURLs,
-                          setArea,
                           setCurrentAreaNames
                         );
                         fetchLocations(
@@ -603,7 +595,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                       id="admin-instances-multiinput"
                       disabled={!adminTypeSelected}
                       label="Administrative Area Instances"
-                      options={area}
+                      options={Object.keys(areaURLs)}
                       onChange={(event, newValue) => {
                           setCurrentAdminInstances(
                             String(newValue)

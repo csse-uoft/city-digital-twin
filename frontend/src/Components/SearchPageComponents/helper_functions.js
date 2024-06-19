@@ -91,12 +91,10 @@ export const fetchArea = async (
   cityURLs,
   adminURLs,
   setAreaURLs,
-  setArea,
   setCurrentAreaNames
 ) => {
   setAreaURLs({});
   setCurrentAreaNames({});
-  setArea([]);
   if (admin) {
     try {
       const response = await axios.post("http://localhost:3000/api/3", {
@@ -119,7 +117,6 @@ export const fetchArea = async (
           [Instance["areaName"]]: Instance["adminAreaInstance"],
         }));
 
-        setArea((prevArea) => [...prevArea, Instance["areaName"]]);
         setCurrentAreaNames((prevCurrent) => ({
           ...prevCurrent,
           [Instance["adminAreaInstance"]]: Instance["areaName"],
@@ -130,7 +127,6 @@ export const fetchArea = async (
     }
   } else {
     setAreaURLs({});
-    setArea([]);
     setCurrentAreaNames({});
   }
 };
