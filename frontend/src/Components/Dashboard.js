@@ -1,13 +1,10 @@
 import {
   Box,
-  Autocomplete,
-  TextField,
   Container,
   Grid,
   Paper,
   Stack,
   Typography,
-  createTheme,
 } from "@mui/material";
 import { AreaChart, Area } from "recharts";
 import AddIcon from "@mui/icons-material/Add";
@@ -26,8 +23,6 @@ import {
   YAxis,
   Tooltip as ChartTooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
 } from "recharts";
 import {
   fetchCities,
@@ -42,7 +37,6 @@ import {
   handleGenerateVisualization,
   handleSum,
   handleAggregation,
-  handleChangeAreas,
   getCurrentAdminTypeURL,
 } from "./SearchPageComponents/helper_functions";
 import MapView from "./DataVisComponents/MapView";
@@ -102,8 +96,6 @@ const adminAreaTypeReducer = (state, action) => {
  * Implements the search page. 
  */
 function Dashboard(savedIndicators, setDashboardData) {
-  const defaultTheme = createTheme();
-
   /*
    * The time ranges being considered for the indicators.
    * Format: An array of objects, each containing a time range for a 
@@ -310,12 +302,7 @@ function Dashboard(savedIndicators, setDashboardData) {
     "#ff69b4",
     "#9acd32",
   ];
-  const handleDropdownChange = (event, newValue) => {
-    if (newValue.length <= 7) {
-      setCurrentSelectedAreas(newValue);
-    }
-    // Optionally, you can provide a feedback to the user if they exceed the limit
-  };
+  
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs);
@@ -492,7 +479,7 @@ function Dashboard(savedIndicators, setDashboardData) {
       }
       setBeginGeneration(false);
     }
-  }, [indicatorData]);
+  }, [beginGeneration, currentAdminInstances, currentAreaNames, indicatorData, indicatorURLs, locationURLs, mapPolygons, selectedIndicators, showingVisualization, years]);
 
   return (
     <Container

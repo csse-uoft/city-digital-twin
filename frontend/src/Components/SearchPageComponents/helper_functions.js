@@ -65,13 +65,6 @@ export const fetchIndicators = async (
         cityName: cityURLs[city],
       });
       // console.log("indicators", response.data.indicatorNames);
-
-      if (response.data === undefined) {
-        // If database returns nothing, try again
-        response = await axios.post("http://localhost:3000/api/1", {
-          cityName: cityURLs[city],
-        });
-      }
       
       response.data.indicatorNames.forEach((URL, index) => {
         const [, indName] = URL.split("#");
