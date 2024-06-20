@@ -265,15 +265,6 @@ function Dashboard(savedIndicators, setDashboardData) {
 
 
   /*
-   * Indicates if an administrative area type has been selected from its dropdown.
-   * While false, dependent dropdowns in the menu will be disabled.
-   * Format: A boolean value, true if selected or false otherwise
-   * Parameters: N/A
-   * Example: lol
-   */
-  const [adminTypeSelected, setAdminTypeSelected] = useState(false);
-  
-  /*
    * The graph type selected for the FIRST graph of each indicator visualization. 
    * Each visualization has two customizable graphs, with various types available: bar, line, etc.
    * Format: key-value pairs, where the key is the indicator URI and the value is the graph type (bar, line, etc.)
@@ -352,7 +343,6 @@ function Dashboard(savedIndicators, setDashboardData) {
     // console.log("tableData:", tableData);
     // console.log("chartData:", chartData);
     // console.log("showVisError:", showVisError);
-    // console.log("adminTypeSelected:", adminTypeSelected);
     // console.log("graphTypes:", graphTypes);
     // console.log("comparisonGraphTypes:", comparisonGraphTypes);
     // console.log("visLoading:", visLoading);
@@ -363,7 +353,7 @@ function Dashboard(savedIndicators, setDashboardData) {
 
     console.log("End of state list");
 
-  }, [areaURLs, cityURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
+  }, [areaURLs, cityURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -611,7 +601,6 @@ function Dashboard(savedIndicators, setDashboardData) {
                           locationURLs,
                           setLocationURLs
                         );
-                        setAdminTypeSelected(true);
                         }}
                         options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
                         desc="Select the demarcation type for analysis."
@@ -619,7 +608,7 @@ function Dashboard(savedIndicators, setDashboardData) {
 
                     <NewDropdown
                       id="admin-instances-multiinput"
-                      disabled={ !adminTypeSelected }
+                      disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
                       label="Administrative Area Instances"
                       options={Object.keys(areaURLs)}
                       
@@ -687,7 +676,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         <NewDropdown
                           key={`indicator-${index}`}
                           id="indicator-input"
-                          disabled={!adminTypeSelected}
+                          disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
                           label={`Indicator #${parseInt(index) + 1}`}
                           options={Object.keys(indicatorURLs)}
                           onChange={(event, newValue) =>
@@ -729,7 +718,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                     >
                       <NumberInput
                         id={`year1-${id}`}
-                        disabled={!adminTypeSelected}
+                        disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
                         label={`Starting Year ${id + 1}`}
                         onChange={(event) =>
                           handleUpdateYear(id, "start", event, years, setYears)
@@ -739,7 +728,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                       />
                       <NumberInput
                         id={`year2-${id}`}
-                        disabled={!adminTypeSelected}
+                        disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
                         label={`Ending Year ${id + 1}`}
                         onChange={(event) =>
                           handleUpdateYear(id, "end", event, years, setYears)
@@ -763,7 +752,7 @@ function Dashboard(savedIndicators, setDashboardData) {
           }}
         >
           <JoyButton
-            disabled={!adminTypeSelected}
+            disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
             size="lg"
             color="success"
             endDecorator={<>{">"}</>}

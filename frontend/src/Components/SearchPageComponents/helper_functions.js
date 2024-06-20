@@ -304,7 +304,7 @@ export const getCurrentAdminTypeURL = (adminAreaTypesState) => {
       return adminAreaTypesState[key].URL;
     }
   }
-  return "  ";
+  return null;
 };
 
 
