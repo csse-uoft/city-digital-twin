@@ -42,7 +42,7 @@ import {
   handleUpdateYear
 } from "../helpers/eventHandlers";
 
-import { getCurrentAdminTypeURL } from "../helpers/reducerHelpers";
+import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getSelectedAdminInstancesURLs } from "../helpers/reducerHelpers";
 
 import MapView from "./DataVisComponents/MapView";
 import IndicatorTable from "./DataVisComponents/Table";
@@ -61,6 +61,10 @@ import { NewDropdownMultiSelect } from "./SearchPageComponents/NewDropdownMultiS
 import { NumberInput } from "./SearchPageComponents/NumberInput";
 import ComparisonGraph from "./DataVisComponents/ComparisonGraph";
 
+import { adminAreaTypeReducer, adminAreaInstanceReducer } from "../reducers";
+
+
+
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -69,33 +73,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-
-
-// State type example: 
-// { currCity: "toronto", CensusTract: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#CensusTract", selected: false }
-//   , Neighbourhood: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood", selected: true } }
-const adminAreaTypeReducer = (state, action) => {
-  const newState = {...state};
-  switch (action.type) {
-    case "SET_URLS":
-      for (const key in action.payload) {
-        const { URL, selected } = action.payload[key];
-        newState[key] = { URL, selected };
-      }
-      return newState;
-    case "SET_CURRENT_CITY":
-      return { ...state, currCity: action.payload };
-    case "SET_SELECTED":
-      for (const key in state) {
-        if (key === "currCity") {break;}
-          newState[key].selected = false;
-      }
-      newState[action.payload].selected = true;
-      return newState;
-    default:
-      return {...state};
-  }
-}
 
 /*
  * Implements the search page. 
@@ -122,12 +99,8 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [cityURLs, setCityURLs] = useState({});
 
   const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
+  const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
 
-  /*
-   * The unique URIs for each administrative area instances, mapped to their names.
-   * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
-   */
-  const [areaURLs, setAreaURLs] = useState({});
 
   /*
    * Area's URIs mapped to 
@@ -315,37 +288,20 @@ function Dashboard(savedIndicators, setDashboardData) {
   }, []);
 
   useEffect(() => {
-    console.log("State updated:", adminAreaTypesState);
-  }, [adminAreaTypesState]);
+    console.log("State updated:", adminAreaInstancesState);
+  }, [adminAreaInstancesState]);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-    // console.log("selected Indicators", currentSelectedMultiIndicators);
-    // console.log("locationURLs:", locationURLs);
-    // console.log("selectedIndicators:", selectedIndicators);
-    // console.log("indicatorData:", indicatorData);
-    // console.log("mapPolygons:", mapPolygons);
-    // console.log("showingVisualization:", showingVisualization);
-    // console.log("beginGeneration:", beginGeneration);
-    // console.log("currentAdminInstances:", currentAdminInstances);
-    // console.log("currentSelectedAreas:", currentSelectedAreas);
-    // console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
-    // console.log("currentAreaNames:", currentAreaNames);
-    // console.log("tableColumns:", tableColumns);
-    // console.log("tableData:", tableData);
-    // console.log("chartData:", chartData);
-    // console.log("showVisError:", showVisError);
-    // console.log("graphTypes:", graphTypes);
-    // console.log("comparisonGraphTypes:", comparisonGraphTypes);
-    // console.log("visLoading:", visLoading);
-    // console.log("cityLoading:", cityLoading);
-    console.log(cityURLs)
-    // console.log("areaURLs:", areaURLs);
-    
+   
+    console.log("locationURLs:", locationURLs);
+    console.log("currentAdminInstances:", currentAdminInstances);
+    console.log("currentSelectedAreas:", currentSelectedAreas);
+    console.log("currentAreaNames:", currentAreaNames);
 
     console.log("End of state list");
 
-  }, [areaURLs, cityURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
+  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -355,7 +311,6 @@ function Dashboard(savedIndicators, setDashboardData) {
       Object.keys(indicatorData).length ===
         Object.keys(selectedIndicators).length
     ) {
-      // const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
       const currentIndicatorNames = Object.fromEntries(
         Object.entries(indicatorURLs).map(([key, value]) => [value, key])
       );
@@ -583,39 +538,43 @@ function Dashboard(savedIndicators, setDashboardData) {
                           newValue,
                           cityURLs,
                           adminAreaTypesState,
-                          setAreaURLs,
-                          setCurrentAreaNames
+                          setCurrentAreaNames,
+                          dispatchAdminAreaInstances
                         );
                         fetchLocations(
                           newValue,
                           cityURLs,
                           adminAreaTypesState,
                           locationURLs,
-                          setLocationURLs
+                          setLocationURLs,
+                          dispatchAdminAreaInstances
                         );
                         }}
                         options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
                         desc="Select the demarcation type for analysis."
                       />
 
-                    <NewDropdown
+                    <NewDropdownMultiSelect
                       id="admin-instances-multiinput"
                       disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
                       label="Administrative Area Instances"
-                      options={Object.keys(areaURLs)}
+                      options={Object.keys(adminAreaInstancesState)}
                       
                       onChange={(event, newValue) => {
                         console.log("currentAdminTypeURL", typeof getCurrentAdminTypeURL(adminAreaTypesState) );
                           setCurrentAdminInstances(
                             String(newValue)
                               .split(",")
-                              .map((value) => areaURLs[value])
+                              .map((value) => adminAreaInstancesState[value]["URL"]) // here we have the name and we get the URL to append it to the names list list
                             // On autofill we get a stringified value.
                             // typeof value === 'string' ? value.split(',') : value,
                           );
-                          setCurrentSelectedAreas(String(newValue).split(","));
+                          setCurrentSelectedAreas(String(newValue).split(",")); // we just add the URL to the selected URLs list
 
-
+                          dispatchAdminAreaInstances({
+                            type: "SET_SELECTED",
+                            payload: String(newValue).split(","),
+                          });
                         
                       }}
                       desc="Select the individual demarcation areas you want to analyze."

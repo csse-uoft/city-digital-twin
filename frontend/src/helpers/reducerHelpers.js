@@ -7,3 +7,25 @@ export const getCurrentAdminTypeURL = (adminAreaTypesState) => {
   }
   return null;
 };
+
+
+// ## AdminAreaInstancesReducer helper functions
+export const getSelectedAdminInstancesURLs = (adminAreaInstancesState) => {
+  const selectedAreasURLs = [];
+  for (const key in adminAreaInstancesState) {
+    if (adminAreaInstancesState[key].selected) {
+      selectedAreasURLs.push(adminAreaInstancesState[key].URL);
+    }
+  }
+  return selectedAreasURLs;
+}
+
+export const getSelectedAdminInstancesNames = (adminAreaInstancesState) => {
+  const selectedAreasNames = [];
+  for (const key in adminAreaInstancesState) {
+      if (adminAreaInstancesState[key].selected) {
+        selectedAreasNames.push(key);
+      }
+  }
+  return selectedAreasNames;
+}
