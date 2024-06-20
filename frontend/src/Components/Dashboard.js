@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { AreaChart, Area } from "recharts";
 import AddIcon from "@mui/icons-material/Add";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
 import "leaflet/dist/leaflet.css";
 import { Popup, Polygon, Tooltip } from "react-leaflet";
 import L from "leaflet";
@@ -43,6 +43,7 @@ import {
   handleSum,
   handleAggregation,
   handleChangeAreas,
+  getCurrentAdminTypeURL,
 } from "./SearchPageComponents/helper_functions";
 import MapView from "./DataVisComponents/MapView";
 import IndicatorTable from "./DataVisComponents/Table";
@@ -68,6 +69,34 @@ L.Icon.Default.mergeOptions({
   iconUrl: require("leaflet/dist/images/marker-icon.png"),
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
+
+
+
+// State type example: 
+// { currCity: "toronto", CensusTract: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#CensusTract", selected: false }
+//   , Neighbourhood: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood", selected: true } }
+const adminAreaTypeReducer = (state, action) => {
+  const newState = {...state};
+  switch (action.type) {
+    case "SET_URLS":
+      for (const key in action.payload) {
+        const { URL, selected } = action.payload[key];
+        newState[key] = { URL, selected };
+      }
+      return newState;
+    case "SET_CURRENT_CITY":
+      return { ...state, currCity: action.payload };
+    case "SET_SELECTED":
+      for (const key in state) {
+        if (key === "currCity") {break;}
+          newState[key].selected = false;
+      }
+      newState[action.payload].selected = true;
+      return newState;
+    default:
+      return {...state};
+  }
+}
 
 /*
  * Implements the search page. 
@@ -95,13 +124,7 @@ function Dashboard(savedIndicators, setDashboardData) {
   */
   const [cityURLs, setCityURLs] = useState({});
 
-  /*
-   * Administrative area types mapped to their URIs. Includes current city. 
-   * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
-   * Parameters: The “currCity” key contains the name of the current selected city.
-   * Example: { currCity: "toronto", CensusTract: "http://ontology.eil.utoronto.ca/Toronto/Toronto#CensusTract", Neighbourhood: "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood"} 
-  */
-  const [adminURLs, setAdminURLs] = useState({});
+  const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
 
   /*
    * The unique URIs for each administrative area instances, mapped to their names.
@@ -168,10 +191,6 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [beginGeneration, setBeginGeneration] = useState(false);
 
-  /*
-   * The URI of the current selected administrative area type.
-   */
-  const [currentAdminType, setCurrentAdminType] = useState("");
 
   /*
    * The URIs of the currently selected administrative area instances.
@@ -312,36 +331,39 @@ function Dashboard(savedIndicators, setDashboardData) {
     
   }, []);
 
+  useEffect(() => {
+    console.log("State updated:", adminAreaTypesState);
+  }, [adminAreaTypesState]);
+
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-    console.log("selected Indicators", currentSelectedMultiIndicators);
-    console.log("locationURLs:", locationURLs);
-    console.log("selectedIndicators:", selectedIndicators);
-    console.log("indicatorData:", indicatorData);
-    console.log("mapPolygons:", mapPolygons);
-    console.log("showingVisualization:", showingVisualization);
-    console.log("beginGeneration:", beginGeneration);
-    console.log("currentAdminType:", currentAdminType);
-    console.log("currentAdminInstances:", currentAdminInstances);
-    console.log("currentSelectedAreas:", currentSelectedAreas);
-    console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
-    console.log("currentAreaNames:", currentAreaNames);
-    console.log("tableColumns:", tableColumns);
-    console.log("tableData:", tableData);
-    console.log("chartData:", chartData);
-    console.log("showVisError:", showVisError);
-    console.log("adminTypeSelected:", adminTypeSelected);
-    console.log("graphTypes:", graphTypes);
-    console.log("comparisonGraphTypes:", comparisonGraphTypes);
-    console.log("visLoading:", visLoading);
-    console.log("cityLoading:", cityLoading);
-
-    console.log("areaURLs:", areaURLs);
+    // console.log("selected Indicators", currentSelectedMultiIndicators);
+    // console.log("locationURLs:", locationURLs);
+    // console.log("selectedIndicators:", selectedIndicators);
+    // console.log("indicatorData:", indicatorData);
+    // console.log("mapPolygons:", mapPolygons);
+    // console.log("showingVisualization:", showingVisualization);
+    // console.log("beginGeneration:", beginGeneration);
+    // console.log("currentAdminInstances:", currentAdminInstances);
+    // console.log("currentSelectedAreas:", currentSelectedAreas);
+    // console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+    // console.log("currentAreaNames:", currentAreaNames);
+    // console.log("tableColumns:", tableColumns);
+    // console.log("tableData:", tableData);
+    // console.log("chartData:", chartData);
+    // console.log("showVisError:", showVisError);
+    // console.log("adminTypeSelected:", adminTypeSelected);
+    // console.log("graphTypes:", graphTypes);
+    // console.log("comparisonGraphTypes:", comparisonGraphTypes);
+    // console.log("visLoading:", visLoading);
+    // console.log("cityLoading:", cityLoading);
+    console.log(cityURLs)
+    // console.log("areaURLs:", areaURLs);
     
 
     console.log("End of state list");
 
-  }, [areaURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminType, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading, adminURLs]);
+  }, [areaURLs, cityURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, adminTypeSelected, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -532,12 +554,12 @@ function Dashboard(savedIndicators, setDashboardData) {
                       id="city-input"
                       label="City"
                       disabled={false}
-                      onChange={(event, newValue) => {
+                      onChange={async (event, newValue) => {
                         setCityLoading(true);
-                        fetchAdministration(
+                        await fetchAdministration(
                           newValue,
                           cityURLs,
-                          setAdminURLs
+                          dispatchAdminAreaTypes
                         );
                         fetchIndicators(
                           newValue,
@@ -569,35 +591,40 @@ function Dashboard(savedIndicators, setDashboardData) {
                     <NewDropdown
                       id="admin-type-input"
                       label="Administrative Area Type"
-                      disabled={!(Object.keys(adminURLs).includes('currCity'))}
+                      disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
                       onChange={(event, newValue) => {
+                        dispatchAdminAreaTypes({
+                          type: "SET_SELECTED",
+                          payload: newValue,
+                        });
                         fetchArea(
                           newValue,
                           cityURLs,
-                          adminURLs,
+                          adminAreaTypesState,
                           setAreaURLs,
                           setCurrentAreaNames
                         );
                         fetchLocations(
                           newValue,
                           cityURLs,
-                          adminURLs,
+                          adminAreaTypesState,
                           locationURLs,
                           setLocationURLs
                         );
-                        setCurrentAdminType(adminURLs[newValue]);
                         setAdminTypeSelected(true);
                         }}
-                        options={Object.keys(adminURLs).filter(key => key !== 'currCity')}
+                        options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
                         desc="Select the demarcation type for analysis."
                       />
 
-                    <NewDropdownMultiSelect
+                    <NewDropdown
                       id="admin-instances-multiinput"
-                      disabled={!adminTypeSelected}
+                      disabled={ !adminTypeSelected }
                       label="Administrative Area Instances"
                       options={Object.keys(areaURLs)}
+                      
                       onChange={(event, newValue) => {
+                        console.log("currentAdminTypeURL", typeof getCurrentAdminTypeURL(adminAreaTypesState) );
                           setCurrentAdminInstances(
                             String(newValue)
                               .split(",")
@@ -744,10 +771,9 @@ function Dashboard(savedIndicators, setDashboardData) {
               handleGenerateVisualization(
                 years,
                 cityURLs,
-                adminURLs,
+                adminAreaTypesState,
                 indicatorURLs,
                 selectedIndicators,
-                currentAdminType,
                 currentAdminInstances,
                 showVisError,
                 setMapPolygons,

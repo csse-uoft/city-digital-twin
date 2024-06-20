@@ -19,36 +19,39 @@ export const fetchCities = async (setCityURLs) => {
 export const fetchAdministration = async (
   city,
   cityURLs,
-  setAdminURLs
+  dispatchAdminAreaTypes
 ) => {
   if (city) {
     try {
       const response = await axios.post("http://localhost:3000/api/2", {
         cityName: cityURLs[city],
       });
+      
 
-      if (response.data === undefined) {
-        response = await axios.post("http://localhost:3000/api/2", {
-          cityName: cityURLs[city],
-        });
-      }
 
-      setAdminURLs({ currCity: city }); //The current city is stored in the adminURL['currCity']
+      // setAdminURLs({ currCity: city }); 
+      dispatchAdminAreaTypes({
+        type: "SET_CURRENT_CITY",
+        payload: city
+      });
+      const adminAreaTypeURLs = {};
+
+      // console.log("admin areas", response.data.adminAreaTypeNames);
       response.data.adminAreaTypeNames.forEach((URL, index) => {
         const [, adminName] = URL.split("#");
 
-        setAdminURLs((prevAdminURLs) => ({
-          ...prevAdminURLs,
-          [adminName]: URL,
-        }));
-
+        adminAreaTypeURLs[adminName] = { URL: URL, selected: false };
       });
+
+      dispatchAdminAreaTypes({
+        type: "SET_URLS",
+        payload: adminAreaTypeURLs
+      });
+
     } catch (error) {
       console.error("POST Error:", error);
     }
-  } else {
-    setAdminURLs({});
-  }
+  } 
 };
 
 export const fetchIndicators = async (
@@ -89,7 +92,7 @@ export const fetchIndicators = async (
 export const fetchArea = async (
   admin,
   cityURLs,
-  adminURLs,
+  adminAreaTypesState,
   setAreaURLs,
   setCurrentAreaNames
 ) => {
@@ -97,19 +100,14 @@ export const fetchArea = async (
   setCurrentAreaNames({});
   if (admin) {
     try {
+      const areaTypeURL = adminAreaTypesState[admin].URL;
+      const cityName = cityURLs[adminAreaTypesState["currCity"]];
+
       const response = await axios.post("http://localhost:3000/api/3", {
-        cityName: cityURLs[adminURLs["currCity"]],
-        adminType: adminURLs[admin],
+        cityName: cityName,
+        adminType: areaTypeURL,
       });
       console.log("admin instances", response.data["adminAreaInstanceNames"]);
-
-      if (response.data === undefined) {
-        // If the database failed to return anything, try again
-        response = await axios.post("http://localhost:3000/api/3", {
-          cityName: cityURLs[adminURLs["currCity"]],
-          adminType: adminURLs[admin],
-        });
-      }
 
       response.data["adminAreaInstanceNames"].forEach((Instance, index) => {
         setAreaURLs((prevAreaURLs) => ({
@@ -134,7 +132,7 @@ export const fetchArea = async (
 export const fetchLocations = async (
   admin,
   cityURLs,
-  adminURLs,
+  adminAreaTypesState,
   locationURLs,
   setLocationURLs
 ) => {
@@ -142,18 +140,10 @@ export const fetchLocations = async (
   if (admin) {
     try {
       const response = await axios.post("http://localhost:3000/api/6", {
-        cityName: cityURLs[adminURLs["currCity"]],
-        adminType: adminURLs[admin],
+        cityName: cityURLs[adminAreaTypesState["currCity"]],
+        adminType: adminAreaTypesState[admin].URL,
       });
       console.log("list of all admin instances", response.data["adminAreaInstanceNames"]);
-
-      if (response.data === undefined) {
-        // If the database failed to return anything, try again
-        response = await axios.post("http://localhost:3000/api/6", {
-          cityName: cityURLs[adminURLs["currCity"]],
-          adminType: adminURLs[admin],
-        });
-      }
 
       const updatedLocationURLs = { ...locationURLs };
       response.data["adminAreaInstanceNames"].forEach((Instance, index) => {
@@ -307,13 +297,23 @@ export const handleUpdateIndicators = (id, value, setSelectedIndicators) => {
   }));
 };
 
+//TODO: Move this function to a more appropriate location
+export const getCurrentAdminTypeURL = (adminAreaTypesState) => {
+  for (const key in adminAreaTypesState) {
+    if (adminAreaTypesState[key].selected) {
+      return adminAreaTypesState[key].URL;
+    }
+  }
+  return "  ";
+};
+
+
 export const handleGenerateVisualization = async (
   years,
   cityURLs,
-  adminURLs,
+  adminAreaTypesState,
   indicatorURLs,
   selectedIndicators,
-  currentAdminType,
   currentAdminInstances,
   showVisError,
   setMapPolygons,
@@ -323,9 +323,12 @@ export const handleGenerateVisualization = async (
   setShowingVisualization,
   setVisLoading
 ) => {
+  const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
+
   const checkIfInputsFilled = () => {
     return (
-      typeof adminURLs["currCity"] !== "undefined" &&
+
+      typeof adminAreaTypesState["currCity"] !== "undefined" &&
       typeof currentAdminType === "string" &&
       currentAdminType !== "" &&
       currentAdminInstances.every((instance) => {
@@ -343,10 +346,13 @@ export const handleGenerateVisualization = async (
   setVisLoading(true);
   setMapPolygons([]);
 
+  console.log("City name", cityURLs[adminAreaTypesState["currCity"]]);
+  console.log("Admin type", currentAdminType);
+
   const fetchData = async () => {
     const promises = Object.keys(selectedIndicators).map(async (index) => {
       const response = await axios.post("http://localhost:3000/api/4", {
-        cityName: cityURLs[adminURLs["currCity"]],
+        cityName: cityURLs[adminAreaTypesState["currCity"]],
         adminType: currentAdminType,
         adminInstance: currentAdminInstances,
         indicatorName: indicatorURLs[selectedIndicators[index]],
