@@ -30,15 +30,20 @@ import {
   fetchIndicators,
   fetchArea,
   fetchLocations,
-  handleUpdateIndicators,
-  handleAddIndicator,
-  handleAddYears,
-  handleUpdateYear,
-  handleGenerateVisualization,
+} from "../helpers/fetchFunctions";
+
+import {
   handleSum,
   handleAggregation,
-  getCurrentAdminTypeURL,
-} from "./SearchPageComponents/helper_functions";
+  handleAddIndicator,
+  handleAddYears,
+  handleGenerateVisualization,
+  handleUpdateIndicators,
+  handleUpdateYear
+} from "../helpers/eventHandlers";
+
+import { getCurrentAdminTypeURL } from "../helpers/reducerHelpers";
+
 import MapView from "./DataVisComponents/MapView";
 import IndicatorTable from "./DataVisComponents/Table";
 import ActivePie from "./DataVisComponents/ActivePie";
