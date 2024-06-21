@@ -1,17 +1,4 @@
-// Define globalThis if it's not available
-if (typeof globalThis === 'undefined') {
-  if (typeof global !== 'undefined') {
-    globalThis = global;
-  } else if (typeof self !== 'undefined') {
-    globalThis = self;
-  } else {
-    // In some environments, you might need to use a different fallback
-    // For example, in a web browser, you can use window
-    // globalThis = window;
-  }
-}
-
-
+// NOTE: the backend is required due to CORS policy
 var express = require('express');
 var bodyParser = require('body-parser');
 var multer = require('multer');
