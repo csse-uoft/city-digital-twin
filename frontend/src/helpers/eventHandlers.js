@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getCurrentAdminTypeURL } from "./reducerHelpers.js";
+import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getSelectedAdminInstancesURLs } from "./reducerHelpers.js";
 
 export const handleSum = (indicator, chartData) => {
   let data = JSON.parse(JSON.stringify(chartData[indicator]));
@@ -48,20 +48,6 @@ export const handleAggregation = (indicator, chartData) => {
   // Convert aggregatedData to an array
   const aggregatedArray = Object.values(aggregatedData);
   return aggregatedArray;
-};
-
-export const handleChangeAreas = (
-  event,
-  setCurrentAdminInstances,
-  setCurrentSelectedAreas,
-  areaURLs
-) => {
-  setCurrentAdminInstances(
-    String(event.target.value)
-      .split(",")
-      .map((value) => areaURLs[value])
-  );
-  setCurrentSelectedAreas(String(event.target.value).split(","));
 };
 
 export const handleAddIndicator = (
@@ -127,7 +113,7 @@ export const handleGenerateVisualization = async (
   adminAreaTypesState,
   indicatorURLs,
   selectedIndicators,
-  currentAdminInstances,
+  adminAreaInstancesState,
   showVisError,
   setMapPolygons,
   setShowVisError,
@@ -137,16 +123,17 @@ export const handleGenerateVisualization = async (
   setVisLoading
 ) => {
   const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
+  const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
+  console.log("selectedAdminInstancesURLs", selectedAdminInstancesURLs)
 
   const checkIfInputsFilled = () => {
     return (
       typeof adminAreaTypesState["currCity"] !== "undefined" &&
       typeof currentAdminType === "string" &&
       currentAdminType !== "" &&
-      currentAdminInstances.every((instance) => {
+      selectedAdminInstancesURLs.every((instance) => {
         return typeof instance === "string" && instance !== "";
       }) &&
-      // typeof(currentAdminInstance) === 'string' && currentAdminInstance !== ''  &&
       Object.keys(selectedIndicators).every((index) => {
         return selectedIndicators[index] !== "";
       }) &&
@@ -166,7 +153,7 @@ export const handleGenerateVisualization = async (
       const response = await axios.post("http://localhost:3000/api/4", {
         cityName: cityURLs[adminAreaTypesState["currCity"]],
         adminType: currentAdminType,
-        adminInstance: currentAdminInstances,
+        adminInstance: selectedAdminInstancesURLs,
         indicatorName: indicatorURLs[selectedIndicators[index]],
         startTime: years[parseInt(index)].value1,
         endTime: years[parseInt(index)].value2,

@@ -153,17 +153,6 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [beginGeneration, setBeginGeneration] = useState(false);
 
 
-  /*
-   * The URIs of the currently selected administrative area instances.
-   * Format: Array (ordered list).
-   */
-  const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
-
-  /*
-   * The NAMES of the currently selected administrative area instances.
-   * Format: Array (ordered list).
-   */
-  const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
   const [currentSelectedMultiIndicators, setCurrentSelectedMultiIndicators] = useState([]);
 
   /*
@@ -285,13 +274,12 @@ function Dashboard(savedIndicators, setDashboardData) {
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
    
-    console.log("currentAdminInstances:", currentAdminInstances);
-    console.log("currentSelectedAreas:", currentSelectedAreas);
     console.log("currentAreaNames:", currentAreaNames);
+    console.log("indicatorData:", indicatorData);
 
     console.log("End of state list");
 
-  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
+  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -344,9 +332,14 @@ function Dashboard(savedIndicators, setDashboardData) {
         const tempChartData = yearRange.map(
           (year) => {
             const res = { name: year };
+            
+            const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
+            console.log("selectedAdminInstancesURLs", selectedAdminInstancesURLs);
+
+            // we want to get an object of type { "Area Name": value, "Area Name": value, ... }
 
             const val = Object.fromEntries(
-              currentAdminInstances.map((instance) => [
+              selectedAdminInstancesURLs.map((instance) => [
                 currentAreaNames[instance],
                 indicatorData[indicator].data[instance][year],
               ])
@@ -431,7 +424,7 @@ function Dashboard(savedIndicators, setDashboardData) {
       }
       setBeginGeneration(false);
     }
-  }, [beginGeneration, currentAdminInstances, currentAreaNames, indicatorData, indicatorURLs, adminAreaInstancesState, mapPolygons, selectedIndicators, showingVisualization, years]);
+  }, [beginGeneration, currentAreaNames, indicatorData, indicatorURLs, adminAreaInstancesState, mapPolygons, selectedIndicators, showingVisualization, years]);
 
   return (
     <Container
@@ -551,16 +544,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                       options={Object.keys(adminAreaInstancesState)}
                       
                       onChange={(event, newValue) => {
-                        console.log("currentAdminTypeURL", typeof getCurrentAdminTypeURL(adminAreaTypesState) );
-                          setCurrentAdminInstances(
-                            String(newValue)
-                              .split(",")
-                              .map((value) => adminAreaInstancesState[value]["URL"]) // here we have the name and we get the URL to append it to the names list list
-                            // On autofill we get a stringified value.
-                            // typeof value === 'string' ? value.split(',') : value,
-                          );
-                          setCurrentSelectedAreas(String(newValue).split(",")); // we just add the URL to the selected URLs list
-
+                        // console.log("currentAdminTypeURL", typeof getCurrentAdminTypeURL(adminAreaTypesState) );
                           dispatchAdminAreaInstances({
                             type: "SET_SELECTED",
                             payload: String(newValue).split(","),
@@ -568,7 +552,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         
                       }}
                       desc="Select the individual demarcation areas you want to analyze."
-                      currentlySelected={currentSelectedAreas}
+                      currentlySelected={getSelectedAdminInstancesNames(adminAreaInstancesState)}
                     />
                   </Stack>
                 </JoyBox>
@@ -704,7 +688,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                 adminAreaTypesState,
                 indicatorURLs,
                 selectedIndicators,
-                currentAdminInstances,
+                adminAreaInstancesState,
                 showVisError,
                 setMapPolygons,
                 setShowVisError,
@@ -862,11 +846,11 @@ function Dashboard(savedIndicators, setDashboardData) {
                           margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
                         >
 
-                          {currentAdminInstances.map((instance, index) => (
+                          {getSelectedAdminInstancesNames(adminAreaInstancesState).map((instanceName, index) => (
                             <Line
-                              key={instance} // Add a unique key for each Line
+                              key={instanceName} // Add a unique key for each Line
                               type="monotone"
-                              dataKey={currentAreaNames[instance]}
+                              dataKey={instanceName}
                               stroke={colors[index % colors.length]} // Use colors[index] to assign a color
                             />
                           ))}
@@ -892,9 +876,9 @@ function Dashboard(savedIndicators, setDashboardData) {
                               <ChartTooltip />
                               <Legend />
 
-                              {currentAdminInstances.map((instance, index) => (
+                              {getSelectedAdminInstancesNames(adminAreaInstancesState).map((instanceName, index) => (
                                 <Bar
-                                  dataKey={currentAreaNames[instance]}
+                                  dataKey={instanceName}
                                   fill={colors[index % colors.length]}
                                 />
                               ))}
@@ -929,10 +913,10 @@ function Dashboard(savedIndicators, setDashboardData) {
                             <XAxis dataKey="name" />
                             <YAxis />
                             <ChartTooltip />
-                            {currentAdminInstances.map((instance, index) => (
+                            {getSelectedAdminInstancesNames(adminAreaInstancesState).map((instanceName, index) => (
                               <Area
                                 type="monotone"
-                                dataKey={currentAreaNames[instance]}
+                                dataKey={instanceName}
                                 fill={colors[index % colors.length]}
                                 stackId={1}
                               />

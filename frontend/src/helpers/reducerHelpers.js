@@ -13,17 +13,18 @@ export const getCurrentAdminTypeURL = (adminAreaTypesState) => {
 export const getSelectedAdminInstancesURLs = (adminAreaInstancesState) => {
   const selectedAreasURLs = [];
   for (const key in adminAreaInstancesState) {
-    if (adminAreaInstancesState[key].selected) {
+    if (adminAreaInstancesState[key].selected === true) {
       selectedAreasURLs.push(adminAreaInstancesState[key].URL);
     }
   }
+  console.log("selectedAreasURLs", selectedAreasURLs);
   return selectedAreasURLs;
 }
 
 export const getSelectedAdminInstancesNames = (adminAreaInstancesState) => {
   const selectedAreasNames = [];
   for (const key in adminAreaInstancesState) {
-      if (adminAreaInstancesState[key].selected) {
+      if (adminAreaInstancesState[key].selected === true) {
         selectedAreasNames.push(key);
       }
   }
