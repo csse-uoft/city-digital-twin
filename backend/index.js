@@ -20,7 +20,7 @@ var upload = multer();
 
 var app = express();
 
-var api = require('./routes/api.js');
+var api = require('./api.js');
 
 app.use(cors());
 
