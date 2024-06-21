@@ -1,9 +1,10 @@
-import {mapAreaURLtoName} from "./helpers/fetchFunctions";
 
 
-// State type example: 
-// { currCity: "toronto", CensusTract: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#CensusTract", selected: false }
-//   , Neighbourhood: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood", selected: true } }
+/**
+ * State type example: 
+ * { currCity: "toronto", CensusTract: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#CensusTract", selected: false }
+ *   , Neighbourhood: { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood", selected: true } }
+ */
 export const adminAreaTypeReducer = (state, action) => {
   const newState = {...state};
   switch (action.type) {
@@ -17,33 +18,34 @@ export const adminAreaTypeReducer = (state, action) => {
       return { ...state, currCity: action.payload };
     case "SET_SELECTED":
       for (const key in state) {
-        if (key === "currCity") {break;}
+        if (key === "currCity") {continue;}
           newState[key].selected = false;
       }
-      newState[action.payload].selected = true;
+      if (action.payload === null || action.payload === "") { return newState; }
+
+      if (newState.hasOwnProperty(action.payload)) {
+        newState[action.payload].selected = true;
+      }
       return newState;
+    case "CLEAR":
+      return { currCity: state.currCity };
     default:
       return {...state};
   }
 }
 
 
-// State type example:
-// { "Niagra (82)": { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood82", selected: false, 
-//                    coordinates: [Array(596)]},
-//    "South Riverdale (70)": { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood77", selected: true,
-//                              coordinates: [Array(257)] } }
+/**  
+ * State type example:
+ * { "Niagra (82)": { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood82", selected: false, 
+ *                    coordinates: [Array(596)]},
+ *   "South Riverdale (70)": { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood77", selected: true,
+ *                              coordinates: [Array(257)] } }
+*/
 export const adminAreaInstanceReducer = (state, action) => {
   let newState = {...state};
   switch (action.type) {
-    case "SET_URLS":
-      for (const area in action.payload) { 
-        // payload is a list of objects with keys: adminAreaInstance (this is the URL), areaName
-        const { adminAreaInstance, areaName } = area;
-        newState[areaName] = { URL: adminAreaInstance, selected: false, coordinates: null };
-      }
-      return newState;
-    case "SET_COORDINATES":
+    case "SET_COORDINATES_AND_URLS":
       // clear the state of all entries
       newState = {};
 
@@ -56,12 +58,14 @@ export const adminAreaInstanceReducer = (state, action) => {
     case "SET_SELECTED":
       // set all areas to not selected
       for (const key in state) {
-        newState[key].selected = {...newState[key], selected: false };
+        newState[key] = {...newState[key], selected: false };
       }
 
       // payload is the a list of area names
       for (const areaName of action.payload) {
-        newState[areaName] = { ...state[areaName], selected: true };
+        if (newState.hasOwnProperty(areaName)) {
+          newState[areaName] = { ...state[areaName], selected: true };
+        }
       }
       return newState;
     default:

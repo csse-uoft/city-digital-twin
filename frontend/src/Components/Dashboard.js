@@ -28,7 +28,6 @@ import {
   fetchCities,
   fetchAdministration,
   fetchIndicators,
-  fetchArea,
   fetchLocations,
 } from "../helpers/fetchFunctions";
 
@@ -42,7 +41,12 @@ import {
   handleUpdateYear
 } from "../helpers/eventHandlers";
 
-import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getSelectedAdminInstancesURLs } from "../helpers/reducerHelpers";
+import { 
+  getCurrentAdminTypeURL, 
+  getSelectedAdminInstancesNames,
+  getSelectedAdminInstancesURLs, 
+  mapInstanceURLtoName
+} from "../helpers/reducerHelpers";
 
 import MapView from "./DataVisComponents/MapView";
 import IndicatorTable from "./DataVisComponents/Table";
@@ -98,6 +102,7 @@ function Dashboard(savedIndicators, setDashboardData) {
   */
   const [cityURLs, setCityURLs] = useState({});
 
+  // Checkout reducers.js for the state structure
   const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
   const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
 
@@ -154,13 +159,6 @@ function Dashboard(savedIndicators, setDashboardData) {
 
 
   const [currentSelectedMultiIndicators, setCurrentSelectedMultiIndicators] = useState([]);
-
-  /*
-   * The names of all the administrative areas.
-   * Format: Key-value pairs, where the key is the URI of the admin area instance and the value is the name
-   * Example: {"http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood77":"Waterfront Communities-The Island (77)"}
-   */
-  const [currentAreaNames, setCurrentAreaNames] = useState({});
 
   /*
    * The relevant table column names for each indicator.
@@ -268,18 +266,19 @@ function Dashboard(savedIndicators, setDashboardData) {
   }, []);
 
   useEffect(() => {
-    console.log("State updated:", adminAreaInstancesState);
+    console.log("Instance State updated:", adminAreaInstancesState);
   }, [adminAreaInstancesState]);
+
+  useEffect(() => {
+    console.log("Type State updated:", adminAreaTypesState);
+  }, [adminAreaTypesState]);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
    
-    console.log("currentAreaNames:", currentAreaNames);
     console.log("indicatorData:", indicatorData);
 
-    console.log("End of state list");
-
-  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
+  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentSelectedMultiIndicators, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -292,11 +291,9 @@ function Dashboard(savedIndicators, setDashboardData) {
       const currentIndicatorNames = Object.fromEntries(
         Object.entries(indicatorURLs).map(([key, value]) => [value, key])
       );
-      console.log("currentIndicatorNames", currentIndicatorNames);
       const indicatorIndices = Object.fromEntries(
         Object.entries(selectedIndicators).map(([key, value]) => [value, key])
       );
-      console.log("indicatorIndices", indicatorIndices);
 
       setMapPolygons({});
       setTableColumns({});
@@ -322,7 +319,7 @@ function Dashboard(savedIndicators, setDashboardData) {
           ...prevData,
           [indicator]: Object.entries(indicatorData[indicator].data).map(
             ([instanceURL, data]) =>
-              [currentAreaNames[instanceURL]].concat(
+              [mapInstanceURLtoName(adminAreaInstancesState, instanceURL)].concat(
                 Object.entries(data).map(([year, value]) => value)
               )
           ),
@@ -334,14 +331,13 @@ function Dashboard(savedIndicators, setDashboardData) {
             const res = { name: year };
             
             const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
-            console.log("selectedAdminInstancesURLs", selectedAdminInstancesURLs);
 
             // we want to get an object of type { "Area Name": value, "Area Name": value, ... }
 
             const val = Object.fromEntries(
-              selectedAdminInstancesURLs.map((instance) => [
-                currentAreaNames[instance],
-                indicatorData[indicator].data[instance][year],
+              selectedAdminInstancesURLs.map((instanceURL) => [
+                mapInstanceURLtoName(adminAreaInstancesState, instanceURL),
+                indicatorData[indicator].data[instanceURL][year],
               ])
             );
 
@@ -365,43 +361,43 @@ function Dashboard(savedIndicators, setDashboardData) {
         };
 
         const newPolygons = Object.keys(adminAreaInstancesState).map((key) => {
-          const areaInstanceURL = adminAreaInstancesState[key].URL; 
+          const instanceURL = adminAreaInstancesState[key].URL; 
           return (
           <Polygon
-            key={areaInstanceURL}
-            pathOptions={{ color: itemColor(areaInstanceURL) }}
+            key={instanceURL}
+            pathOptions={{ color: itemColor(instanceURL) }}
             positions={adminAreaInstancesState[key].coordinates}
           >
-            {Object.keys(indicatorData[indicator].data).indexOf(areaInstanceURL) === -1 ? (
+            {Object.keys(indicatorData[indicator].data).indexOf(instanceURL) === -1 ? (
               <>
                 <Tooltip sticky>
-                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   Area was not selected
                 </Tooltip>
                 <Popup>
-                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   Area was not selected
                 </Popup>
               </>
             ) : (
               <>
                 <Tooltip sticky>
-                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator].data[areaInstanceURL]).map(
+                  {Object.entries(indicatorData[indicator].data[instanceURL]).map(
                     ([year, value]) => (
-                      <div key={currentAreaNames[areaInstanceURL]}>
+                      <div key={mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}>
                         {value} ({year})
                       </div>
                     )
                   )}
                 </Tooltip>
                 <Popup>
-                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator].data[areaInstanceURL]).map(
+                  {Object.entries(indicatorData[indicator].data[instanceURL]).map(
                     ([year, value]) => (
-                      <div key={currentAreaNames[areaInstanceURL]}>
+                      <div key={mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}>
                         {value} ({year})
                       </div>
                     )
@@ -424,7 +420,7 @@ function Dashboard(savedIndicators, setDashboardData) {
       }
       setBeginGeneration(false);
     }
-  }, [beginGeneration, currentAreaNames, indicatorData, indicatorURLs, adminAreaInstancesState, mapPolygons, selectedIndicators, showingVisualization, years]);
+  }, [beginGeneration, indicatorData, indicatorURLs, adminAreaInstancesState, mapPolygons, selectedIndicators, showingVisualization, years]);
 
   return (
     <Container
@@ -519,13 +515,6 @@ function Dashboard(savedIndicators, setDashboardData) {
                           type: "SET_SELECTED",
                           payload: newValue,
                         });
-                        fetchArea(
-                          newValue,
-                          cityURLs,
-                          adminAreaTypesState,
-                          setCurrentAreaNames,
-                          dispatchAdminAreaInstances
-                        );
                         fetchLocations(
                           newValue,
                           cityURLs,
@@ -544,7 +533,6 @@ function Dashboard(savedIndicators, setDashboardData) {
                       options={Object.keys(adminAreaInstancesState)}
                       
                       onChange={(event, newValue) => {
-                        // console.log("currentAdminTypeURL", typeof getCurrentAdminTypeURL(adminAreaTypesState) );
                           dispatchAdminAreaInstances({
                             type: "SET_SELECTED",
                             payload: String(newValue).split(","),

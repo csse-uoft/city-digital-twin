@@ -17,7 +17,6 @@ export const getSelectedAdminInstancesURLs = (adminAreaInstancesState) => {
       selectedAreasURLs.push(adminAreaInstancesState[key].URL);
     }
   }
-  console.log("selectedAreasURLs", selectedAreasURLs);
   return selectedAreasURLs;
 }
 
@@ -29,4 +28,13 @@ export const getSelectedAdminInstancesNames = (adminAreaInstancesState) => {
       }
   }
   return selectedAreasNames;
+}
+
+export const mapInstanceURLtoName = (adminAreaInstancesState, URL) => {
+  for (const key in adminAreaInstancesState) {
+    if (adminAreaInstancesState[key].URL === URL) {
+      return key;
+    }
+  }
+  return null;
 }

@@ -71,7 +71,6 @@ export const handleAddYears = (years, setYears) => {
     id: years.length,
   });
   setYears(temp);
-  console.log(temp);
 };
 
 export const handleUpdateYear = (id, startOrEnd, event, years, setYears) => {
@@ -124,7 +123,6 @@ export const handleGenerateVisualization = async (
 ) => {
   const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
   const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
-  console.log("selectedAdminInstancesURLs", selectedAdminInstancesURLs)
 
   const checkIfInputsFilled = () => {
     return (
@@ -144,9 +142,6 @@ export const handleGenerateVisualization = async (
   };
   setVisLoading(true);
   setMapPolygons([]);
-
-  console.log("City name", cityURLs[adminAreaTypesState["currCity"]]);
-  console.log("Admin type", currentAdminType);
 
   const fetchData = async () => {
     const promises = Object.keys(selectedIndicators).map(async (index) => {

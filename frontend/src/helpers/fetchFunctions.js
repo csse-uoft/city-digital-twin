@@ -82,58 +82,6 @@ export const fetchIndicators = async (
   }
 };
 
-export const fetchArea = async (
-  admin,
-  cityURLs,
-  adminAreaTypesState,
-  setCurrentAreaNames,
-  dispatchAdminAreaInstances
-) => {
-  setCurrentAreaNames({});
-  if (admin) {
-    try {
-      const areaTypeURL = adminAreaTypesState[admin].URL;
-      const cityName = cityURLs[adminAreaTypesState["currCity"]];
-
-      const response = await axios.post("http://localhost:3000/api/3", {
-        cityName: cityName,
-        adminType: areaTypeURL,
-      });
-      console.log("admin instances", response.data["adminAreaInstanceNames"]);
-
-      // dispatchAdminAreaInstances({
-      //   type: "SET_URLS",
-      //   payload: response.data["adminAreaInstanceNames"]
-      // });
-
-      response.data["adminAreaInstanceNames"].forEach((Instance, index) => {
-
-        setCurrentAreaNames((prevCurrent) => ({
-          ...prevCurrent,
-          [Instance["adminAreaInstance"]]: Instance["areaName"],
-        }));
-      });
-    } catch (error) {
-      console.error("POST Error:", error);
-    }
-  } else {
-    setCurrentAreaNames({});
-  }
-};
-
-
-// TODO: Move to a more appropriate location
-export function mapAreaURLtoName(instanceList, areaURL) {
-  console.log("objList", instanceList)
-  console.log("areaURL", areaURL)
-  for (const instance of instanceList) {
-    if (instance.adminAreaInstance === areaURL) {
-      return instance.areaName;
-    }
-  }
-  return null;
-}
-
 export const fetchLocations = async (
   admin,
   cityURLs,
@@ -186,16 +134,16 @@ export const fetchLocations = async (
         updatedLocationURLs[Instance["adminAreaInstance"]] = flipped;
       });
 
-      const areaNameToCoords = {};
+      const areaNameToCoordsAndURL = {};
 
       for (const key in updatedLocationURLs) {
         const areaName = mapAreaURLtoName(areaInstaceList, key);
-        areaNameToCoords[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
+        areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
       }
-      console.log("areaNameToCoords", areaNameToCoords)
+      console.log("areaNameToCoords", areaNameToCoordsAndURL)
       dispatchAdminAreaInstances({
-        type: "SET_COORDINATES",
-        payload: areaNameToCoords
+        type: "SET_COORDINATES_AND_URLS",
+        payload: areaNameToCoordsAndURL
       });
 
       // console.log("locations", updatedLocationURLs);
@@ -204,3 +152,14 @@ export const fetchLocations = async (
     }
   }
 };
+
+// instanceList is of type [{adminAreaInstance: URL, areaName: name}]
+function mapAreaURLtoName(instanceList, areaURL) {
+  for (const instance of instanceList) {
+    if (instance.adminAreaInstance === areaURL) {
+      console.log("instance.areaName", instance.areaName)
+      return instance.areaName;
+    }
+  }
+  return null;
+}
