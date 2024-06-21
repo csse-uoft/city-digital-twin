@@ -34,7 +34,7 @@ export const adminAreaTypeReducer = (state, action) => {
 //    "South Riverdale (70)": { URL: "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood77", selected: true,
 //                              coordinates: [Array(257)] } }
 export const adminAreaInstanceReducer = (state, action) => {
-  const newState = {...state};
+  let newState = {...state};
   switch (action.type) {
     case "SET_URLS":
       for (const area in action.payload) { 
@@ -44,10 +44,13 @@ export const adminAreaInstanceReducer = (state, action) => {
       }
       return newState;
     case "SET_COORDINATES":
+      // clear the state of all entries
+      newState = {};
+
       // payload is an object of the form { areaName: {URL, coordinates} }
       for (const key in action.payload) {
         const { URL, coordinates } = action.payload[key];
-        newState[key] = { URL, coordinates, selected: false };
+        newState[key] = { URL, coordinates: coordinates, selected: false };
       }
       return newState;
     case "SET_SELECTED":

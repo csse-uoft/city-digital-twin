@@ -101,15 +101,6 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
   const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
 
-
-  /*
-   * Area's URIs mapped to 
-   * Format: The key is the Administrative Area Instance URL.
-   *   The value is an object with the key "coordinates" mapping to an array of arrays of coordinates.
-   * Example: { http://ontology.eil.utoronto.ca/Toronto/Toronto#ward17 : { coordinates: [[[x, y], [x, y], [x, y]], [[j,k] [j,k], [j,k]]] }}
-   */
-  const [locationURLs, setLocationURLs] = useState({});
-
   /*
    * Indicator names mapped to their unique URIs.
    * Format: An object. The key is the name of the indicator and the value is the URL.
@@ -294,14 +285,13 @@ function Dashboard(savedIndicators, setDashboardData) {
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
    
-    console.log("locationURLs:", locationURLs);
     console.log("currentAdminInstances:", currentAdminInstances);
     console.log("currentSelectedAreas:", currentSelectedAreas);
     console.log("currentAreaNames:", currentAreaNames);
 
     console.log("End of state list");
 
-  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, locationURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
+  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentAdminInstances, currentSelectedAreas, currentSelectedMultiIndicators, currentAreaNames, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -381,42 +371,44 @@ function Dashboard(savedIndicators, setDashboardData) {
           }
         };
 
-        const newPolygons = Object.keys(locationURLs).map((key) => (
+        const newPolygons = Object.keys(adminAreaInstancesState).map((key) => {
+          const areaInstanceURL = adminAreaInstancesState[key].URL; 
+          return (
           <Polygon
-            key={key}
-            pathOptions={{ color: itemColor(key) }}
-            positions={locationURLs[key].coordinates}
+            key={areaInstanceURL}
+            pathOptions={{ color: itemColor(areaInstanceURL) }}
+            positions={adminAreaInstancesState[key].coordinates}
           >
-            {Object.keys(indicatorData[indicator].data).indexOf(key) === -1 ? (
+            {Object.keys(indicatorData[indicator].data).indexOf(areaInstanceURL) === -1 ? (
               <>
                 <Tooltip sticky>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
                   Area was not selected
                 </Tooltip>
                 <Popup>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
                   Area was not selected
                 </Popup>
               </>
             ) : (
               <>
                 <Tooltip sticky>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator].data[key]).map(
+                  {Object.entries(indicatorData[indicator].data[areaInstanceURL]).map(
                     ([year, value]) => (
-                      <div key={currentAreaNames[key]}>
+                      <div key={currentAreaNames[areaInstanceURL]}>
                         {value} ({year})
                       </div>
                     )
                   )}
                 </Tooltip>
                 <Popup>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{currentAreaNames[areaInstanceURL]}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator].data[key]).map(
+                  {Object.entries(indicatorData[indicator].data[areaInstanceURL]).map(
                     ([year, value]) => (
-                      <div key={currentAreaNames[key]}>
+                      <div key={currentAreaNames[areaInstanceURL]}>
                         {value} ({year})
                       </div>
                     )
@@ -425,7 +417,7 @@ function Dashboard(savedIndicators, setDashboardData) {
               </>
             )}
           </Polygon>
-        ));
+        )});
         setMapPolygons((oldPolygons) => ({
           ...oldPolygons,
           [indicator]: { polygons: newPolygons, index: ind },
@@ -439,7 +431,7 @@ function Dashboard(savedIndicators, setDashboardData) {
       }
       setBeginGeneration(false);
     }
-  }, [beginGeneration, currentAdminInstances, currentAreaNames, indicatorData, indicatorURLs, locationURLs, mapPolygons, selectedIndicators, showingVisualization, years]);
+  }, [beginGeneration, currentAdminInstances, currentAreaNames, indicatorData, indicatorURLs, adminAreaInstancesState, mapPolygons, selectedIndicators, showingVisualization, years]);
 
   return (
     <Container
@@ -545,8 +537,6 @@ function Dashboard(savedIndicators, setDashboardData) {
                           newValue,
                           cityURLs,
                           adminAreaTypesState,
-                          locationURLs,
-                          setLocationURLs,
                           dispatchAdminAreaInstances
                         );
                         }}

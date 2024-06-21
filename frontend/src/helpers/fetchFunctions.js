@@ -138,11 +138,8 @@ export const fetchLocations = async (
   admin,
   cityURLs,
   adminAreaTypesState,
-  locationURLs,
-  setLocationURLs,
   dispatchAdminAreaInstances
 ) => {
-  setLocationURLs({});
   if (admin) {
     try {
 
@@ -156,22 +153,12 @@ export const fetchLocations = async (
 
       const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
-
-      console.log("admin instances", response1.data["adminAreaInstanceNames"]);
-
-
-
       const response2 = await axios.post("http://localhost:3000/api/6", {
         cityName: cityURLs[adminAreaTypesState["currCity"]],
         adminType: adminAreaTypesState[admin].URL,
       });
-      console.log("list of all admin instances", response2.data["adminAreaInstanceNames"]);
 
-
-
-
-
-      const updatedLocationURLs = { ...locationURLs };
+      const updatedLocationURLs = {};
 
       // this extracts the cooridnates into the updatedLocationURLs variable
       response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
@@ -203,7 +190,7 @@ export const fetchLocations = async (
 
       for (const key in updatedLocationURLs) {
         const areaName = mapAreaURLtoName(areaInstaceList, key);
-        areaNameToCoords[areaName] = { URL: key, coordinates: updatedLocationURLs[key] };
+        areaNameToCoords[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
       }
       console.log("areaNameToCoords", areaNameToCoords)
       dispatchAdminAreaInstances({
@@ -211,12 +198,9 @@ export const fetchLocations = async (
         payload: areaNameToCoords
       });
 
-      setLocationURLs(updatedLocationURLs);
-      console.log("locations", updatedLocationURLs);
+      // console.log("locations", updatedLocationURLs);
     } catch (error) {
       console.error("POST Error:", error);
     }
-  } else {
-    setLocationURLs({});
   }
 };
