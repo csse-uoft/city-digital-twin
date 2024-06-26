@@ -93,7 +93,7 @@ function Dashboard(savedIndicators, setDashboardData) {
    *   id = the corresponding indicator the time range is for (id = 0 → first indicator)
    * Example: [{value1:2016, value2:2018, id:0}]
    */
-  const [years, setYears] = useState([{ start: 0, end: 0, id: 0 }]);
+  const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
 
   /*
    * City names mapped to their unique URIs.
@@ -265,18 +265,32 @@ function Dashboard(savedIndicators, setDashboardData) {
     
   }, []);
 
-  useEffect(() => {
-    console.log("Instance State updated:", adminAreaInstancesState);
-  }, [adminAreaInstancesState]);
+  // useEffect(() => {
+  //   console.log("Instance State updated:", adminAreaInstancesState);
+  // }, [adminAreaInstancesState]);
 
-  useEffect(() => {
-    console.log("Type State updated:", adminAreaTypesState);
-  }, [adminAreaTypesState]);
+  // useEffect(() => {
+  //   console.log("Type State updated:", adminAreaTypesState);
+  // }, [adminAreaTypesState]);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-   
+    console.log("indicatorURLs:", indicatorURLs);
+    console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
+    console.log("selectedIndicators:", selectedIndicators);
     console.log("indicatorData:", indicatorData);
+    console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+
+    console.log("tabeColumns:", tableColumns);
+    console.log("tableData:", tableData);
+    console.log("chartData:", chartData);
+
+    console.log("graphTypes:", graphTypes);
+    console.log("comparisonGraphTypes:", comparisonGraphTypes);
+
+    console.log("years:", years);
+
+    console.log("END OF USE EFFECT");
 
   }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentSelectedMultiIndicators, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 

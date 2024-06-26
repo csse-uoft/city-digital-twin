@@ -140,7 +140,7 @@ export const fetchLocations = async (
         const areaName = mapAreaURLtoName(areaInstaceList, key);
         areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
       }
-      console.log("areaNameToCoords", areaNameToCoordsAndURL)
+      // console.log("areaNameToCoords", areaNameToCoordsAndURL)
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
         payload: areaNameToCoordsAndURL
@@ -157,7 +157,7 @@ export const fetchLocations = async (
 function mapAreaURLtoName(instanceList, areaURL) {
   for (const instance of instanceList) {
     if (instance.adminAreaInstance === areaURL) {
-      console.log("instance.areaName", instance.areaName)
+      // console.log("instance.areaName", instance.areaName)
       return instance.areaName;
     }
   }
