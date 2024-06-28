@@ -1,6 +1,23 @@
 import axios from "axios";
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getSelectedAdminInstancesURLs } from "./reducerHelpers.js";
 
+export const handleDeleteIndicator = (years, selectedIndicators, setYears, setSelectedIndicators) => {
+  var tempIndicator = { ...selectedIndicators }; // Create a shallow copy of the selectedIndicators object
+  var tempYears = [...years]
+  var len = Object.keys(tempIndicator).length;
+  
+  if (len > 1) {
+    delete tempIndicator[len - 1]; // Delete the last key-value pair
+    tempYears.pop()
+  }
+
+  console.log('temp years', tempYears)
+  setYears(tempYears);
+  setSelectedIndicators(tempIndicator); // Set the state with the new object
+
+  console.log('remove Del Indicator', selectedIndicators, years);
+}
+
 export const handleSum = (indicator, chartData) => {
   let data = JSON.parse(JSON.stringify(chartData[indicator]));
   for (const yearData of data) {
