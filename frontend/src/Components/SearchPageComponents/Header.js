@@ -1,6 +1,4 @@
 import { Typography, Stack } from "@mui/material";
-// import {ReactComponent as Logo} from "../LOGO-SoC-RGB.svg";
-import InsertChartRoundedIcon from '@mui/icons-material/InsertChartRounded';
 
 export function Header() {
   return (

@@ -1,17 +1,14 @@
 import {
   Box,
-  Autocomplete,
-  TextField,
   Container,
   Grid,
   Paper,
   Stack,
   Typography,
-  createTheme,
 } from "@mui/material";
 import { AreaChart, Area } from "recharts";
 import AddIcon from "@mui/icons-material/Add";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
 import "leaflet/dist/leaflet.css";
 import { Popup, Polygon, Tooltip } from "react-leaflet";
 import L from "leaflet";
@@ -26,24 +23,31 @@ import {
   YAxis,
   Tooltip as ChartTooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
 } from "recharts";
 import {
   fetchCities,
   fetchAdministration,
   fetchIndicators,
-  fetchArea,
   fetchLocations,
-  handleUpdateIndicators,
-  handleAddIndicator,
-  handleAddYears,
-  handleUpdateYear,
-  handleGenerateVisualization,
+} from "../helpers/fetchFunctions";
+
+import {
   handleSum,
   handleAggregation,
-  handleChangeAreas,
-} from "./SearchPageComponents/helper_functions";
+  handleAddIndicator,
+  handleAddYears,
+  handleGenerateVisualization,
+  handleUpdateIndicators,
+  handleUpdateYear
+} from "../helpers/eventHandlers";
+
+import { 
+  getCurrentAdminTypeURL, 
+  getSelectedAdminInstancesNames,
+  getSelectedAdminInstancesURLs, 
+  mapInstanceURLtoName
+} from "../helpers/reducerHelpers";
+
 import MapView from "./DataVisComponents/MapView";
 import IndicatorTable from "./DataVisComponents/Table";
 import ActivePie from "./DataVisComponents/ActivePie";
@@ -61,6 +65,11 @@ import { NewDropdownMultiSelect } from "./SearchPageComponents/NewDropdownMultiS
 import { NumberInput } from "./SearchPageComponents/NumberInput";
 import ComparisonGraph from "./DataVisComponents/ComparisonGraph";
 
+import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
+import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
+
+
+
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -69,86 +78,41 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
+
 /*
  * Implements the search page. 
  */
 function Dashboard(savedIndicators, setDashboardData) {
-  const defaultTheme = createTheme();
-
   /*
    * The time ranges being considered for the indicators.
-   * Format: An array of objects, each containing a time range for a corresponding indicator. Years[0], the first entry, gives the year range for indicator 1.
-   * Parameters: For each array entry, value1 = start year for year range, value2 = end year for year range, id = the corresponding indicator the time range is for (id = 0 → first indicator)
+   * Format: An array of objects, each containing a time range for a 
+   *   corresponding indicator. Years[0], the first entry, gives the 
+   *   year range for indicator 1.
+   * Parameters for each array entry: 
+   *   start = start year for year range, 
+   *   end = end year for year range, 
+   *   id = the corresponding indicator the time range is for (id = 0 → first indicator)
    * Example: [{value1:2016, value2:2018, id:0}]
    */
   const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
 
   /*
-   * The names of the cities available in the database.
-   * Format: An array of strings, each representing the name of a city in the database.
-   * Parameters: N/A
-   * Example: [“toronto”]
-   */
-  const [cities, setCities] = useState([]);
-
-  /*
-   * The unique URIs of the cities available in the database, mapped with the names of the cities.
-   * Format: An object, with each key value pair representing a city. The key is the city name, the city name, the value is the city’s URI.
-   * Parameters: N/A
-   * Example: {“toronto”:”url.com/uniqueuri”}
+   * City names mapped to their unique URIs.
+   * Format: A dictionary (js object). 
+   * Example: { toronto : "url.com/uniqueuri" }
   */
   const [cityURLs, setCityURLs] = useState({});
 
-  /*
-   * The names of all administrative area types.
-   * Format: An array of strings, each representing the name of an administrative area type.
-   * Parameters: N/A
-   * Example: [“Ward”, ”Neighbourhood”, ”Census Tract”]
-   */
-  const [admin, setAdmin] = useState([]);
+  // Checkout reducers.js for the state structure
+  const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
+  const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
 
   /*
-   * The unique URIs for each administrative area type, mapped to their names. 
-   * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
-   * Parameters: The “currCity” key contains the name of the current selected city.
-   */
-  const [adminURLs, setAdminURLs] = useState({});
-
-  /*
-   * The names of all administrative area instances matching the selected admin area type.
-   * Format: An array of strings, each representing the name of an administrative area instance.
-   * Parameters: N/A
-   */
-  const [area, setArea] = useState([]);
-
-  /*
-   * The unique URIs for each administrative area instances, mapped to their names.
-   * Format: An object, with each key-value pair representing an administrative area type. The key is the name and the value is the URL.
-   * Parameters: N/A
-   */
-  const [areaURLs, setAreaURLs] = useState({});
-
-  /*
-   * The names of all of the indicators from a selected city.
-   * Format: An array of strings, each representing the name of an indicator.
-   * Parameters: N/A
-   * Example: [“TheftOverCrime2014”,”TheftOverCrime2015”,”TheftOverCrime2016”]
-   */
-  const [indicators, setIndicators] = useState([]);
-
-  /*
-   * The unique URIs for each indicator, mapped to their names.
-   * Format: An object, with each key-value pair representing an indicator. The key is the name of the indicator and the value is the URL.
-   * Parameters: N/A
-   */
-  const [indicatorURLs, setIndicatorURLs] = useState({});
-
-  /*
-   * The coordinates for each specific area instance mapped to the area’s URI.
-   * Format: An object, with each key-value pair representing an the location of an area. The key is the URI and the value is the coordinates in an array.
-   * Parameters: N/A
-   */
-  const [locationURLs, setLocationURLs] = useState({});
+   * Indicator names mapped to their unique URIs.
+   * Format: An object. The key is the name of the indicator and the value is the URL.
+   * Example: {“TheftOverCrime2014”: “http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrime2014”} 
+  */
+    const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
    * The names of the indicators that are currently selected from each dropdown.
@@ -159,7 +123,9 @@ function Dashboard(savedIndicators, setDashboardData) {
 
   /*
    * The data for each selected indicator.
-   * Format: An object with all selected indicators as its child objects. Each child object (selected indicator) is a URI that maps to the selected area’s URI. Finally, the selected Area’s URI maps to the each year and its desired data/value.
+   * Format: An object with all selected indicators as its child objects. 
+   *   Each child object (selected indicator) is a URI that maps to the selected area’s URI. 
+   *   Finally, the selected Area’s URI maps to the each year and its desired data/value.
    * Example: 
       {
         "http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": {
@@ -183,46 +149,17 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [mapPolygons, setMapPolygons] = useState({});
 
-  /*
-   * Whether the visualizations should be shown or not.
-   * Format: A boolean value, true if the visualizations should show or false if they should not.
-   * Parameters: N/A
-   * Example: lol
-   */
+
   const [showingVisualization, setShowingVisualization] = useState(false);
 
   /*
    * Whether the visualization generation functions should activate.
-   * Format: A boolean value, true if the program is ready for the visualization to generate, false otherwise.
-   * Parameters: N/A
-   * Example: lol
+   * True if the program is ready for the visualization to generate, false otherwise.
    */
   const [beginGeneration, setBeginGeneration] = useState(false);
 
-  /*
-   * The URI of the current selected administrative area type.
-   */
-  const [currentAdminType, setCurrentAdminType] = useState("");
 
-  /*
-   * The URIs of the currently selected administrative area instances.
-   * Format: Array (ordered list).
-   */
-  const [currentAdminInstances, setCurrentAdminInstances] = useState([]);
-
-  /*
-   * The NAMES of the currently selected administrative area instances.
-   * Format: Array (ordered list).
-   */
-  const [currentSelectedAreas, setCurrentSelectedAreas] = useState([]);
   const [currentSelectedMultiIndicators, setCurrentSelectedMultiIndicators] = useState([]);
-
-  /*
-   * The names of all the administrative areas.
-   * Format: Key-value pairs, where the key is the URI of the admin area instance and the value is the name
-   * Example: {"http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood77":"Waterfront Communities-The Island (77)"}
-   */
-  const [currentAreaNames, setCurrentAreaNames] = useState({});
 
   /*
    * The relevant table column names for each indicator.
@@ -275,24 +212,7 @@ function Dashboard(savedIndicators, setDashboardData) {
    */
   const [showVisError, setShowVisError] = useState(false);
 
-  /*
-   * Indicates if a city has been selected from its dropdown.
-   * While false, all other dropdowns in the menu will be disabled (as they require a city to determine their values)
-   * Format: A boolean value, true if a city has been selected or false otherwise
-   * Parameters: N/A
-   * Example: lol
-   */
-  const [citySelected, setCitySelected] = useState(false);
 
-  /*
-   * Indicates if an administrative area type has been selected from its dropdown.
-   * While false, dependent dropdowns in the menu will be disabled.
-   * Format: A boolean value, true if selected or false otherwise
-   * Parameters: N/A
-   * Example: lol
-   */
-  const [adminTypeSelected, setAdminTypeSelected] = useState(false);
-  
   /*
    * The graph type selected for the FIRST graph of each indicator visualization. 
    * Each visualization has two customizable graphs, with various types available: bar, line, etc.
@@ -339,22 +259,41 @@ function Dashboard(savedIndicators, setDashboardData) {
     "#ff69b4",
     "#9acd32",
   ];
-  const handleDropdownChange = (event, newValue) => {
-    if (newValue.length <= 7) {
-      setCurrentSelectedAreas(newValue);
-    }
-    // Optionally, you can provide a feedback to the user if they exceed the limit
-  };
+  
   // Upon initial page load, fetch list of cities
   useEffect(() => {
-    fetchCities(setCityURLs, setCities, cities);
+    fetchCities(setCityURLs);
     
   }, []);
 
+  // useEffect(() => {
+  //   console.log("Instance State updated:", adminAreaInstancesState);
+  // }, [adminAreaInstancesState]);
+
+  // useEffect(() => {
+  //   console.log("Type State updated:", adminAreaTypesState);
+  // }, [adminAreaTypesState]);
+
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-    console.log("selected Indicators", currentSelectedMultiIndicators);
-  }, [currentSelectedMultiIndicators]);
+    console.log("indicatorURLs:", indicatorURLs);
+    console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
+    console.log("selectedIndicators:", selectedIndicators);
+    console.log("indicatorData:", indicatorData);
+    console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+
+    console.log("tabeColumns:", tableColumns);
+    console.log("tableData:", tableData);
+    console.log("chartData:", chartData);
+
+    console.log("graphTypes:", graphTypes);
+    console.log("comparisonGraphTypes:", comparisonGraphTypes);
+
+    console.log("years:", years);
+
+    console.log("END OF USE EFFECT");
+
+  }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentSelectedMultiIndicators, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
 
   useEffect(() => {
@@ -364,7 +303,6 @@ function Dashboard(savedIndicators, setDashboardData) {
       Object.keys(indicatorData).length ===
         Object.keys(selectedIndicators).length
     ) {
-      // const currentAreaNames = Object.fromEntries(Object.entries(areaURLs).map(([key, value]) => [value, key]));
       const currentIndicatorNames = Object.fromEntries(
         Object.entries(indicatorURLs).map(([key, value]) => [value, key])
       );
@@ -396,7 +334,7 @@ function Dashboard(savedIndicators, setDashboardData) {
           ...prevData,
           [indicator]: Object.entries(indicatorData[indicator].data).map(
             ([instanceURL, data]) =>
-              [currentAreaNames[instanceURL]].concat(
+              [mapInstanceURLtoName(adminAreaInstancesState, instanceURL)].concat(
                 Object.entries(data).map(([year, value]) => value)
               )
           ),
@@ -406,11 +344,15 @@ function Dashboard(savedIndicators, setDashboardData) {
         const tempChartData = yearRange.map(
           (year) => {
             const res = { name: year };
+            
+            const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
+
+            // we want to get an object of type { "Area Name": value, "Area Name": value, ... }
 
             const val = Object.fromEntries(
-              currentAdminInstances.map((instance) => [
-                currentAreaNames[instance],
-                indicatorData[indicator].data[instance][year],
+              selectedAdminInstancesURLs.map((instanceURL) => [
+                mapInstanceURLtoName(adminAreaInstancesState, instanceURL),
+                indicatorData[indicator].data[instanceURL][year],
               ])
             );
 
@@ -433,42 +375,44 @@ function Dashboard(savedIndicators, setDashboardData) {
           }
         };
 
-        const newPolygons = Object.keys(locationURLs).map((key) => (
+        const newPolygons = Object.keys(adminAreaInstancesState).map((key) => {
+          const instanceURL = adminAreaInstancesState[key].URL; 
+          return (
           <Polygon
-            key={key}
-            pathOptions={{ color: itemColor(key) }}
-            positions={locationURLs[key].coordinates}
+            key={instanceURL}
+            pathOptions={{ color: itemColor(instanceURL) }}
+            positions={adminAreaInstancesState[key].coordinates}
           >
-            {Object.keys(indicatorData[indicator].data).indexOf(key) === -1 ? (
+            {Object.keys(indicatorData[indicator].data).indexOf(instanceURL) === -1 ? (
               <>
                 <Tooltip sticky>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   Area was not selected
                 </Tooltip>
                 <Popup>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   Area was not selected
                 </Popup>
               </>
             ) : (
               <>
                 <Tooltip sticky>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator].data[key]).map(
+                  {Object.entries(indicatorData[indicator].data[instanceURL]).map(
                     ([year, value]) => (
-                      <div key={currentAreaNames[key]}>
+                      <div key={mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}>
                         {value} ({year})
                       </div>
                     )
                   )}
                 </Tooltip>
                 <Popup>
-                  <strong>{currentAreaNames[key]}</strong> <br />
+                  <strong>{mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}</strong> <br />
                   {selectedIndicators[ind]}:<br />
-                  {Object.entries(indicatorData[indicator].data[key]).map(
+                  {Object.entries(indicatorData[indicator].data[instanceURL]).map(
                     ([year, value]) => (
-                      <div key={currentAreaNames[key]}>
+                      <div key={mapInstanceURLtoName(adminAreaInstancesState, instanceURL)}>
                         {value} ({year})
                       </div>
                     )
@@ -477,7 +421,7 @@ function Dashboard(savedIndicators, setDashboardData) {
               </>
             )}
           </Polygon>
-        ));
+        )});
         setMapPolygons((oldPolygons) => ({
           ...oldPolygons,
           [indicator]: { polygons: newPolygons, index: ind },
@@ -491,7 +435,7 @@ function Dashboard(savedIndicators, setDashboardData) {
       }
       setBeginGeneration(false);
     }
-  }, [indicatorData]);
+  }, [beginGeneration, indicatorData, indicatorURLs, adminAreaInstancesState, mapPolygons, selectedIndicators, showingVisualization, years]);
 
   return (
     <Container
@@ -543,25 +487,21 @@ function Dashboard(savedIndicators, setDashboardData) {
                       id="city-input"
                       label="City"
                       disabled={false}
-                      onChange={(event, newValue) => {
+                      onChange={async (event, newValue) => {
                         setCityLoading(true);
-                        fetchAdministration(
+                        await fetchAdministration(
                           newValue,
                           cityURLs,
-                          setAdminURLs,
-                          setAdmin
+                          dispatchAdminAreaTypes
                         );
                         fetchIndicators(
                           newValue,
                           cityURLs,
-                          setIndicatorURLs,
-                          setIndicators,
-                          indicators
+                          setIndicatorURLs
                         );
-                        setCitySelected(true);
                         setCityLoading(false);
                       }}
-                      options={cities}
+                      options={Object.keys(cityURLs)}
                       desc={
                         "Select the city which you want the indicator data for."
                       }
@@ -584,50 +524,38 @@ function Dashboard(savedIndicators, setDashboardData) {
                     <NewDropdown
                       id="admin-type-input"
                       label="Administrative Area Type"
-                      disabled={!citySelected}
+                      disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
                       onChange={(event, newValue) => {
-                        fetchArea(
-                          newValue,
-                          cityURLs,
-                          adminURLs,
-                          setAreaURLs,
-                          setArea,
-                          setCurrentAreaNames
-                        );
+                        dispatchAdminAreaTypes({
+                          type: "SET_SELECTED",
+                          payload: newValue,
+                        });
                         fetchLocations(
                           newValue,
                           cityURLs,
-                          adminURLs,
-                          locationURLs,
-                          setLocationURLs
+                          adminAreaTypesState,
+                          dispatchAdminAreaInstances
                         );
-                        setCurrentAdminType(adminURLs[newValue]);
-                        setAdminTypeSelected(true);
-                      }}
-                      options={admin}
-                      desc="Select the demarcation type for analysis."
-                    />
+                        }}
+                        options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
+                        desc="Select the demarcation type for analysis."
+                      />
 
                     <NewDropdownMultiSelect
                       id="admin-instances-multiinput"
-                      disabled={!adminTypeSelected}
+                      disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
                       label="Administrative Area Instances"
-                      options={area}
+                      options={Object.keys(adminAreaInstancesState)}
+                      
                       onChange={(event, newValue) => {
-                          setCurrentAdminInstances(
-                            String(newValue)
-                              .split(",")
-                              .map((value) => areaURLs[value])
-                            // On autofill we get a stringified value.
-                            // typeof value === 'string' ? value.split(',') : value,
-                          );
-                          setCurrentSelectedAreas(String(newValue).split(","));
-
-
+                          dispatchAdminAreaInstances({
+                            type: "SET_SELECTED",
+                            payload: String(newValue).split(","),
+                          });
                         
                       }}
                       desc="Select the individual demarcation areas you want to analyze."
-                      currentlySelected={currentSelectedAreas}
+                      currentlySelected={getSelectedAdminInstancesNames(adminAreaInstancesState)}
                     />
                   </Stack>
                 </JoyBox>
@@ -676,9 +604,9 @@ function Dashboard(savedIndicators, setDashboardData) {
                         <NewDropdown
                           key={`indicator-${index}`}
                           id="indicator-input"
-                          disabled={!adminTypeSelected}
+                          disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
                           label={`Indicator #${parseInt(index) + 1}`}
-                          options={indicators}
+                          options={Object.keys(indicatorURLs)}
                           onChange={(event, newValue) =>
                             handleUpdateIndicators(
                               parseInt(index),
@@ -708,7 +636,7 @@ function Dashboard(savedIndicators, setDashboardData) {
               </Grid>
               <Grid xs="12" md="6">
                 <Stack spacing={5} sx={{ marginTop: "40px" }}>
-                  {years.map(({ id, value1, value2 }) => (
+                  {years.map(({ id, start, end }) => (
                     <JoyBox
                       sx={{
                         display: "flex",
@@ -718,22 +646,22 @@ function Dashboard(savedIndicators, setDashboardData) {
                     >
                       <NumberInput
                         id={`year1-${id}`}
-                        disabled={!adminTypeSelected}
+                        disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
                         label={`Starting Year ${id + 1}`}
                         onChange={(event) =>
                           handleUpdateYear(id, "start", event, years, setYears)
                         }
-                        value={value1}
+                        value={start}
                         desc=""
                       />
                       <NumberInput
                         id={`year2-${id}`}
-                        disabled={!adminTypeSelected}
+                        disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
                         label={`Ending Year ${id + 1}`}
                         onChange={(event) =>
                           handleUpdateYear(id, "end", event, years, setYears)
                         }
-                        value={value2}
+                        value={end}
                         desc=""
                       />
                     </JoyBox>
@@ -752,7 +680,7 @@ function Dashboard(savedIndicators, setDashboardData) {
           }}
         >
           <JoyButton
-            disabled={!adminTypeSelected}
+            disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
             size="lg"
             color="success"
             endDecorator={<>{">"}</>}
@@ -760,11 +688,10 @@ function Dashboard(savedIndicators, setDashboardData) {
               handleGenerateVisualization(
                 years,
                 cityURLs,
-                adminURLs,
+                adminAreaTypesState,
                 indicatorURLs,
                 selectedIndicators,
-                currentAdminType,
-                currentAdminInstances,
+                adminAreaInstancesState,
                 showVisError,
                 setMapPolygons,
                 setShowVisError,
@@ -922,11 +849,11 @@ function Dashboard(savedIndicators, setDashboardData) {
                           margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
                         >
 
-                          {currentAdminInstances.map((instance, index) => (
+                          {getSelectedAdminInstancesNames(adminAreaInstancesState).map((instanceName, index) => (
                             <Line
-                              key={instance} // Add a unique key for each Line
+                              key={instanceName} // Add a unique key for each Line
                               type="monotone"
-                              dataKey={currentAreaNames[instance]}
+                              dataKey={instanceName}
                               stroke={colors[index % colors.length]} // Use colors[index] to assign a color
                             />
                           ))}
@@ -952,9 +879,9 @@ function Dashboard(savedIndicators, setDashboardData) {
                               <ChartTooltip />
                               <Legend />
 
-                              {currentAdminInstances.map((instance, index) => (
+                              {getSelectedAdminInstancesNames(adminAreaInstancesState).map((instanceName, index) => (
                                 <Bar
-                                  dataKey={currentAreaNames[instance]}
+                                  dataKey={instanceName}
                                   fill={colors[index % colors.length]}
                                 />
                               ))}
@@ -989,10 +916,10 @@ function Dashboard(savedIndicators, setDashboardData) {
                             <XAxis dataKey="name" />
                             <YAxis />
                             <ChartTooltip />
-                            {currentAdminInstances.map((instance, index) => (
+                            {getSelectedAdminInstancesNames(adminAreaInstancesState).map((instanceName, index) => (
                               <Area
                                 type="monotone"
-                                dataKey={currentAreaNames[instance]}
+                                dataKey={instanceName}
                                 fill={colors[index % colors.length]}
                                 stackId={1}
                               />
