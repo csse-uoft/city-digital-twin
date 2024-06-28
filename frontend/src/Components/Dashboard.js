@@ -69,7 +69,6 @@ import ComparisonGraph from "./DataVisComponents/ComparisonGraph";
 import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
 
-import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 
@@ -628,7 +627,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                     )}
                     <JoyBox>
                       <JoyButton
-                        sx={{ width: "25%" }}
+                        sx={{ width: "25%"}}
                         variant="soft"
                         color="danger"
                         onClick={(event) => 
@@ -639,7 +638,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                           <DeleteIcon />
                       </JoyButton>
                       <JoyButton
-                        sx={{ width: "75%" }}
+                        sx={{ width: "73%", marginLeft: '2%' }}
                         variant="soft"
                         onClick={() => {
                           handleAddIndicator(
