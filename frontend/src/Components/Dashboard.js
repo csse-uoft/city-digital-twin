@@ -65,7 +65,8 @@ import { NewDropdownMultiSelect } from "./SearchPageComponents/NewDropdownMultiS
 import { NumberInput } from "./SearchPageComponents/NumberInput";
 import ComparisonGraph from "./DataVisComponents/ComparisonGraph";
 
-import { adminAreaTypeReducer, adminAreaInstanceReducer } from "../reducers";
+import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
+import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
 
 
 
