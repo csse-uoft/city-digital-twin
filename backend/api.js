@@ -43,55 +43,39 @@ router.get("/0", async (req, res) => {
   });
 });
 
-// API 1
-// Type: POST
-// URL: /api/1/
-// Input: Name of city (cityName), provided as the FULL cityName URL from API 0 (e.g. for Toronto, http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto)
-// Input form: {cityName: “City Name”}
-// Output: List of all indicators in JSON format
 
-// CURRENT ISSUES
-// - Does not take into account city input at all, just gets list of ALL indicators from database, whether they're from chosen city or not
-router.post("/1", async (req, res) => {
-  if (!includesAllInputs([req.body.cityName], "string")) {
-  // if (!req.body.cityName) {
-    res.status(400);
-    res.json({message:"Bad request: missing cityName"});
-  } else if (!String(req.body.cityName).includes("#")) {
-    res.status(400);
-    res.json({message:"Bad request: cityName is not an URI"});
-  } else {
-    const query = `
-      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#> 
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      
-      SELECT ?class
-      WHERE {
-          ?class rdfs:subClassOf iso21972:Indicator.
-      }
-    `;
-
-    const stream = await client.query.select(query);
-
-    var result = [];
-    var totalResults = 0;
-
-    stream.on('data', row => {
-      // Version for simply putting each result value into the final array
-      Object.entries(row).forEach(([key, value]) => {
-        result.push(value.value);
-        totalResults++;
-      });
-    });
-  
-    stream.on('end', () => {
-      res.json({message: "success", indicatorNames: result, totalResults: totalResults});
-    });
+//returns all indicators in the knowledge graph
+router.get("/indicators", async (req, res) => {
+  const query = `
+    PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#> 
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     
-    stream.on('error', err => {
-      res.status(500).send('Oops, error!');
+    SELECT ?class
+    WHERE {
+        ?class rdfs:subClassOf iso21972:Indicator.
+    }
+  `;
+
+  const stream = await client.query.select(query);
+
+  var result = [];
+  var totalResults = 0;
+
+  stream.on('data', row => {
+    // Version for simply putting each result value into the final array
+    Object.entries(row).forEach(([key, value]) => {
+      result.push(value.value);
+      totalResults++;
     });
-  }
+  });
+
+  stream.on('end', () => {
+    res.json({message: "success", indicatorNames: result, totalResults: totalResults});
+  });
+  
+  stream.on('error', err => {
+    res.status(500).send('Oops, error!');
+  });
 });
 
 // API 2
