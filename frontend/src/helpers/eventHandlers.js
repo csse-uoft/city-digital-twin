@@ -11,11 +11,9 @@ export const handleDeleteIndicator = (years, selectedIndicators, setYears, setSe
     tempYears.pop()
   }
 
-  console.log('temp years', tempYears)
   setYears(tempYears);
   setSelectedIndicators(tempIndicator); // Set the state with the new object
 
-  console.log('remove Del Indicator', selectedIndicators, years);
 }
 
 export const handleSum = (indicator, chartData) => {
