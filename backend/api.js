@@ -6,13 +6,8 @@ const endpointUrl = 'http://ec2-3-97-59-180.ca-central-1.compute.amazonaws.com:7
 
 const client = new SparqlClient({ endpointUrl });
 
-/// API 0
-// Type: GET
-// URL: /api/0/
-// Input: None
-// Output: List of available cities in connected database
-// Description: Get list of available cities
-router.get("/0", async (req, res) => {
+// returns all cities in the knowledge graph
+router.get("/cities", async (req, res) => {
   const query = `
     PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

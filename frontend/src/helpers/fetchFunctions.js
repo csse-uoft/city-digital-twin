@@ -3,7 +3,7 @@ import axios from "axios";
 
 export const fetchCities = async (setCityURLs) => {
   
-  const response = await axios.get(`http://localhost:3000/api/0`);
+  const response = await axios.get(`http://localhost:3000/api/cities`);
   // console.log("City Response", response.data)
   response.data.cityNames.forEach((URL, index) => {
     const [, cityName] = URL.split("#");
