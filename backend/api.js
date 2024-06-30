@@ -73,22 +73,15 @@ router.get("/indicators", async (req, res) => {
   });
 });
 
-// API 2
-// Type: POST
-// URL: /api/2/
-// Input: Name of city (cityName)
-// Input form: {cityName: "City Name"}
-// Output: JSON list of all administrative area types
-// Description: Get all administrative area types (ward, neighbourhood, etc.) for a given city
-router.post("/2", async (req, res) => {
-  if (!includesAllInputs([req.body.cityName], "string")) {
-    res.status(400);
-    res.json({message:"Bad request: missing cityName"});
-  } else if (!isURI(req.body.cityName)) {
+// requires a city URL as input in the query, i.e. /api/admin-area-types?city=http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto
+// returns a JSON list of all administrative area types
+router.get("/admin-area-types/", async (req, res) => {
+  const { city } = req.query;
+  if (!isURI(city)) {
     res.status(400);
     res.json({message:"Bad request: cityName is not an URI"});
   } else {
-    const [prefix, suffix] = splitURI(req.body.cityName);
+    const [prefix, suffix] = splitURI(city);
 
     const query = `
       PREFIX CITY: <${prefix}>

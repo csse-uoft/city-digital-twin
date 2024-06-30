@@ -23,8 +23,10 @@ export const fetchAdministration = async (
 ) => {
   if (city) {
     try {
-      const response = await axios.post("http://localhost:3000/api/2", {
-        cityName: cityURLs[city],
+      const response = await axios.get("http://localhost:3000/api/admin-area-types", {
+        params: {
+          city: cityURLs[city],
+        },
       });
       
 
