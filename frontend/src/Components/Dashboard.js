@@ -38,7 +38,8 @@ import {
   handleAddYears,
   handleGenerateVisualization,
   handleUpdateIndicators,
-  handleUpdateYear
+  handleUpdateYear,
+  handleDeleteIndicator
 } from "../helpers/eventHandlers";
 
 import { 
@@ -68,6 +69,7 @@ import ComparisonGraph from "./DataVisComponents/ComparisonGraph";
 import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
 
+import DeleteIcon from '@mui/icons-material/Delete';
 
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -266,9 +268,9 @@ function Dashboard(savedIndicators, setDashboardData) {
     
   }, []);
 
-  // useEffect(() => {
-  //   console.log("Instance State updated:", adminAreaInstancesState);
-  // }, [adminAreaInstancesState]);
+  useEffect(() => {
+    
+  }, [selectedIndicators]);
 
   // useEffect(() => {
   //   console.log("Type State updated:", adminAreaTypesState);
@@ -598,39 +600,58 @@ function Dashboard(savedIndicators, setDashboardData) {
                     marginTop: "40px",
                   }}
                 >
+                  
                   <Stack spacing={5}>
+                    
                     {Object.entries(selectedIndicators).map(
                       ([index, value]) => (
-                        <NewDropdown
-                          key={`indicator-${index}`}
-                          id="indicator-input"
-                          disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
-                          label={`Indicator #${parseInt(index) + 1}`}
-                          options={Object.keys(indicatorURLs)}
-                          onChange={(event, newValue) =>
-                            handleUpdateIndicators(
-                              parseInt(index),
-                              newValue,
-                              setSelectedIndicators
-                            )
-                          }
-                          desc=""
-                        />
+                        <div>
+                          
+                          <NewDropdown
+                            key={`indicator-${index}`}
+                            id="indicator-input"
+                            disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
+                            label={`Indicator #${parseInt(index) + 1}`}
+                            options={Object.keys(indicatorURLs)}
+                            onChange={(event, newValue) =>
+                              handleUpdateIndicators(
+                                parseInt(index),
+                                newValue,
+                                setSelectedIndicators
+                              )
+                            }
+                            desc=""
+                          />
+                        </div>
                       )
                     )}
-                    <JoyButton
-                      sx={{ width: "100%" }}
-                      variant="soft"
-                      onClick={() => {
-                        handleAddIndicator(
-                          selectedIndicators,
-                          setSelectedIndicators
-                        );
-                        handleAddYears(years, setYears);
-                      }}
-                    >
-                      <AddIcon />
-                    </JoyButton>
+                    <JoyBox>
+                      <JoyButton
+                        sx={{ width: "25%"}}
+                        variant="soft"
+                        color="danger"
+                        onClick={(event) => 
+                          handleDeleteIndicator(years, selectedIndicators, setYears, setSelectedIndicators, setCurrentSelectedMultiIndicators)
+                          
+                        }
+                        >
+                          <DeleteIcon />
+                      </JoyButton>
+                      <JoyButton
+                        sx={{ width: "73%", marginLeft: '2%' }}
+                        variant="soft"
+                        onClick={() => {
+                          handleAddIndicator(
+                            selectedIndicators,
+                            setSelectedIndicators
+                          );
+                          handleAddYears(years, setYears);
+                        }}
+                      >
+                        <AddIcon />
+                        
+                      </JoyButton>
+                    </JoyBox>
                   </Stack>
                 </JoyBox>
               </Grid>
@@ -941,7 +962,7 @@ function Dashboard(savedIndicators, setDashboardData) {
           ))}
           <Grid container spacing={2} sx={{ paddingTop: "150px"}}>
             <Grid item xs={12} md={12} lg={3}>
-              <JoyBox sx={{paddingTop: '15%', display: 'flex', justifyContent: 'center'}}>
+              <JoyBox sx={{paddingTop: '15%', display: 'flex', justifyContent: 'center'}} key={selectedIndicators}>
                 <NewDropdownMultiSelect
                     id="multiple-indicator-select"
                     label="Select Indicators"
