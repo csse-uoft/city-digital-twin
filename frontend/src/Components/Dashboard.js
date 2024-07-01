@@ -631,7 +631,7 @@ function Dashboard(savedIndicators, setDashboardData) {
                         variant="soft"
                         color="danger"
                         onClick={(event) => 
-                          handleDeleteIndicator(years, selectedIndicators, setYears, setSelectedIndicators)
+                          handleDeleteIndicator(years, selectedIndicators, setYears, setSelectedIndicators, setCurrentSelectedMultiIndicators)
                           
                         }
                         >
