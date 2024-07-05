@@ -23,13 +23,7 @@ export const fetchAdministration = async (
 ) => {
   if (city) {
     try {
-      const response = await axios.get("http://localhost:3000/api/admin-area-types", {
-        params: {
-          city: cityURLs[city],
-        },
-      });
-      
-
+      const response = await axios.get(`http://localhost:3000/api/admin-area-types/${encodeURIComponent(cityURLs[city])}`);
 
       // setAdminURLs({ currCity: city }); 
       dispatchAdminAreaTypes({
@@ -93,10 +87,7 @@ export const fetchLocations = async (
       const areaTypeURL = adminAreaTypesState[admin].URL;
       const cityName = cityURLs[adminAreaTypesState["currCity"]];
 
-      const response1 = await axios.post("http://localhost:3000/api/3", {
-        cityName: cityName,
-        adminType: areaTypeURL,
-      });
+      const response1 = await axios.get(`http://localhost:3000/api/admin-area-instances/${encodeURIComponent(cityName)}/${encodeURIComponent(areaTypeURL)}`);
 
       const areaInstaceList = response1.data["adminAreaInstanceNames"];
 

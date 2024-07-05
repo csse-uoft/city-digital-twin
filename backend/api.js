@@ -73,10 +73,10 @@ router.get("/indicators", async (req, res) => {
   });
 });
 
-// requires a city URL as input in the query, i.e. /api/admin-area-types?city=http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto
+// example: /api/admin-area-types/http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto
 // returns a JSON list of all administrative area types
-router.get("/admin-area-types/", async (req, res) => {
-  const { city } = req.query;
+router.get("/admin-area-types/:city", async (req, res) => {
+  const city = req.params.city;
   if (!isURI(city)) {
     res.status(400);
     res.json({message:"Bad request: cityName is not an URI"});
@@ -133,90 +133,87 @@ router.get("/admin-area-types/", async (req, res) => {
   }
 });
 
-// API 3
-// Type: POST
-// URL: /api/3/
-// Input: Name of city (cityName), name of administrative area type (adminType)
+
 // Output: List of all admin area instances for the given type and city
-router.post("/3", async (req, res) => {
-  if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
+router.get("/admin-area-instances/:city/:adminType", async (req, res) => {
+  const cityURL = decodeURIComponent(req.params.city);
+  const adminTypeURL = decodeURIComponent(req.params.adminType);
+
+  if (!isURI(cityURL) || !isURI(adminTypeURL)) {
     res.status(400);
-    res.json({message:"Bad request: missing or non-string cityName or adminType"});
-  } else if (!isURI(req.body.cityName) || !isURI(req.body.adminType)) {
-    res.status(400);
-    res.json({message:"Bad request: cityName or adminType is not an URI"}); 
-  } else {
-    const [prefix, citySuffix] = splitURI(req.body.cityName);
-    const [,adminTypeSuffix] = splitURI(req.body.adminType);
-
-    const query = `
-      PREFIX CITY: <${prefix}>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-      SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-        CITY:${citySuffix} ?p ?adminAreaInstance.
-        ?adminAreaInstance rdfs:comment ?areaName.
-        ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-      }
-    `;
-
-    // Check if city is in database; if not, quit
-    const doesCityExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}>
-      PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-      ASK {
-        CITY:${citySuffix} rdf:type i50872:City.
-      }
-    `);
-
-    // Check if provided admin area type exists; if not, exit
-    const doesAdminAreaTypeExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}>
-      PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      
-      ASK {
-          CITY:${citySuffix} ?p ?AdminArea.
-          ?AdminArea rdf:type CITY:${adminTypeSuffix}.
-          CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
-      }
-    `);
-
-    if (!doesCityExist || !doesAdminAreaTypeExist) {
-      if (!doesCityExist) {
-        res.status(400);
-        res.json({message:"Bad request: Provided city does not exist"});
-      } else {
-        res.status(400);
-        res.json({message:"Bad request: Provided administrative area type does not exist"});
-      } 
-    } else {
-      const stream = await client.query.select(query);
-
-      var result = [];
-      var totalResults = 0;
-
-      stream.on('data', row => {
-        var singleRow = {};
-        Object.entries(row).forEach(([key, value]) => {
-          singleRow[key] = value.value;
-        });
-        result.push(singleRow);
-        totalResults++;
-      });
+    res.json({message:"Bad request: cityName or adminType is not an URI"}).send(); 
+  } 
     
-      stream.on('end', () => {
-        res.json({message: "success", adminAreaInstanceNames: result, totalResults:totalResults});
-      });
-      
-      stream.on('error', err => {
-        res.status(500).send('Oops, error!');
-      });
+  const [prefix, citySuffix] = splitURI(cityURL);
+  const [,adminTypeSuffix] = splitURI(adminTypeURL);
+
+  const query = `
+    PREFIX CITY: <${prefix}>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+    SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+      CITY:${citySuffix} ?p ?adminAreaInstance.
+      ?adminAreaInstance rdfs:comment ?areaName.
+      ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
     }
+  `;
+
+  // Check if city is in database; if not, quit
+  const doesCityExist = await client.query.ask(`
+    PREFIX CITY: <${prefix}>
+    PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+    ASK {
+      CITY:${citySuffix} rdf:type i50872:City.
+    }
+  `);
+
+  // Check if provided admin area type exists; if not, exit
+  const doesAdminAreaTypeExist = await client.query.ask(`
+    PREFIX CITY: <${prefix}>
+    PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    
+    ASK {
+        CITY:${citySuffix} ?p ?AdminArea.
+        ?AdminArea rdf:type CITY:${adminTypeSuffix}.
+        CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+    }
+  `);
+
+  if (!doesCityExist || !doesAdminAreaTypeExist) {
+    if (!doesCityExist) {
+      res.status(400);
+      res.json({message:"Bad request: Provided city does not exist"});
+    } else {
+      res.status(400);
+      res.json({message:"Bad request: Provided administrative area type does not exist"});
+    } 
+  } else {
+    const stream = await client.query.select(query);
+
+    var result = [];
+    var totalResults = 0;
+
+    stream.on('data', row => {
+      var singleRow = {};
+      Object.entries(row).forEach(([key, value]) => {
+        singleRow[key] = value.value;
+      });
+      result.push(singleRow);
+      totalResults++;
+    });
+  
+    stream.on('end', () => {
+      res.json({message: "success", adminAreaInstanceNames: result, totalResults:totalResults});
+    });
+    
+    stream.on('error', err => {
+      res.status(500).send('Oops, error!');
+    });
   }
 });
 
@@ -683,8 +680,8 @@ function splitURI(URI) {
 
 function isURI(URI) {
 
-  URI = String(URI);
-  
+  URI = decodeURIComponent(URI);
+
   const hasHTTP = URI.includes("http");
   const hasHashtag = URI.includes("#");
   const hasSlash = URI.includes("/");
