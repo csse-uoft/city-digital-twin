@@ -160,7 +160,7 @@ export const handleGenerateVisualization = async (
 
   const fetchData = async () => {
     const promises = Object.keys(selectedIndicators).map(async (index) => {
-      const response = await axios.post("http://localhost:3000/api/4", {
+      const response = await axios.post("http://localhost:3000/api/visualization-data", {
         cityName: cityURLs[adminAreaTypesState["currCity"]],
         adminType: currentAdminType,
         adminInstance: selectedAdminInstancesURLs,
@@ -215,7 +215,7 @@ export const handleGenerateVisualization = async (
     try {
       // await Promise.all(
       //   Object.keys(selectedIndicators).map(async (index) => {
-      //     const response = await axios.post("http://localhost:3000/api/4", {
+      //     const response = await axios.post("http://localhost:3000/api/visualization-data", {
       //       cityName: cityURLs[adminURLs["currCity"]],
       //       adminType: currentAdminType,
       //       adminInstance: currentAdminInstances,

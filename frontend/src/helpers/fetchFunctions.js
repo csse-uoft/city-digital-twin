@@ -23,7 +23,7 @@ export const fetchAdministration = async (
 ) => {
   if (city) {
     try {
-      const response = await axios.post("http://localhost:3000/api/2", {
+      const response = await axios.post("http://localhost:3000/api/admin-types", {
         cityName: cityURLs[city],
       });
       
@@ -91,7 +91,7 @@ export const fetchLocations = async (
       const areaTypeURL = adminAreaTypesState[admin].URL;
       const cityName = cityURLs[adminAreaTypesState["currCity"]];
 
-      const response1 = await axios.post("http://localhost:3000/api/3", {
+      const response1 = await axios.post("http://localhost:3000/api/admin-instances", {
         cityName: cityName,
         adminType: areaTypeURL,
       });

@@ -73,14 +73,10 @@ router.get("/indicators", async (req, res) => {
   });
 });
 
-// API 2
-// Type: POST
-// URL: /api/2/
-// Input: Name of city (cityName)
-// Input form: {cityName: "City Name"}
+// Input form: {cityName: "http://ontology.eil.utoronto.ca/5087/2/City#Toronto"}
 // Output: JSON list of all administrative area types
 // Description: Get all administrative area types (ward, neighbourhood, etc.) for a given city
-router.post("/2", async (req, res) => {
+router.post("/admin-types", async (req, res) => {
   if (!includesAllInputs([req.body.cityName], "string")) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
@@ -140,12 +136,9 @@ router.post("/2", async (req, res) => {
   }
 });
 
-// API 3
-// Type: POST
-// URL: /api/3/
 // Input: Name of city (cityName), name of administrative area type (adminType)
 // Output: List of all admin area instances for the given type and city
-router.post("/3", async (req, res) => {
+router.post("/admin-instances", async (req, res) => {
   if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
     res.status(400);
     res.json({message:"Bad request: missing or non-string cityName or adminType"});
@@ -227,12 +220,9 @@ router.post("/3", async (req, res) => {
   }
 });
 
-// API 4
-// Type: POST
-// URL: /api/4/
 // Input: Name of city (cityName), admin area type (adminType), admin area instance (adminInstance), indicators (indicatorNames), time range (timeStart, timeEnd)
 // Output: Corresponding visualization and indicator data from connected database
-router.post("/4", async (req, res) => {
+router.post("/visualization-data", async (req, res) => {
   // ----------- MISSING REQUEST VARIABLE HANDLING -----------
   if (!req.body.cityName) {
     res.status(400);
