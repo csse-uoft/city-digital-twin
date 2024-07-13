@@ -444,7 +444,7 @@ function Dashboard(savedIndicators, setDashboardData) {
     >
       {/* Input Form */}
       <Stack spacing={3}>
-        <Header />
+        <Header pageName={"Search Indicators"}/>
 
         <JoyBox sx={{ marginBottom: "50px" }}>
           <JoyBox

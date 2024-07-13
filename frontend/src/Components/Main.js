@@ -7,6 +7,7 @@ import NewSidebar from "./MainComponents/NewSidebar";
 import {Box as JoyBox } from "@mui/joy";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import CompleteCommunitiesDashboard from "./CompleteCommunitiesDashboard";
 
 // The main display that shows the navbar and the indicator dashboard pages
 function Main() {
@@ -52,6 +53,8 @@ function Main() {
                 return <Dashboard savedIndicators={dashboardData.savedIndicators} setDashboardData={setDashboardData}/>;
             case "faq":
                 return <FAQ />;
+            case "complete community":
+                return <CompleteCommunitiesDashboard />;
             default:
                 break;
         }

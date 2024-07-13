@@ -12,6 +12,7 @@ import ListItemContent from "@mui/joy/ListItemContent"
 import Typography from "@mui/joy/Typography"
 import Sheet from "@mui/joy/Sheet"
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded"
+import MapsHomeWorkIcon from '@mui/icons-material/MapsHomeWork';
 
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import InsertChartRoundedIcon from '@mui/icons-material/InsertChartRounded';
@@ -151,6 +152,15 @@ export default function NewSidebar({activePage, setActivePage}) {
               <DashboardRoundedIcon />
               <ListItemContent>
                 <Typography level="title-sm" sx={{...(activePage === "search" && {fontWeight:"bold"})}}>Search Indicators</Typography>
+              </ListItemContent>
+            </ListItemButton>
+          </ListItem>
+
+          <ListItem sx={{userSelect: "none"}}>
+            <ListItemButton onClick={() => setActivePage("complete community")}>
+              <MapsHomeWorkIcon />
+              <ListItemContent>
+                <Typography level="title-sm" sx={{...(activePage === "complete community" && {fontWeight:"bold"})}}>Complete Communities</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>
