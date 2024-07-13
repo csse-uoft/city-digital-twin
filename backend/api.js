@@ -227,18 +227,23 @@ router.post("/visualization-data", async (req, res) => {
   if (!req.body.cityName) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
+    return;
   } else if (!req.body.adminType) {
     res.status(400);
     res.json({message:"Bad request: missing adminType"});
+    return;
   } else if (!req.body.adminInstance || !Array.isArray(req.body.adminInstance)) {
     res.status(400);
     res.json({message:"Bad request: missing or non-array adminInstance"});
+    return;
   } else if (!req.body.indicatorName) {
     res.status(400);
     res.json({message:"Bad request: missing indicatorName"});
+    return;
   } else if (!req.body.startTime || !req.body.endTime) {
     res.status(400);
     res.json({message:"Bad request: missing date"});
+    return;
   // ----------- ALL REQUEST VARIABLES PROVIDED ----------
   } else {
     const cityPrefix = String(req.body.cityName).split("#")[0];
@@ -273,6 +278,7 @@ router.post("/visualization-data", async (req, res) => {
     if (!doesCityExist) {
       res.status(400);
       res.json({message:"Bad request: Provided city does not exist"});
+      return;
     }
 
     // Check if provided admin area type exists; if not, exit
@@ -291,6 +297,7 @@ router.post("/visualization-data", async (req, res) => {
     if (!doesAdminAreaTypeExist) {
       res.status(400);
       res.json({message:"Bad request: Provided administrative area type does not exist"});
+      return;
     }
 
     var adminAreaTypeNames = [];
@@ -315,7 +322,7 @@ router.post("/visualization-data", async (req, res) => {
         }
       });
     });
-  
+
     adminAreaTypeNameStream.on('end', async () => {
       for (let instance in adminInstanceSuffix) {
         var instanceResult = {};
@@ -360,6 +367,7 @@ router.post("/visualization-data", async (req, res) => {
                 // Handle and log the error
                 console.error('Error executing SPARQL query:', error);
                 res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
+                return;
               }
 
 
@@ -389,8 +397,15 @@ router.post("/visualization-data", async (req, res) => {
                 overlappingAdminAreas.on('end', async () => {
                   var result = 0;
                   if (overlappingAreaList.length === 0) {
-                    res.status(500);
-                    res.json({message:"Bad request: No indicator data for given admin area type or smaller"});
+                    try {
+                      // res.status(500); // COMMENTED OUT BECAUSE OTHERWISE IT CRASHES WHEN DOING CENSUS TRACTS
+                      // res.json({message:"Bad request: No indicator data for given admin area type or smaller"});
+                      return;
+                    } catch (error) {
+                      console.error('Error executing SPARQL query:', error);
+                      res.status(500).json({ message: 'Oops, something went wrong! (census tract crutch triggered)', err: error });
+                      return;
+                    }
                   } else {
                     var result = 0;
 
@@ -452,6 +467,7 @@ router.post("/visualization-data", async (req, res) => {
 
                     getValuesForOverlappingAreas.on('error', err => {
                       res.status(500).send('Oops, error!');
+                      return;
                     });
                   }
                 });
@@ -511,6 +527,7 @@ router.post("/visualization-data", async (req, res) => {
 
             indicatorDataStream.on('error', err => {
               res.status(500).send('Oops, error!');
+              return;
             });
           }
         }
@@ -520,7 +537,8 @@ router.post("/visualization-data", async (req, res) => {
     });
 
     adminAreaTypeNameStream.on('error', err => {
-      res.status(500).send('Oops, error!');
+      // res.status(500).send('Oops, error!');
+      return;
     });
   }
 });
