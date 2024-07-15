@@ -85,7 +85,7 @@ L.Icon.Default.mergeOptions({
 /*
  * Implements the search page. 
  */
-function Dashboard(savedIndicators, setDashboardData) {
+function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) {
   /*
    * The time ranges being considered for the indicators.
    * Format: An array of objects, each containing a time range for a 
@@ -100,22 +100,11 @@ function Dashboard(savedIndicators, setDashboardData) {
   const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
 
   /*
-   * City names mapped to their unique URIs.
-   * Format: A dictionary (js object). 
-   * Example: { toronto : "url.com/uniqueuri" }
-  */
-  const [cityURLs, setCityURLs] = useState({});
-
-  // Checkout reducers.js for the state structure
-  const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
-  const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
-
-  /*
    * Indicator names mapped to their unique URIs.
    * Format: An object. The key is the name of the indicator and the value is the URL.
    * Example: {“TheftOverCrime2014”: “http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrime2014”} 
   */
-    const [indicatorURLs, setIndicatorURLs] = useState({});
+  const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
    * The names of the indicators that are currently selected from each dropdown.
@@ -259,11 +248,7 @@ function Dashboard(savedIndicators, setDashboardData) {
     "#ff69b4",
     "#9acd32",
   ];
-  
-  // Upon initial page load, fetch list of cities
-  useEffect(() => {
-    fetchCities(setCityURLs);
-  }, []);
+
 
   // Upon initial page load, fetch list of indicators
   useEffect(() => {
@@ -272,9 +257,9 @@ function Dashboard(savedIndicators, setDashboardData) {
 
 
   useEffect(() => {
-    console.log("Instance State updated:", adminAreaInstancesState);
+    console.log("Types State updated:", adminAreaTypesState);
     
-  }, [adminAreaInstancesState]);
+  }, [adminAreaTypesState]);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {

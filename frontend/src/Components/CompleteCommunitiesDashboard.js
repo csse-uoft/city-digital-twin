@@ -73,24 +73,7 @@ const categories = [
   }
 ];
 
-const CompleteCommunitiesDashboard = () => {
-
-  /*
-  * City names mapped to their unique URIs.
-  * Format: A dictionary (js object). 
-  * Example: { toronto : "url.com/uniqueuri" }
-  */
-  const [cityURLs, setCityURLs] = useState({});
-
-	// Checkout reducers.js for the state structure
-  const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
-  const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
-
-  // Upon initial page load, fetch list of cities
-  useEffect(() => {
-    fetchCities(setCityURLs);
-  }, []);
-
+const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
 
 	return (
 		<Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>

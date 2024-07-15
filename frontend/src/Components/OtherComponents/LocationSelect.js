@@ -1,14 +1,19 @@
 import { Stack, Grid, Typography } from '@mui/material';
 import { Sheet as JoySheet } from "@mui/joy";
 import { Box as JoyBox } from "@mui/joy";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NewDropdown } from '../SearchPageComponents/NewDropdown';
 import { NewDropdownMultiSelect } from '../SearchPageComponents/NewDropdownMultiSelect';
 import { fetchAdministration, fetchLocations } from '../../helpers/fetchFunctions';
-import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames } from '../../helpers/reducerHelpers';
+import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getCurrentAdminTypeName } from '../../helpers/reducerHelpers';
 
 const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
   const [cityLoading, setCityLoading] = useState(false);
+
+  useEffect(() => {
+    console.log("City Loading: ", cityLoading);
+    console.log("City URLs: ", cityURLs);
+  }, [cityLoading, cityURLs]);
 
   return (
     <JoyBox sx={{ textAlign: 'center', marginBottom: '50px' }}>
@@ -51,7 +56,9 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
             <Stack spacing={5}>
               <NewDropdown
                 id="city-input"
+                key="city-input"
                 label="City"
+                value={adminAreaTypesState.currCity}
                 disabled={false}
                 options={Object.keys(cityURLs)}
                 desc="Select the city which you want the indicator data for."
@@ -81,7 +88,9 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
             <Stack spacing={5}>
               <NewDropdown
                 id="admin-type-input"
+                key={"admin-type-input"}
                 label="Administrative Area Type"
+                value={getCurrentAdminTypeName(adminAreaTypesState)}
                 disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
                 options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
                 desc="Select the demarcation type for analysis."
@@ -101,6 +110,7 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
               />
               <NewDropdownMultiSelect
                 id="admin-instances-multiinput"
+                key={"admin-instances-multiinput"}
                 label="Administrative Area Instance"
                 disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
                 options={Object.keys(adminAreaInstancesState)}

@@ -18,7 +18,6 @@ export function NewDropdownMultiSelect({label, options, desc, disabled, onChange
         isOptionEqualToValue={(option, value) => option === value}
 
         sx={{ maxWidth: 300, minWidth: 220 }}
-
         renderTags={(tags, getTagProps) =>
           tags.map((item, index) => (
             <JoyChip
