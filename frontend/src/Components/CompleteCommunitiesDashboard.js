@@ -1,13 +1,11 @@
 import { Container, Stack, Grid, Card, CardContent, Typography } from '@mui/material';
-import { Sheet as JoySheet } from "@mui/joy";
 import { Box as JoyBox } from "@mui/joy";
-
-
 import { Header } from './SearchPageComponents/Header';
-import { useState, useEffect } from 'react';
-import { NewDropdown } from './SearchPageComponents/NewDropdown';
-import { fetchCities } from '../helpers/fetchFunctions';
+import { useState, useEffect, useReducer } from 'react';
+import { fetchCities} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
+import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
+import { adminAreaInstanceReducer } from '../reducers/adminAreaInstanceReducer';
 
 const categories = [
   {
@@ -84,6 +82,9 @@ const CompleteCommunitiesDashboard = () => {
   */
   const [cityURLs, setCityURLs] = useState({});
 
+	// Checkout reducers.js for the state structure
+  const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
+  const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
 
   // Upon initial page load, fetch list of cities
   useEffect(() => {
@@ -91,69 +92,54 @@ const CompleteCommunitiesDashboard = () => {
   }, []);
 
 
+	return (
+		<Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
+			<Stack spacing={3}>
+				<Header pageName="Complete Communities Dashboard" />
+				<LocationSelect
+					cityURLs={cityURLs}
+					setCityURLs={setCityURLs}
+					adminAreaTypesState={adminAreaTypesState}
+					dispatchAdminAreaTypes={dispatchAdminAreaTypes}
+					adminAreaInstancesState={adminAreaInstancesState}
+					dispatchAdminAreaInstances={dispatchAdminAreaInstances}
+				/>
 
-  return (
-    <Container
-      maxWidth="lg"
-      sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}
-    >
-      <Header pageName="Complete Communities Dashboard" />
-      <Stack spacing={3}>
-        <LocationSelect cityURLs={cityURLs} setCityURLs={setCityURLs} />
-				
-        <JoyBox sx={{ marginBottom: '50px' }}>
-          <JoyBox
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: '40px',
-              marginBottom: '20px',
-            }}
-          >
-            <Typography
-              variant="h5"
-              style={{
-                fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
-                fontSize: 35,
-                fontWeight: "bold",
-                color: "#0b2f4e",
-              }}
-            >
-              Complete Communities Data
-            </Typography>
-          </JoyBox>
-          <JoyBox
-            sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px', backgroundColor: '#fff', boxShadow: 1 }}
-          >
-            <Grid container spacing={4}>
-              {categories.map((category, index) => (
-                <Grid item xs={12} md={6} lg={4} key={index}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="h5" component="div">
-                        {category.title}
-                      </Typography>
-                      {category.indicators.map((indicator, i) => (
-                        <JoyBox key={i} sx={{ marginTop: 2 }}>
-                          <Typography variant="h6" component="div">
-                            {indicator.value}
-                          </Typography>
-                          <Typography color="text.secondary">
-                            {indicator.label}
-                          </Typography>
-                        </JoyBox>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </JoyBox>
-        </JoyBox>
-      </Stack>
-    </Container>
-  );
+				<JoyBox sx={{ marginBottom: '50px' }}>
+					<JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+						<Typography variant="h5" style={{ fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif", fontSize: 35, fontWeight: "bold", color: "#0b2f4e" }}>
+							Complete Communities Data
+						</Typography>
+					</JoyBox>
+					<JoyBox sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px', backgroundColor: '#fff', boxShadow: 1 }}>
+						<Grid container spacing={4}>
+							{categories.map((category, index) => (
+								<Grid item xs={12} md={6} lg={4} key={index}>
+									<Card>
+										<CardContent>
+											<Typography variant="h5" component="div">
+												{category.title}
+											</Typography>
+											{category.indicators.map((indicator, i) => (
+												<JoyBox key={i} sx={{ marginTop: 2 }}>
+													<Typography variant="h6" component="div">
+														{indicator.value}
+													</Typography>
+													<Typography color="text.secondary">
+														{indicator.label}
+													</Typography>
+												</JoyBox>
+											))}
+										</CardContent>
+									</Card>
+								</Grid>
+							))}
+						</Grid>
+					</JoyBox>
+				</JoyBox>
+			</Stack>
+		</Container>
+	);
 };
 
 export default CompleteCommunitiesDashboard;

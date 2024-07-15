@@ -70,6 +70,7 @@ import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
 
 import DeleteIcon from '@mui/icons-material/Delete';
+import LocationSelect from "./OtherComponents/LocationSelect";
 
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -244,10 +245,7 @@ function Dashboard(savedIndicators, setDashboardData) {
 
   /*
    * Indicates if the user has selected a city from the dropdown, which begins loading in values for the other dropdowns.
-   * Used primarily for showing loading indicators while this is going on.
    * Format: A boolean value, true if loading or false otherwise
-   * Parameters: N/A
-   * Example: lol
    */
   const [cityLoading, setCityLoading] = useState(false);
 
@@ -265,7 +263,11 @@ function Dashboard(savedIndicators, setDashboardData) {
   // Upon initial page load, fetch list of cities
   useEffect(() => {
     fetchCities(setCityURLs);
-    
+  }, []);
+
+  // Upon initial page load, fetch list of indicators
+  useEffect(() => {
+    fetchIndicators(setIndicatorURLs);
   }, []);
 
 
@@ -446,124 +448,14 @@ function Dashboard(savedIndicators, setDashboardData) {
       <Stack spacing={3}>
         <Header pageName={"Search Indicators"}/>
 
-        <JoyBox sx={{ marginBottom: "50px" }}>
-          <JoyBox
-            sx={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "40px",
-              marginBottom: "20px",
-            }}
-          >
-            <Typography
-              variant="h5"
-              style={{
-                fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
-                fontSize: 35,
-                fontWeight: "bold",
-                color: "#0b2f4e",
-              }}
-            >
-              Location & Area Type
-            </Typography>
-          </JoyBox>
-          <JoySheet
-            variant="outlined"
-            sx={{ p: 2, borderRadius: "sm", paddingBottom: "50px" }}
-          >
-            <Grid container>
-              <Grid xs="12" md="6">
-                <JoyBox
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                    marginTop: "40px",
-                  }}
-                >
-                  <Stack spacing={5}>
-                    <NewDropdown
-                      id="city-input"
-                      label="City"
-                      disabled={false}
-                      onChange={async (event, newValue) => {
-                        setCityLoading(true);
-                        await fetchAdministration(
-                          newValue,
-                          cityURLs,
-                          dispatchAdminAreaTypes
-                        );
-                        fetchIndicators(
-                          newValue,
-                          cityURLs,
-                          setIndicatorURLs
-                        );
-                        setCityLoading(false);
-                      }}
-                      options={Object.keys(cityURLs)}
-                      desc={
-                        "Select the city which you want the indicator data for."
-                      }
-                      isLoading={cityLoading}
-                    />
-                  </Stack>
-                </JoyBox>
-              </Grid>
-
-              <Grid xs="12" md="6">
-                <JoyBox
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                    marginTop: "40px",
-                  }}
-                >
-                  <Stack spacing={5}>
-                    <NewDropdown
-                      id="admin-type-input"
-                      label="Administrative Area Type"
-                      disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
-                      onChange={(event, newValue) => {
-                        dispatchAdminAreaTypes({
-                          type: "SET_SELECTED",
-                          payload: newValue,
-                        });
-                        fetchLocations(
-                          newValue,
-                          cityURLs,
-                          adminAreaTypesState,
-                          dispatchAdminAreaInstances
-                        );
-                        }}
-                        options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
-                        desc="Select the demarcation type for analysis."
-                      />
-
-                    <NewDropdownMultiSelect
-                      id="admin-instances-multiinput"
-                      disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
-                      label="Administrative Area Instances"
-                      options={Object.keys(adminAreaInstancesState)}
-                      
-                      onChange={(event, newValue) => {
-                        console.log("!!!!!!!!!!!!!!!New Value", newValue);
-                          dispatchAdminAreaInstances({
-                            type: "SET_SELECTED",
-                            payload: newValue,
-                          });
-                        
-                      }}
-                      desc="Select the individual demarcation areas you want to analyze."
-                      currentlySelected={getSelectedAdminInstancesNames(adminAreaInstancesState)}
-                    />
-                  </Stack>
-                </JoyBox>
-              </Grid>
-            </Grid>
-          </JoySheet>
-        </JoyBox>
+        <LocationSelect
+					cityURLs={cityURLs}
+					setCityURLs={setCityURLs}
+					adminAreaTypesState={adminAreaTypesState}
+					dispatchAdminAreaTypes={dispatchAdminAreaTypes}
+					adminAreaInstancesState={adminAreaInstancesState}
+					dispatchAdminAreaInstances={dispatchAdminAreaInstances}
+				/>
         <JoyBox>
           <JoyBox
             sx={{

@@ -54,28 +54,20 @@ export const fetchAdministration = async (
   } 
 };
 
-export const fetchIndicators = async (
-  city,
-  cityURLs,
-  setIndicatorURLs
-) => {
-  if (city) {
-    try {
-      const response = await axios.get("http://localhost:3000/api/indicators");
-      
-      response.data.indicatorNames.forEach((URL, index) => {
-        const [, indName] = URL.split("#");
+export const fetchIndicators = async (setIndicatorURLs) => {
+  try {
+    const response = await axios.get("http://localhost:3000/api/indicators");
+    
+    response.data.indicatorNames.forEach((URL, index) => {
+      const [, indName] = URL.split("#");
 
-        setIndicatorURLs((prevIndicatorURLs) => ({
-          ...prevIndicatorURLs,
-          [indName]: URL,
-        }));
-      });
-    } catch (error) {
-      console.error("POST Error:", error);
-    }
-  } else {
-    setIndicatorURLs({});
+      setIndicatorURLs((prevIndicatorURLs) => ({
+        ...prevIndicatorURLs,
+        [indName]: URL,
+      }));
+    });
+  } catch (error) {
+    console.error("POST Error:", error);
   }
 };
 

@@ -1,12 +1,14 @@
 import { Stack, Grid, Typography } from '@mui/material';
 import { Sheet as JoySheet } from "@mui/joy";
 import { Box as JoyBox } from "@mui/joy";
-import { useEffect, useState } from 'react';
-
+import { useState } from 'react';
 import { NewDropdown } from '../SearchPageComponents/NewDropdown';
+import { NewDropdownMultiSelect } from '../SearchPageComponents/NewDropdownMultiSelect';
+import { fetchAdministration, fetchLocations } from '../../helpers/fetchFunctions';
+import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames } from '../../helpers/reducerHelpers';
 
 const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
-
+  const [cityLoading, setCityLoading] = useState(false);
 
   return (
     <JoyBox sx={{ textAlign: 'center', marginBottom: '50px' }}>
@@ -51,11 +53,18 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
                 id="city-input"
                 label="City"
                 disabled={false}
-                options={[]}
+                options={Object.keys(cityURLs)}
                 desc="Select the city which you want the indicator data for."
-                onChange={() => {}}
-                
-                isLoading={false}
+                onChange={async (event, newValue) => {
+                  setCityLoading(true);
+                  await fetchAdministration(
+                    newValue,
+                    cityURLs,
+                    dispatchAdminAreaTypes
+                  );
+                  setCityLoading(false);
+                }}
+                isLoading={cityLoading}
               />
             </Stack>
           </JoyBox>
@@ -71,22 +80,39 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
           >
             <Stack spacing={5}>
               <NewDropdown
-                label="Administrative Area"
-                options={[]}
+                id="admin-type-input"
+                label="Administrative Area Type"
+                disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
+                options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
                 desc="Select the demarcation type for analysis."
-                disabled={false}
-                onChange={() => {}}
-                id=""
+                onChange={(event, newValue) => {
+                  dispatchAdminAreaTypes({
+                    type: "SET_SELECTED",
+                    payload: newValue,
+                  });
+                  fetchLocations(
+                    newValue,
+                    cityURLs,
+                    adminAreaTypesState,
+                    dispatchAdminAreaInstances
+                  );
+                }}
                 isLoading={false}
               />
-              <NewDropdown
+              <NewDropdownMultiSelect
+                id="admin-instances-multiinput"
                 label="Administrative Area Instance"
-                options={[]}
+                disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
+                options={Object.keys(adminAreaInstancesState)}
                 desc="Select the individual demarcation areas you want to analyze."
-                disabled={false}
-                onChange={() => {}}
-                id=""
-                isLoading={false}
+                onChange={(event, newValue) => {
+                  dispatchAdminAreaInstances({
+                    type: "SET_SELECTED",
+                    payload: newValue,
+                  });
+                
+              }}
+              currentlySelected={getSelectedAdminInstancesNames(adminAreaInstancesState)}
               />
             </Stack>
           </JoyBox>
