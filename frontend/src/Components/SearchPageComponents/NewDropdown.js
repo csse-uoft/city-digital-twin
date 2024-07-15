@@ -1,7 +1,7 @@
 import { Autocomplete as JoyAutocomplete, FormControl as JoyFormControl, FormLabel as JoyFormLabel, FormHelperText as JoyFormHelperText} from '@mui/joy';
 import { CircularProgress as JoyCircularProgress }from "@mui/joy";
 
-export function NewDropdown({label, options, desc, disabled, onChange, id, isLoading=false}) {
+export function NewDropdown({label, options, desc, disabled, onChange, id, isLoading=false, value=null}) {
   return (
     <JoyFormControl>
       <JoyFormLabel>{label}</JoyFormLabel>
@@ -9,6 +9,7 @@ export function NewDropdown({label, options, desc, disabled, onChange, id, isLoa
         id={id}
         disabled={disabled} 
         placeholder={label}
+        value={value}
         options={options}
         onChange={onChange}
         loading={isLoading}
