@@ -3,7 +3,7 @@ import axios from "axios";
 
 export const fetchCities = async (setCityURLs) => {
   
-  const response = await axios.get(`http://localhost:3000/api/0`);
+  const response = await axios.get(`http://localhost:3000/api/cities`);
   // console.log("City Response", response.data)
   response.data.cityNames.forEach((URL, index) => {
     const [, cityName] = URL.split("#");
@@ -23,7 +23,7 @@ export const fetchAdministration = async (
 ) => {
   if (city) {
     try {
-      const response = await axios.post("http://localhost:3000/api/2", {
+      const response = await axios.post("http://localhost:3000/api/admin-types", {
         cityName: cityURLs[city],
       });
       
@@ -61,10 +61,7 @@ export const fetchIndicators = async (
 ) => {
   if (city) {
     try {
-      const response = await axios.post("http://localhost:3000/api/1", {
-        cityName: cityURLs[city],
-      });
-      // console.log("indicators", response.data.indicatorNames);
+      const response = await axios.get("http://localhost:3000/api/indicators");
       
       response.data.indicatorNames.forEach((URL, index) => {
         const [, indName] = URL.split("#");
@@ -94,7 +91,7 @@ export const fetchLocations = async (
       const areaTypeURL = adminAreaTypesState[admin].URL;
       const cityName = cityURLs[adminAreaTypesState["currCity"]];
 
-      const response1 = await axios.post("http://localhost:3000/api/3", {
+      const response1 = await axios.post("http://localhost:3000/api/admin-instances", {
         cityName: cityName,
         adminType: areaTypeURL,
       });

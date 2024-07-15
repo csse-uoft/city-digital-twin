@@ -6,13 +6,8 @@ const endpointUrl = 'http://ec2-3-97-59-180.ca-central-1.compute.amazonaws.com:7
 
 const client = new SparqlClient({ endpointUrl });
 
-/// API 0
-// Type: GET
-// URL: /api/0/
-// Input: None
-// Output: List of available cities in connected database
-// Description: Get list of available cities
-router.get("/0", async (req, res) => {
+// returns all cities in the knowledge graph
+router.get("/cities", async (req, res) => {
   const query = `
     PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -43,65 +38,45 @@ router.get("/0", async (req, res) => {
   });
 });
 
-// API 1
-// Type: POST
-// URL: /api/1/
-// Input: Name of city (cityName), provided as the FULL cityName URL from API 0 (e.g. for Toronto, http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto)
-// Input form: {cityName: “City Name”}
-// Output: List of all indicators in JSON format
 
-// CURRENT ISSUES
-// - Does not take into account city input at all, just gets list of ALL indicators from database, whether they're from chosen city or not
-router.post("/1", async (req, res) => {
-  if (!includesAllInputs([req.body.cityName], "string")) {
-  // if (!req.body.cityName) {
-    res.status(400);
-    res.json({message:"Bad request: missing cityName"});
-  } else if (!String(req.body.cityName).includes("#")) {
-    res.status(400);
-    res.json({message:"Bad request: cityName is not an URI"});
-  } else {
-    const query = `
-      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#> 
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      
-      SELECT ?class
-      WHERE {
-          ?class rdfs:subClassOf iso21972:Indicator.
-      }
-    `;
-
-    const stream = await client.query.select(query);
-
-    var result = [];
-    var totalResults = 0;
-
-    stream.on('data', row => {
-      // Version for simply putting each result value into the final array
-      Object.entries(row).forEach(([key, value]) => {
-        result.push(value.value);
-        totalResults++;
-      });
-    });
-  
-    stream.on('end', () => {
-      res.json({message: "success", indicatorNames: result, totalResults: totalResults});
-    });
+//returns all indicators in the knowledge graph
+router.get("/indicators", async (req, res) => {
+  const query = `
+    PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#> 
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     
-    stream.on('error', err => {
-      res.status(500).send('Oops, error!');
+    SELECT ?class
+    WHERE {
+        ?class rdfs:subClassOf iso21972:Indicator.
+    }
+  `;
+
+  const stream = await client.query.select(query);
+
+  var result = [];
+  var totalResults = 0;
+
+  stream.on('data', row => {
+    // Version for simply putting each result value into the final array
+    Object.entries(row).forEach(([key, value]) => {
+      result.push(value.value);
+      totalResults++;
     });
-  }
+  });
+
+  stream.on('end', () => {
+    res.json({message: "success", indicatorNames: result, totalResults: totalResults});
+  });
+  
+  stream.on('error', err => {
+    res.status(500).send('Oops, error!');
+  });
 });
 
-// API 2
-// Type: POST
-// URL: /api/2/
-// Input: Name of city (cityName)
-// Input form: {cityName: "City Name"}
+// Input form: {cityName: "http://ontology.eil.utoronto.ca/5087/2/City#Toronto"}
 // Output: JSON list of all administrative area types
 // Description: Get all administrative area types (ward, neighbourhood, etc.) for a given city
-router.post("/2", async (req, res) => {
+router.post("/admin-types", async (req, res) => {
   if (!includesAllInputs([req.body.cityName], "string")) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
@@ -161,12 +136,9 @@ router.post("/2", async (req, res) => {
   }
 });
 
-// API 3
-// Type: POST
-// URL: /api/3/
 // Input: Name of city (cityName), name of administrative area type (adminType)
 // Output: List of all admin area instances for the given type and city
-router.post("/3", async (req, res) => {
+router.post("/admin-instances", async (req, res) => {
   if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
     res.status(400);
     res.json({message:"Bad request: missing or non-string cityName or adminType"});
@@ -248,28 +220,30 @@ router.post("/3", async (req, res) => {
   }
 });
 
-// API 4
-// Type: POST
-// URL: /api/4/
 // Input: Name of city (cityName), admin area type (adminType), admin area instance (adminInstance), indicators (indicatorNames), time range (timeStart, timeEnd)
 // Output: Corresponding visualization and indicator data from connected database
-router.post("/4", async (req, res) => {
+router.post("/visualization-data", async (req, res) => {
   // ----------- MISSING REQUEST VARIABLE HANDLING -----------
   if (!req.body.cityName) {
     res.status(400);
     res.json({message:"Bad request: missing cityName"});
+    return;
   } else if (!req.body.adminType) {
     res.status(400);
     res.json({message:"Bad request: missing adminType"});
+    return;
   } else if (!req.body.adminInstance || !Array.isArray(req.body.adminInstance)) {
     res.status(400);
     res.json({message:"Bad request: missing or non-array adminInstance"});
+    return;
   } else if (!req.body.indicatorName) {
     res.status(400);
     res.json({message:"Bad request: missing indicatorName"});
+    return;
   } else if (!req.body.startTime || !req.body.endTime) {
     res.status(400);
     res.json({message:"Bad request: missing date"});
+    return;
   // ----------- ALL REQUEST VARIABLES PROVIDED ----------
   } else {
     const cityPrefix = String(req.body.cityName).split("#")[0];
@@ -304,6 +278,7 @@ router.post("/4", async (req, res) => {
     if (!doesCityExist) {
       res.status(400);
       res.json({message:"Bad request: Provided city does not exist"});
+      return;
     }
 
     // Check if provided admin area type exists; if not, exit
@@ -322,6 +297,7 @@ router.post("/4", async (req, res) => {
     if (!doesAdminAreaTypeExist) {
       res.status(400);
       res.json({message:"Bad request: Provided administrative area type does not exist"});
+      return;
     }
 
     var adminAreaTypeNames = [];
@@ -346,7 +322,7 @@ router.post("/4", async (req, res) => {
         }
       });
     });
-  
+
     adminAreaTypeNameStream.on('end', async () => {
       for (let instance in adminInstanceSuffix) {
         var instanceResult = {};
@@ -391,6 +367,7 @@ router.post("/4", async (req, res) => {
                 // Handle and log the error
                 console.error('Error executing SPARQL query:', error);
                 res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
+                return;
               }
 
 
@@ -420,8 +397,15 @@ router.post("/4", async (req, res) => {
                 overlappingAdminAreas.on('end', async () => {
                   var result = 0;
                   if (overlappingAreaList.length === 0) {
-                    res.status(500);
-                    res.json({message:"Bad request: No indicator data for given admin area type or smaller"});
+                    try {
+                      // res.status(500); // COMMENTED OUT BECAUSE OTHERWISE IT CRASHES WHEN DOING CENSUS TRACTS
+                      // res.json({message:"Bad request: No indicator data for given admin area type or smaller"});
+                      return;
+                    } catch (error) {
+                      console.error('Error executing SPARQL query:', error);
+                      res.status(500).json({ message: 'Oops, something went wrong! (census tract crutch triggered)', err: error });
+                      return;
+                    }
                   } else {
                     var result = 0;
 
@@ -483,6 +467,7 @@ router.post("/4", async (req, res) => {
 
                     getValuesForOverlappingAreas.on('error', err => {
                       res.status(500).send('Oops, error!');
+                      return;
                     });
                   }
                 });
@@ -542,6 +527,7 @@ router.post("/4", async (req, res) => {
 
             indicatorDataStream.on('error', err => {
               res.status(500).send('Oops, error!');
+              return;
             });
           }
         }
@@ -551,7 +537,8 @@ router.post("/4", async (req, res) => {
     });
 
     adminAreaTypeNameStream.on('error', err => {
-      res.status(500).send('Oops, error!');
+      // res.status(500).send('Oops, error!');
+      return;
     });
   }
 });

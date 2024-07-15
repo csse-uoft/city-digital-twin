@@ -268,32 +268,30 @@ function Dashboard(savedIndicators, setDashboardData) {
     
   }, []);
 
-  useEffect(() => {
-    
-  }, [selectedIndicators]);
 
-  // useEffect(() => {
-  //   console.log("Type State updated:", adminAreaTypesState);
-  // }, [adminAreaTypesState]);
+  useEffect(() => {
+    console.log("Instance State updated:", adminAreaInstancesState);
+    
+  }, [adminAreaInstancesState]);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-    console.log("indicatorURLs:", indicatorURLs);
-    console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
-    console.log("selectedIndicators:", selectedIndicators);
-    console.log("indicatorData:", indicatorData);
-    console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+    // console.log("indicatorURLs:", indicatorURLs);
+    // console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
+    // console.log("selectedIndicators:", selectedIndicators);
+    // console.log("indicatorData:", indicatorData);
+    // console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
 
-    console.log("tabeColumns:", tableColumns);
-    console.log("tableData:", tableData);
-    console.log("chartData:", chartData);
+    // console.log("tabeColumns:", tableColumns);
+    // console.log("tableData:", tableData);
+    // console.log("chartData:", chartData);
 
-    console.log("graphTypes:", graphTypes);
-    console.log("comparisonGraphTypes:", comparisonGraphTypes);
+    // console.log("graphTypes:", graphTypes);
+    // console.log("comparisonGraphTypes:", comparisonGraphTypes);
 
-    console.log("years:", years);
+    // console.log("years:", years);
 
-    console.log("END OF USE EFFECT");
+    // console.log("END OF USE EFFECT");
 
   }, [cityURLs, currentSelectedMultiIndicators, indicatorURLs, selectedIndicators, indicatorData, mapPolygons, showingVisualization, beginGeneration, currentSelectedMultiIndicators, tableColumns, tableData, chartData, showVisError, graphTypes, comparisonGraphTypes, visLoading, cityLoading]);
 
@@ -550,9 +548,10 @@ function Dashboard(savedIndicators, setDashboardData) {
                       options={Object.keys(adminAreaInstancesState)}
                       
                       onChange={(event, newValue) => {
+                        console.log("!!!!!!!!!!!!!!!New Value", newValue);
                           dispatchAdminAreaInstances({
                             type: "SET_SELECTED",
-                            payload: String(newValue).split(","),
+                            payload: newValue,
                           });
                         
                       }}
