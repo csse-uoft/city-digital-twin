@@ -1,13 +1,36 @@
 import { Stack, Grid, Typography } from '@mui/material';
 import { Sheet as JoySheet } from "@mui/joy";
 import { Box as JoyBox } from "@mui/joy";
+import { useEffect, useState } from 'react';
 
-import { NewDropdown } from './SearchPageComponents/NewDropdown';
+import { NewDropdown } from '../SearchPageComponents/NewDropdown';
 
-const LocationSelect = ({adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
-  
+const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
+
+
   return (
     <JoyBox sx={{ textAlign: 'center', marginBottom: '50px' }}>
+      <JoyBox
+        sx={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '40px',
+          marginBottom: '20px',
+        }}
+      >
+        <Typography
+          variant="h5"
+          style={{
+            fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
+            fontSize: 35,
+            fontWeight: "bold",
+            color: "#0b2f4e",
+          }}
+        >
+          Location & Area Type
+        </Typography>
+    </JoyBox>
     <JoySheet
       variant="outlined"
       sx={{ p: 2, borderRadius: "sm", paddingBottom: "50px" }}
@@ -22,14 +45,16 @@ const LocationSelect = ({adminAreaTypesState, dispatchAdminAreaTypes, adminAreaI
               marginTop: "40px",
             }}
           >
+            
             <Stack spacing={5}>
               <NewDropdown
+                id="city-input"
                 label="City"
+                disabled={false}
                 options={[]}
                 desc="Select the city which you want the indicator data for."
-                disabled={false}
                 onChange={() => {}}
-                id=""
+                
                 isLoading={false}
               />
             </Stack>
