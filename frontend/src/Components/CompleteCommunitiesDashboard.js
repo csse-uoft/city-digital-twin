@@ -4,6 +4,7 @@ import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
 import { fetchCities} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
+import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
 import { adminAreaInstanceReducer } from '../reducers/adminAreaInstanceReducer';
 
@@ -73,6 +74,20 @@ const categories = [
   }
 ];
 
+const processData = (categories) => {
+  return categories.map(category => {
+    const data = { title: category.title };
+    category.indicators.forEach(indicator => {
+      data[indicator.label] = parseFloat(indicator.value);
+    });
+    return data;
+  });
+};
+
+const radarData = processData(categories);
+
+
+
 const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
 
 	return (
@@ -89,6 +104,37 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 				/>
 
 				<JoyBox sx={{ marginBottom: '50px' }}>
+          <JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+						<Typography variant="h5" style={{ fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif", fontSize: 35, fontWeight: "bold", color: "#0b2f4e" }}>
+							Overall Completeness
+						</Typography>
+					</JoyBox>
+          <JoyBox>
+            <RadarChart cx={300} cy={250} outerRadius={150} width={600} height={500} data={radarData}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="title" />
+              <PolarRadiusAxis />
+              <Radar name="Indicators" dataKey="Affordable Housing" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="New Units" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Transit Stations" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Public Transport Use" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Parks" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Proximity to Shops" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Urban Green Areas" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Tree Coverage" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Unemployment Rate" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="New Businesses" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Community Participation" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Events Held" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Cultural Diversity" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Languages Spoken" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="People per Sq Mile" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Increase in Population" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="Historic Preservation" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+              <Radar name="Indicators" dataKey="New Developments" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
+              <Tooltip />
+            </RadarChart>
+          </JoyBox>
 					<JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
 						<Typography variant="h5" style={{ fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif", fontSize: 35, fontWeight: "bold", color: "#0b2f4e" }}>
 							Complete Communities Data

@@ -480,7 +480,7 @@ router.post("/visualization-data", async (req, res) => {
               }
             }
           } else {
-            var result = 0;
+            var result = 0; 
 
             indicatorDataStream = await client.query.select(`
               PREFIX CITY: <${cityPrefix}#>

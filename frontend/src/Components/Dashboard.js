@@ -263,11 +263,11 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-    // console.log("indicatorURLs:", indicatorURLs);
-    // console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
-    // console.log("selectedIndicators:", selectedIndicators);
-    // console.log("indicatorData:", indicatorData);
-    // console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+    console.log("indicatorURLs:", indicatorURLs);
+    console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
+    console.log("selectedIndicators:", selectedIndicators);
+    console.log("indicatorData:", indicatorData);
+    console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
 
     // console.log("tabeColumns:", tableColumns);
     // console.log("tableData:", tableData);
@@ -488,6 +488,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                             id="indicator-input"
                             disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
                             label={`Indicator #${parseInt(index) + 1}`}
+                            value={value}
                             options={Object.keys(indicatorURLs)}
                             onChange={(event, newValue) =>
                               handleUpdateIndicators(
