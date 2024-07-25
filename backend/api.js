@@ -42,12 +42,19 @@ router.get("/cities", async (req, res) => {
 //returns all indicators in the knowledge graph
 router.get("/indicators", async (req, res) => {
   const query = `
-    PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#> 
+    PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    
-    SELECT ?class
+
+    SELECT DISTINCT ?class
+    FROM NAMED <http://www.ontotext.com/implicit>
+    FROM NAMED <http://www.ontotext.com/explicit>
     WHERE {
         ?class rdfs:subClassOf iso21972:Indicator.
+      
+        GRAPH <http://www.ontotext.com/explicit> {  
+        ?instance a ?class;
+        iso21972:value ?measure.  
+        }
     }
   `;
 

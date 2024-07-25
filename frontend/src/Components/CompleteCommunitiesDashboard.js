@@ -110,7 +110,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 						</Typography>
 					</JoyBox>
           <JoyBox>
-            <RadarChart cx={300} cy={250} outerRadius={150} width={600} height={500} data={radarData}>
+            <RadarChart cx={300} cy={250} outerRadius={150} width={600} height={500} data={radarData} withPolarRadiusAxis>
               <PolarGrid />
               <PolarAngleAxis dataKey="title" />
               <PolarRadiusAxis />
