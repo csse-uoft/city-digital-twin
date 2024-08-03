@@ -11,8 +11,8 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
   const [cityLoading, setCityLoading] = useState(false);
 
   useEffect(() => {
-    console.log("City Loading: ", cityLoading);
-    console.log("City URLs: ", cityURLs);
+    // console.log("City Loading: ", cityLoading);
+    // console.log("City URLs: ", cityURLs);
   }, [cityLoading, cityURLs]);
 
   return (
