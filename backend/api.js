@@ -684,6 +684,48 @@ router.post("/6", async (req, res) => {
   }
 });
 
+router.get('/complete-community', (req, res) => {
+  const data = [
+    {
+      "title": "Housing",
+      "completeness": 84
+    },
+    {
+      "title": "Transportation",
+      "completeness": 84
+    },
+    {
+      "title": "Amenities",
+      "completeness": 47
+    },
+    {
+      "title": "Green Space",
+      "completeness": 64
+    },
+    {
+      "title": "Economy",
+      "completeness": 75
+    },
+    {
+      "title": "Engagement",
+      "completeness": 68
+    },
+    {
+      "title": "Diversity",
+      "completeness": 44
+    },
+    {
+      "title": "Density",
+      "completeness": 81
+    },
+    {
+      "title": "Character",
+      "completeness": 44
+    }
+  ];
+  
+  res.json(data);
+});
 
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"

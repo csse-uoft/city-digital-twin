@@ -142,6 +142,20 @@ export const fetchLocations = async (
   }
 };
 
+export const fetchCompleteCommunity = async (
+  setCompleteness
+) => {
+  try {
+    const response = await axios.get("http://localhost:3000/api/complete-community");
+    console.log("reponse below")
+    console.log(response);
+    setCompleteness(response.data);
+  } catch (error) {
+    console.error("Error fetching complete community data:", error);
+    throw error; // Re-throw the error if you want to handle it further up the call stack
+  }
+};
+
 // instanceList is of type [{adminAreaInstance: URL, areaName: name}]
 function mapAreaURLtoName(instanceList, areaURL) {
   for (const instance of instanceList) {
