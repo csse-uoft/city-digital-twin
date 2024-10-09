@@ -152,3 +152,10 @@ function mapAreaURLtoName(instanceList, areaURL) {
   }
   return null;
 }
+
+export const fetchParkData= async () => {
+  
+  const response = await axios.post("http://localhost:3000/api/park-data", {
+  });
+  return response
+};

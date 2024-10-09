@@ -677,6 +677,57 @@ router.post("/6", async (req, res) => {
   }
 });
 
+router.post("/park-data", async (req, res) => {
+  try {
+    const query = `
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX osm: <http://ontology.eil.utoronto.ca/OSM#>
+      PREFIX uoft: <http://ontology.eil.utoronto.ca/tove/cacensus#>
+      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+
+      SELECT ?name ?value
+      WHERE {
+        ?neighborhood a toronto:Neighborhood;
+          rdfs:comment ?name.
+
+        ?parkindicator a osm:PercentWalkingDistance400Park;
+          uoft:hasLocation ?neighborhood;
+          iso21972:value ?measure.
+
+        ?measure iso21972:numerical_value ?value.
+      }
+    `;
+
+    // Execute the query
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    const results = [];
+    stream.on('data', row => {
+      results.push({
+        name: row.name.value,
+        value: row.value.value,
+      });
+    });
+
+    // Handle stream end (when all data has been processed)
+    stream.on('end', () => {
+      res.json(results); // Send the collected results as JSON response
+    });
+
+    // Handle errors in the query or stream
+    stream.on('error', err => {
+      console.error('Query error: ', err);
+      res.status(500).send('Error executing query');
+    });
+
+  } catch (err) {
+    console.error('Server error: ', err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"

@@ -2,13 +2,13 @@ import { Container, Stack, Grid, Card, CardContent, Typography } from '@mui/mate
 import { Box as JoyBox } from "@mui/joy";
 import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
-import { fetchCities} from '../helpers/fetchFunctions';
+import { fetchCities, fetchParkData} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
 import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
 import { adminAreaInstanceReducer } from '../reducers/adminAreaInstanceReducer';
 import axios from 'axios';
-import { getCurrentAdminTypeURL, getSelectedAdminInstancesURLs } from '../helpers/reducerHelpers';
+import { getCurrentAdminTypeURL, getSelectedAdminInstancesURLs, getSelectedAdminInstancesNames} from '../helpers/reducerHelpers';
 
 
 
@@ -51,87 +51,87 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   }
 
 
-  // const [categoriesData, setCategories] = useState([
-  //   {
-  //     title: 'Housing',
-  //     indicators: [
-  //       { value: '30%', label: 'Affordable Housing' },
-  //       { value: '1200', label: 'New Units' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Transportation',
-  //     indicators: [
-  //       { value: '15', label: 'Transit Stations' },
-  //       { value: '45%', label: 'Public Transport Use' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Amenities',
-  //     indicators: [
-  //       { value: '25', label: 'Parks' },
-  //       { value: '75%', label: 'Proximity to Shops' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Green Space',
-  //     indicators: [
-  //       { value: '40%', label: 'Urban Green Areas' },
-  //       { value: '60%', label: 'Tree Coverage' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Economy',
-  //     indicators: [
-  //       { value: '5%', label: 'Unemployment Rate' },
-  //       { value: '150000', label: 'Average After Tax Income' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Engagement',
-  //     indicators: [
-  //       { value: '80%', label: 'Community Participation' },
-  //       { value: '120', label: 'Events Held' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Diversity',
-  //     indicators: [
-  //       { value: '65%', label: 'Cultural Diversity' },
-  //       { value: '50', label: 'Languages Spoken' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Density',
-  //     indicators: [
-  //       { value: '2000', label: 'People per Sq Mile' },
-  //       { value: '15%', label: 'Increase in Population' }
-  //     ]
-  //   },
-  //   {
-  //     title: 'Character',
-  //     indicators: [
-  //       { value: '85%', label: 'Historic Preservation' },
-  //       { value: '30%', label: 'New Developments' }
-  //     ]
-  //   }
-  // ]);
-  // const radarData = processData(categoriesData);
-  // const handleUpdateCategories = () => {
-  //   setCategories(prevCategories => {
-  //     return prevCategories.map(category => {
-  //       return {
-  //         ...category,
-  //         indicators: category.indicators.map(indicator => {
-  //           if (indicator.label === 'Unemployment Rate') {
-  //             return { ...indicator, value: responseData["http://ontology.eil.utoronto.ca/tove/cacensus#UnemploymentRate2016"]['2016'] };
-  //           }
-  //           return indicator;
-  //         })
-  //       };
-  //     });
-  //   });
-  // };
+  const [categoriesData, setCategories] = useState([
+    {
+      title: 'Housing',
+      indicators: [
+        { value: '30%', label: 'Affordable Housing' },
+        { value: '1200', label: 'New Units' }
+      ]
+    },
+    {
+      title: 'Transportation',
+      indicators: [
+        { value: '15', label: 'Transit Stations' },
+        { value: '45%', label: 'Public Transport Use' }
+      ]
+    },
+    {
+      title: 'Amenities',
+      indicators: [
+        { value: '25', label: 'Parks' },
+        { value: '75%', label: 'Proximity to Shops' }
+      ]
+    },
+    {
+      title: 'Green Space',
+      indicators: [
+        { value: '40%', label: 'Urban Green Areas' },
+        { value: '60%', label: 'Tree Coverage' }
+      ]
+    },
+    {
+      title: 'Economy',
+      indicators: [
+        { value: '5%', label: 'Unemployment Rate' },
+        { value: '150000', label: 'Average After Tax Income' }
+      ]
+    },
+    {
+      title: 'Engagement',
+      indicators: [
+        { value: '80%', label: 'Community Participation' },
+        { value: '120', label: 'Events Held' }
+      ]
+    },
+    {
+      title: 'Diversity',
+      indicators: [
+        { value: '65%', label: 'Cultural Diversity' },
+        { value: '50', label: 'Languages Spoken' }
+      ]
+    },
+    {
+      title: 'Density',
+      indicators: [
+        { value: '2000', label: 'People per Sq Mile' },
+        { value: '15%', label: 'Increase in Population' }
+      ]
+    },
+    {
+      title: 'Character',
+      indicators: [
+        { value: '85%', label: 'Historic Preservation' },
+        { value: '30%', label: 'New Developments' }
+      ]
+    }
+  ]);
+  const radarData = processData(categoriesData);
+  const handleUpdateCategories = () => {
+    setCategories(prevCategories => {
+      return prevCategories.map(category => {
+        return {
+          ...category,
+          indicators: category.indicators.map(indicator => {
+            if (indicator.label === 'Unemployment Rate') {
+              return { ...indicator, value: responseData["http://ontology.eil.utoronto.ca/tove/cacensus#UnemploymentRate2016"]['2016'] };
+            }
+            return indicator;
+          })
+        };
+      });
+    });
+  };
   const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
   const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
   
@@ -144,12 +144,33 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     //       endTime: years[parseInt(index)].value2,
     
     
+    // Make this into a helper function after its done
+
+    let parkDataResults = {};
+    const adminNames = getSelectedAdminInstancesNames(adminAreaInstancesState)
+    const parkData = fetchParkData()
+      .then(parkData => {
+        
+        adminNames.forEach(name=> {
+          const matchedObject = parkData.data.find(obj => obj.name === name);
+          console.log("Name", name)
+          if (matchedObject) {
+            parkDataResults[matchedObject.name] = matchedObject.value
+          } else {
+            console.log(`No match found for ${name}`);
+          }
+       });
+      })
+      console.log("Parkdata", parkDataResults)
     
-    
-    
+
     let currCity = cityURLs[adminAreaTypesState["currCity"]];
+
     
     
+
+
+
     const fetchData = async () => {
       const promises = Object.keys(indicatorURLs).map(async (key) => {
         const url = indicatorURLs[key];
@@ -256,7 +277,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 						</Typography>
 					</JoyBox>
           <JoyBox>
-            {/* <RadarChart cx={300} cy={250} outerRadius={150} width={600} height={500} data={radarData}>
+            <RadarChart cx={300} cy={250} outerRadius={150} width={600} height={500} data={radarData}>
               <PolarGrid />
               <PolarAngleAxis dataKey="title" />
               <PolarRadiusAxis />
@@ -279,7 +300,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
               <Radar name="Indicators" dataKey="Historic Preservation" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
               <Radar name="Indicators" dataKey="New Developments" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
               <Tooltip />
-            </RadarChart> */}
+            </RadarChart> 
           </JoyBox>
 				</JoyBox>
 			</Stack>
