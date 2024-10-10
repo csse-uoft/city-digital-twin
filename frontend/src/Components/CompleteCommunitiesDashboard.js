@@ -145,7 +145,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     
     
     // Make this into a helper function after its done
-
+    // console.log(parkDataResults);
     let parkDataResults = {};
     const adminNames = getSelectedAdminInstancesNames(adminAreaInstancesState)
     const parkData = fetchParkData()
