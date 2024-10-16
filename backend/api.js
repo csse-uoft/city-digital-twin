@@ -677,6 +677,7 @@ router.post("/6", async (req, res) => {
   }
 });
 
+// Returns metrics describing how easily a park is accessible by all neighbourhoods
 router.post("/park-data", async (req, res) => {
   try {
     const query = `
