@@ -76,8 +76,8 @@ function Main() {
                 adminAreaInstancesState={adminAreaInstancesState}
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances}
                 />;
-      case "faq":
-        return <FAQ />;
+      // case "faq":   // Not completed yet
+      //   return <FAQ />;
       case "complete community":
         return <CompleteCommunitiesDashboard 
                 cityURLs={cityURLs}
