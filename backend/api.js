@@ -2,8 +2,10 @@ var express = require('express');
 var router = express.Router();
 
 var SparqlClient = require('sparql-http-client');
-const endpointUrl = 'http://ec2-3-97-59-180.ca-central-1.compute.amazonaws.com:7200/repositories/CACensus';
+require('dotenv').config();
 
+const endpointUrl = process.env.ENDPOINT_URL;
+console.log(`Endpoint URL: ${endpointUrl}`);
 const client = new SparqlClient({ endpointUrl });
 
 // returns all cities in the knowledge graph
