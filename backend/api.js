@@ -5,7 +5,6 @@ var SparqlClient = require('sparql-http-client');
 require('dotenv').config();
 
 const endpointUrl = process.env.ENDPOINT_URL;
-console.log(`Endpoint URL: ${endpointUrl}`);
 const client = new SparqlClient({ endpointUrl });
 
 // returns all cities in the knowledge graph
