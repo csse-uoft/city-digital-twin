@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 
 var SparqlClient = require('sparql-http-client');
+require('dotenv').config();
+
 const endpointUrl = process.env.ENDPOINT_URL;
 
 const client = new SparqlClient({ endpointUrl });

@@ -22,20 +22,31 @@ const processData = (categories) => {
   });
 };
 
+// Take an admin instance area URI and print out its name:
+const URI_to_name = (instance_map, uri) => {
+  console.log("inside the helper", uri)
+  for (const name in instance_map) {
+    if (instance_map[name].URL === uri) {
+      return name;
+    }
+  }
+  return null; // Return null if no matching URI is found
+};
+
 
 
 
 
 const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
   const [responseData, setResponseData] = useState({});
-
+  const [parkData, setParkData] = useState({});
   const categories = {
     'Housing': ['Average Value of Dwellings'],
     'Economy': ['Unemployment Rate', 'Average After Tax Income'],
     'Engagement': ['Participation Rate'],
     'Diversity': ['Total Ethnic Origin'],
     'Density': ['Population Density'],
-    'Amenities': ['Parks and Leisure', 'Arts and Recreasion']
+    // 'Amenities': ['Parks and Leisure', 'Arts and Recreasion']
 
   }
   const indicatorURLs = {
@@ -45,8 +56,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     'Participation Rate': "http://ontology.eil.utoronto.ca/tove/cacensus#ParticipationRate2016",
     'Total Ethnic Origin': "http://ontology.eil.utoronto.ca/tove/cacensus#TotalEthnicOrigin2016",
     'Population Density': "http://ontology.eil.utoronto.ca/tove/cacensus#PopulationDensity2016",
-    'Parks and Leisure': "http://ontology.eil.utoronto.ca/tove/cacensus#31.ParksRecreationLeisureAndFitnessStudies2016",
-    'Arts and Recreasion': "http://ontology.eil.utoronto.ca/tove/cacensus#71ArtsEntertainmentAndRecreation2016"
+    // 'Parks and Leisure': "http://ontology.eil.utoronto.ca/tove/cacensus#31.ParksRecreationLeisureAndFitnessStudies2016",
+    // 'Arts and Recreasion': "http://ontology.eil.utoronto.ca/tove/cacensus#71ArtsEntertainmentAndRecreation2016"
 
   }
 
@@ -145,7 +156,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     
     
     // Make this into a helper function after its done
-    // console.log(parkDataResults);
+    
+    console.log("Print Admin Area instance states", adminAreaInstancesState);
     let parkDataResults = {};
     const adminNames = getSelectedAdminInstancesNames(adminAreaInstancesState)
     const parkData = fetchParkData()
@@ -162,6 +174,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
        });
       })
       console.log("Parkdata", parkDataResults)
+      setParkData(parkDataResults)
     
 
     let currCity = cityURLs[adminAreaTypesState["currCity"]];
@@ -229,48 +242,60 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 							Complete Communities Data
 						</Typography>
 					</JoyBox>
-          {selectedAdminInstancesURLs.map( (value) => (
-
-          
-            <JoyBox  sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px', backgroundColor: '#fff', boxShadow: 1 }}>
+          {selectedAdminInstancesURLs.map((value) => (
+            <JoyBox sx={{ p: 2, borderRadius: 'sm', paddingBottom: '50px', backgroundColor: '#fff', boxShadow: 1 }}>
               <Typography variant="h6" component="div">
-                {value.split('#')[1]}
+                {URI_to_name(adminAreaInstancesState, value)}
               </Typography>
               <Grid container spacing={4}>
-              {Object.keys(categories).map((categoryKey, index) => (
-                <Grid item xs={12} md={6} lg={4} key={index}>
-                  <Card sx={{minHeight: '250px'}}>
+                {Object.keys(categories).map((categoryKey, index) => (
+                  <Grid item xs={12} md={6} lg={4} key={index}>
+                    <Card sx={{ minHeight: '250px' }}>
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          {categoryKey}
+                        </Typography>
+                        {categories[categoryKey].map((indicatorLabel, i) => {
+                          const indicatorURL = indicatorURLs?.[indicatorLabel];
+                          const indicatorData = responseData[indicatorURL]?.data[value]?.['2016'];
+                          return (
+                            <JoyBox key={i} sx={{ marginTop: 2 }}>
+                              <Typography variant="h6" component="div">
+                                {indicatorData !== undefined ? indicatorData : 'N/A'}
+                              </Typography>
+                              <Typography color="text.secondary">
+                                {indicatorLabel}
+                              </Typography>
+                            </JoyBox>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+                
+                {/* Separate Park Data card as a standalone Grid item */}
+                <Grid item xs={12} md={6} lg={4}>
+                  <Card sx={{ minHeight: '250px' }}>
                     <CardContent>
                       <Typography variant="h5" component="div">
-                        {categoryKey}
-                      </Typography> 
-                      {categories[categoryKey].map((indicatorLabel, i) => {
-                        // const indicatorURL = Object.values(indicatorURLs).find(url => url.includes(indicatorLabel.replace(/\s/g, '')));
-                        const indicatorURL = indicatorURLs?.[indicatorLabel];
-                        if (indicatorLabel === 'Average Value of Dwellings'){
-                          console.log("testing data 1", indicatorLabel)
-                          console.log("testing data 2", indicatorURL)
-                        }
-                        
-                        const indicatorData = responseData[indicatorURL]?.data[value]?.['2016'];
-                        return (
-                          <JoyBox key={i} sx={{ marginTop: 2 }}>
-                            <Typography variant="h6" component="div">
-                              {indicatorData !== undefined ? indicatorData : 'N/A'}
-                            </Typography>
-                            <Typography color="text.secondary">
-                              {indicatorLabel}
-                            </Typography>
-                          </JoyBox>
-                        );
-                      })}
+                        Park Data
+                      </Typography>
+                      <JoyBox sx={{ marginTop: 2 }}>
+                        <Typography variant="h6" component="div">
+                          {parkData[URI_to_name(adminAreaInstancesState, value)]}
+                        </Typography>
+                        <Typography color="text.secondary">
+                          Park Access Score
+                        </Typography>
+                      </JoyBox>
                     </CardContent>
                   </Card>
                 </Grid>
-              ))}
               </Grid>
             </JoyBox>
           ))}
+
           <JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
 						<Typography variant="h5" style={{ fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif", fontSize: 35, fontWeight: "bold", color: "#0b2f4e" }}>
 							Overall Completeness
