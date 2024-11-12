@@ -681,6 +681,7 @@ router.post("/6", async (req, res) => {
 
 // Returns metrics describing how easily a park is accessible by all neighbourhoods
 router.post("/park-data", async (req, res) => {
+  
   try {
     const query = `
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -717,6 +718,76 @@ router.post("/park-data", async (req, res) => {
     // Handle stream end (when all data has been processed)
     stream.on('end', () => {
       res.json(results); // Send the collected results as JSON response
+    });
+
+    // Handle errors in the query or stream
+    stream.on('error', err => {
+      console.error('Query error: ', err);
+      res.status(500).send('Error executing query');
+    });
+
+  } catch (err) {
+    console.error('Server error: ', err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+
+
+
+
+
+router.post("/park-locations", async (req, res) => {
+  const neighborhoodName = req.body.neighborhoodName;
+  try {
+    const query = `
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+      PREFIX gcir: <http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#>
+      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+      PREFIX osm: <http://ontology.eil.utoronto.ca/OSM#>
+      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+      SELECT ?park ?name ?coordinates
+
+      WHERE{
+            ?park a gcir:Park;
+        loc:hasLocation ?location.
+          
+          OPTIONAL { ?park genprop:hasName ?name; }
+
+            ?location geo:asWKT ?coordinates.
+            
+            toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+            ?neighlocation geo:asWKT ?neighcoordinates.
+
+            FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+      }
+    `;
+
+    // Execute the query
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on('data', (row) => {
+      rawData.push(row);
+    });
+
+    stream.on('end', () => {
+      // Transform the raw data into a more readable format
+      const formattedData = rawData.map(binding => {
+        return {
+          park: binding.park.value,
+          name: binding.name ? binding.name.value : null,
+          coordinates: binding.coordinates ? binding.coordinates.value : null
+        };
+      });
+      
+      // Send the formatted data as JSON
+      res.json({ success: true, data: formattedData });
     });
 
     // Handle errors in the query or stream

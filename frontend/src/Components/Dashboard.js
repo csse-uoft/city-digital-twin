@@ -693,7 +693,6 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                     <JoyBox sx={{ minHeight: "100px", alignItems: 'center'}}>
 
                       {/* Map visualization of indicator data in desired areas*/}
-
                       <MapView
                         mapPolygons={mapPolygons}
                         indicator={indicator}

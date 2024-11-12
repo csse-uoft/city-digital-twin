@@ -1,14 +1,15 @@
-import { Container, Stack, Grid, Card, CardContent, Typography } from '@mui/material';
+import { Container, Stack, Grid, Card, CardContent, Typography, Paper } from '@mui/material';
 import { Box as JoyBox } from "@mui/joy";
 import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
-import { fetchCities, fetchParkData} from '../helpers/fetchFunctions';
+import { fetchCities, fetchParkData, fetchParkLocations} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
 import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
 import { adminAreaInstanceReducer } from '../reducers/adminAreaInstanceReducer';
 import axios from 'axios';
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesURLs, getSelectedAdminInstancesNames} from '../helpers/reducerHelpers';
+import { TileLayer, Circle, Popup, MapContainer } from 'react-leaflet';
 
 
 
@@ -34,7 +35,18 @@ const URI_to_name = (instance_map, uri) => {
 };
 
 
-
+const data = [
+  { lat: 43.651070, lng: -79.347015, radius: 600, color: 'green', title: 'Node 1' },
+  { lat: 43.700110, lng: -79.416300, radius: 800, color: 'green', title: 'Node 2' },
+  { lat: 43.681720, lng: -79.384210, radius: 400, color: 'green', title: 'Node 3' },
+  { lat: 43.662890, lng: -79.395650, radius: 1200, color: 'green', title: 'Node 4' },
+  { lat: 43.651890, lng: -79.381710, radius: 800, color: 'green', title: 'Node 5' },
+  { lat: 43.638300, lng: -79.430120, radius: 500, color: 'green', title: 'Node 6' },
+  { lat: 43.723160, lng: -79.451130, radius: 700, color: 'green', title: 'Node 7' },
+  { lat: 43.687200, lng: -79.299690, radius: 900, color: 'green', title: 'Node 8' },
+  { lat: 43.671590, lng: -79.287560, radius: 600, color: 'green', title: 'Node 10' },
+  // Add more nodes as needed
+];
 
 
 const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
@@ -220,7 +232,9 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   
     getData();
     // handleUpdateCategories();
-  }, [])
+
+    console.log("TESTINT PARK LOCATIONS", fetchParkLocations("neighborhood1"))
+  }, [cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances])
 
 	return (
 		<Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
@@ -295,8 +309,38 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
               </Grid>
             </JoyBox>
           ))}
-
-          <JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={3} style={{ height: '500px' }}>
+              <MapContainer
+                style={{ height: '100%', width: '100%' }}
+                center={[43.651070, -79.347015]}
+                zoom={10}
+                minZoom={3}
+                maxZoom={19}
+                maxBounds={[[-85.06, -180], [85.06, 180]]}
+                scrollWheelZoom={true}
+              >
+                <TileLayer
+                  attribution=' &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
+                  url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {data.map((node, index) => (
+                  <Circle
+                  key={index}
+                  center={[node.lat, node.lng]}
+                  radius={node.radius} // Radius in meters
+                  color={node.color}
+                  fillOpacity={0.5}
+                >
+                  <Popup>
+                    {node.title}
+                  </Popup>
+                </Circle>
+                ))}
+              </MapContainer>
+            </Paper>
+          </Grid>
+          {/* <JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
 						<Typography variant="h5" style={{ fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif", fontSize: 35, fontWeight: "bold", color: "#0b2f4e" }}>
 							Overall Completeness
 						</Typography>
@@ -326,7 +370,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
               <Radar name="Indicators" dataKey="New Developments" stroke="#413ea0" fill="#413ea0" fillOpacity={0.6} />
               <Tooltip />
             </RadarChart> 
-          </JoyBox>
+          </JoyBox> */}
 				</JoyBox>
 			</Stack>
 		</Container>
