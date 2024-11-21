@@ -3,6 +3,8 @@ import { Typography, Stack, AccordionGroup } from "@mui/joy";
 import { Container, Button, Box, Avatar } from "@mui/material";
 import FAQQuestion from "./FAQComponents/FAQQuestion";
 import { faqItems } from "./FAQComponents/FAQData";
+
+import dashboard from "../assets/icons/dashboard.png";
 import dataLogo from "../assets/icons/data.png";
 import repositoryLogo from "../assets/icons/repository.png";
 import jobLogo from "../assets/icons/job.png";
@@ -14,19 +16,38 @@ export default function FAQ() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const categoryLogos = {
-    "Urban Data Centre": dataLogo,
-    "Canadian Urban Data Repository": repositoryLogo,
-    "Job Positions": jobLogo,
-    "Application Process": applicationLogo
+    "Canadian Urban Data Catalogue": dataLogo,
+    "City Digital Twin Project": repositoryLogo,
+    "Jobs": jobLogo,
+    "Contact Us": applicationLogo,
+    "How to use the dashboard": dashboard,
+    "General Questions": generalLogo,
   };
 
-  // Group the faqItems by category
-  const categories = [...new Set(faqItems.map(item => item.category))];
+  // Extract unique categories from faqItems
+  const predefinedCategories = [
+    "Canadian Urban Data Catalogue",
+    "City Digital Twin Project",
+    "How to use the dashboard",
+    "Jobs",
+    "Contact Us",
+    "General Questions",
+  ];
 
-  // Filter the faqItems to only show those matching the selected category
-  const filteredFaqItems = faqItems.filter(
-    item => item.category === selectedCategory
-  );
+  // Group the faqItems by category
+
+  // Group FAQ items into the predefined categories
+  const categorizedFaqItems = predefinedCategories.reduce((acc, category) => {
+    acc[category] = [];
+    return acc;
+  }, {});
+
+  faqItems.forEach(item => {
+    const category = predefinedCategories.includes(item.category)
+      ? item.category
+      : "General Questions";
+    categorizedFaqItems[category].push(item);
+  });
 
   useEffect(() => {
     if (selectedCategory) {
@@ -54,7 +75,7 @@ export default function FAQ() {
         {/* Display list of categories if no category is selected */}
         {!selectedCategory ? (
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-            {categories.map((category, index) => (
+            {predefinedCategories.map((category, index) => (
               <Button
                 key={index}
                 variant="contained"
@@ -67,6 +88,7 @@ export default function FAQ() {
                   fontSize: "16px",
                   backgroundColor: "#FBFCFE",
                   color: "#171a1c",
+                  textTransform: "none", 
                   width: "40%",
                   border: "1px solid black",
                   '&:hover': {
@@ -85,7 +107,7 @@ export default function FAQ() {
                     height: 30,
                     marginRight: "15px",
                     borderRadius: "4px"
-                  }}
+                  }} 
                 />
                 {category}
               </Button>
@@ -118,7 +140,7 @@ export default function FAQ() {
             >
               Back to Categories
             </Button>
-            {filteredFaqItems.map((item, index) => (
+            {categorizedFaqItems[selectedCategory].map((item, index) => (
               <FAQQuestion key={index} question={item.question} answer={item.answer} />
             ))}
           </AccordionGroup>
