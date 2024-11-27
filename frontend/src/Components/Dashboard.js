@@ -792,7 +792,15 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                     {/* Graph 3 is a pie chart */}
                     <JoyBox sx={{ display: "flex", justifyContent: "center" }}>
                       {comparisonGraphTypes[indicator] === "Pie" ? (
-                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            overflow: "visible", // Ensure labels outside the chart are not clipped
+                            width: "100%",       // Adjust the width to ensure enough space
+                            height: "auto"       // Allow auto height for responsive charts
+                          }}
+                        >
                           <ActivePie
                             data={handleAggregation(indicator, chartData)}
                           ></ActivePie>
@@ -826,7 +834,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                               type="monotone"
                               dataKey="total"
                               fill="#000000"
-                              stackId={1}
+                              stackId={1}ƒ
                             />
                           </AreaChart>
                         </ResponsiveContainer>
