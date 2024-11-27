@@ -9,7 +9,7 @@ import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
 import { adminAreaInstanceReducer } from '../reducers/adminAreaInstanceReducer';
 import axios from 'axios';
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesURLs, getSelectedAdminInstancesNames} from '../helpers/reducerHelpers';
-import { TileLayer, Circle, Popup, MapContainer } from 'react-leaflet';
+import { TileLayer, Circle, Popup, MapContainer, Polygon } from 'react-leaflet';
 
 
 
@@ -34,6 +34,38 @@ const URI_to_name = (instance_map, uri) => {
   return null; // Return null if no matching URI is found
 };
 
+function formatParks(data, neighborhood) {
+  const result = {};
+  let unnamedCount = 0;
+
+  data.forEach((park) => {
+    // Determine park name
+    let name = park.name;
+    if (!name) {
+      unnamedCount += 1;
+      name = `No name ${unnamedCount}`;
+    }
+
+
+    
+    result[name] = park.coords.coordinates;
+  });
+
+  return result;
+}
+
+// function formatNeighborhoodName(input) {
+//   // Use a regular expression to extract the number within parentheses
+//   const match = input.match(/\((\d+)\)/);
+  
+//   // Check if a match was found and return the formatted neighborhood name
+//   if (match) {
+//       return `neighborhood${match[1]}`;
+//   } else {
+//       throw new Error("Input format is incorrect");
+//   }
+// }
+
 
 const data = [
   { lat: 43.651070, lng: -79.347015, radius: 600, color: 'green', title: 'Node 1' },
@@ -52,6 +84,8 @@ const data = [
 const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
   const [responseData, setResponseData] = useState({});
   const [parkData, setParkData] = useState({});
+  const [parkPolygons, setParkPolygons] = useState({});
+  const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
   const categories = {
     'Housing': ['Average Value of Dwellings'],
     'Economy': ['Unemployment Rate', 'Average After Tax Income'],
@@ -159,6 +193,10 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
   
   useEffect(() => {
+    console.log("Current Admin Type", currentAdminType)
+    console.log("Current City", cityURLs)
+
+
     // cityName: cityURLs[adminAreaTypesState["currCity"]],
     //       adminType: currentAdminType,
     //       adminInstance: selectedAdminInstancesURLs,
@@ -233,9 +271,44 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     getData();
     // handleUpdateCategories();
 
-    console.log("TESTINT PARK LOCATIONS", fetchParkLocations("neighborhood1"))
+    const fetchAndFormatParks = async () => {
+      // Initialize an empty object to store all the parks
+      let newParkPolygons = {};
+
+      for (const url of selectedAdminInstancesURLs) {
+        // Extract the neighborhood part from the URL
+        const neighborhood = url.split('#')[1];
+
+        try {
+          // Fetch the park locations for the current neighborhood
+          const rawData = await fetchParkLocations(neighborhood);
+          console.log("FORMAT FOR PARK LOCATIONS", rawData)
+          const parkData = rawData[0];
+          const neighborhoodLocationData = rawData[1];
+          setNeighborhoodPolygons(neighborhoodLocationData)
+          // Format the fetched parks using formatParks
+          const formattedParks = formatParks(parkData);
+
+          // Add the formatted parks to the newParkPolygons object
+          newParkPolygons[neighborhood] = formattedParks;
+        } catch (error) {
+          console.error(`Error fetching or formatting parks for ${neighborhood}:`, error);
+        }
+      }
+
+      // Once all parks are fetched and formatted, update the state
+      setParkPolygons(newParkPolygons);
+    };
+
+    // Call the function to fetch and format parks
+    fetchAndFormatParks();
   }, [cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances])
 
+
+  useEffect(() => {
+    // Log the parkPolygons state whenever it changes
+    console.log('Updated park polygons:', parkPolygons);
+  }, [parkPolygons]); // This will run whenever parkPolygons changes
 	return (
 		<Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
 			<Stack spacing={3}>
@@ -310,7 +383,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
             </JoyBox>
           ))}
           <Grid item xs={12} md={6}>
-            <Paper elevation={3} style={{ height: '500px' }}>
+            {/* <Paper elevation={3} style={{ height: '500px' }}>
               <MapContainer
                 style={{ height: '100%', width: '100%' }}
                 center={[43.651070, -79.347015]}
@@ -338,7 +411,75 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
                 </Circle>
                 ))}
               </MapContainer>
-            </Paper>
+            </Paper> */}
+             <div>
+      {/* {Object.keys(parkPolygons).map((neighborhoodKey) => {
+        {{console.log("Neighbourhood key", "http://ontology.eil.utoronto.ca/Toronto/Toronto#"+neighborhoodKey)}}
+        const neighborhood = parkPolygons[neighborhoodKey];
+        return (
+          <div key={neighborhoodKey} style={{ marginBottom: '20px' }}>
+            <h3>{neighborhoodKey}</h3>
+            <MapContainer
+              center={[43.7, -79.42]} // Set a center for all maps
+              zoom={12}
+              style={{ height: '400px', width: '100%' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {Object.keys(neighborhood).map((parkName) => {
+                const coords = neighborhood[parkName];
+                return (
+                  <Polygon key={parkName} positions={coords} color="green">
+                    <Tooltip>{parkName}</Tooltip>
+                  </Polygon>
+                );
+              })}
+            </MapContainer>
+          </div>
+        );
+      })} */}
+      {Object.keys(parkPolygons).map((neighborhoodKey) => {
+  const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+  const fullKey = baseURI + neighborhoodKey;
+  const neighborhood = parkPolygons[neighborhoodKey];
+  let overlayCoords = neighborhoodPolygons[fullKey]; // Access the overlay polygon
+  if (overlayCoords){
+    overlayCoords = overlayCoords.coordinates;
+  }
+  {{console.log("OVERLAY COORDS", overlayCoords)}}
+  return (
+    <div key={neighborhoodKey} style={{ marginBottom: '20px' }}>
+      <h3>{neighborhoodKey}</h3>
+      <MapContainer
+        center={[43.7, -79.42]} // Set a center for all maps
+        zoom={12}
+        style={{ height: '400px', width: '100%' }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {Object.keys(neighborhood).map((parkName) => {
+          const coords = neighborhood[parkName];
+          {{console.log("PARK COORDS", coords)}}
+          return (
+            <Polygon key={parkName} positions={coords} color="green">
+              <Tooltip>{parkName}</Tooltip>
+            </Polygon>
+          );
+        })}
+        
+        {/* Add overlay polygon if it exists */}
+        {
+          <Polygon key={neighborhoodKey} positions={overlayCoords} color="blue">
+            <Tooltip>Overlay for {neighborhoodKey}</Tooltip>
+          </Polygon>
+        }
+      </MapContainer>
+    </div>
+  );
+})}
+    </div>
           </Grid>
           {/* <JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
 						<Typography variant="h5" style={{ fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif", fontSize: 35, fontWeight: "bold", color: "#0b2f4e" }}>
