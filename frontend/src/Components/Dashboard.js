@@ -834,7 +834,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                               type="monotone"
                               dataKey="total"
                               fill="#000000"
-                              stackId={1}ƒ
+                              stackId={1}
                             />
                           </AreaChart>
                         </ResponsiveContainer>
