@@ -380,6 +380,7 @@ router.post("/visualization-data", async (req, res) => {
 
 
               if (isAdminTypeMatching) {
+                console.log("here to problem begin")
                 notSameAdminType = adminArea;
                 // Also determine which of the new admin areas overlap with the old area, if an adminInstance was provided
                 // If data is only available at a LARGER admin area, return an error (no way to split it down)
@@ -440,43 +441,52 @@ router.post("/visualization-data", async (req, res) => {
 
                     // Removes newline characters
                     indicatorDataQuery = indicatorDataQuery.replace(/(\r\n|\n|\r)/gm, "");
+                    
+                    console.log("Root cause of this bug")
+                    try{
+                      const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery);
+                      var hasData = false;
 
-                    const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery);
+                      getValuesForOverlappingAreas.on('data', row => {
+                        Object.entries(row).forEach(([key, value]) => {
+                          hasData = true;
+                          temp = parseInt(value.value);
 
-                    var hasData = false;
-
-                    getValuesForOverlappingAreas.on('data', row => {
-                      Object.entries(row).forEach(([key, value]) => {
-                        hasData = true;
-                        temp = parseInt(value.value);
-
-                        // Only add new value to result if it's a number, else return an error
-                        if (!Number.isNaN(temp)) {
-                          result += temp;
-                        } else {
+                          // Only add new value to result if it's a number, else return an error
+                          if (!Number.isNaN(temp)) {
+                            result += temp;
+                          } else {
+                            if (year <= endTime) {
+                              instanceResult[year] = NaN;
+                            }
+                          }
+                        });
+                      });
+              
+                      getValuesForOverlappingAreas.on('end', () => {
+                        if (!hasData) {
                           if (year <= endTime) {
                             instanceResult[year] = NaN;
                           }
+                        } else {
+                          if (year <= endTime) {
+                            instanceResult[year] = result;
+                          }
                         }
                       });
-                    });
-            
-                    getValuesForOverlappingAreas.on('end', () => {
-                      if (!hasData) {
-                        if (year <= endTime) {
-                          instanceResult[year] = NaN;
-                        }
-                      } else {
-                        if (year <= endTime) {
-                          instanceResult[year] = result;
-                        }
-                      }
-                    });
 
-                    getValuesForOverlappingAreas.on('error', err => {
-                      res.status(500).send('Oops, error!');
-                      return;
-                    });
+                      getValuesForOverlappingAreas.on('error', err => {
+                        res.status(500).send('Oops, error!');
+                        return;
+                      });
+                    }catch(error){
+                      res.status(500); 
+                      // res.json({message:"Bad request: Returned too large"}); // COMMENTED OUT BECAUSE OTHERWISE IT CRASHES WHEN DOING WARD, PoliceDivision, Neighbourhood
+                      console.log("const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery); cause the error")
+                      return
+                    }
+
+                    
                   }
                 });
               }
