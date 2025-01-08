@@ -370,7 +370,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
                       </Typography>
                       <JoyBox sx={{ marginTop: 2 }}>
                         <Typography variant="h6" component="div">
-                          {parkData[URI_to_name(adminAreaInstancesState, value)]}
+                          {/*{parkData[URI_to_name(adminAreaInstancesState, value)]}*/}
+                          {0.98}
                         </Typography>
                         <Typography color="text.secondary">
                           Park Access Score
@@ -450,7 +451,9 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   {{console.log("OVERLAY COORDS", overlayCoords)}}
   return (
     <div key={neighborhoodKey} style={{ marginBottom: '20px' }}>
-      <h3>{neighborhoodKey}</h3>
+      <Typography variant="h6" component="div">
+      {URI_to_name(adminAreaInstancesState, fullKey)}
+      </Typography>
       <MapContainer
         center={[43.7, -79.42]} // Set a center for all maps
         zoom={12}
