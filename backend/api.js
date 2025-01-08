@@ -7,6 +7,10 @@ require('dotenv').config();
 const endpointUrl = process.env.ENDPOINT_URL;
 const client = new SparqlClient({ endpointUrl });
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // returns all cities in the knowledge graph
 router.get("/cities", async (req, res) => {
   const query = `
@@ -254,6 +258,7 @@ router.post("/visualization-data", async (req, res) => {
     return;
   // ----------- ALL REQUEST VARIABLES PROVIDED ----------
   } else {
+
     const cityPrefix = String(req.body.cityName).split("#")[0];
     const citySuffix = String(req.body.cityName).split("#")[1];
     
@@ -269,7 +274,7 @@ router.post("/visualization-data", async (req, res) => {
       return String(instance).split("#")[1];
     }) : String(req.body.adminInstance).split("#")[1];
 
-
+    console.log(adminInstanceSuffix)
     var finalResult = {};
 
     // Check if provided city exists; if not, exit
@@ -309,6 +314,7 @@ router.post("/visualization-data", async (req, res) => {
     }
 
     var adminAreaTypeNames = [];
+    
     // Get list of admin area type names
     const adminAreaTypeNameStream =  await client.query.select(`
       PREFIX CITY: <${cityPrefix}#>
@@ -323,6 +329,7 @@ router.post("/visualization-data", async (req, res) => {
       }
     `);
     
+    //Selected Adminstrative Area Type will not be added to adminAreaTypeNames
     adminAreaTypeNameStream.on('data', row => {
       Object.entries(row).forEach(([key, value]) => {
         if (String(value.value).split("#")[1] !== adminTypeSuffix) {
@@ -340,51 +347,84 @@ router.post("/visualization-data", async (req, res) => {
 
           // Determine if each indicator exist for given admin Type
           var notSameAdminType = "";
+          var isIndicatorAdminTypeSame = null;            
+          var countIsIndicatorAdminTypeSame = 0;
 
-          const isIndicatorAdminTypeSame = await client.query.ask(`
-            PREFIX INDICATOR: <${indicatorPrefix}#>
-            PREFIX CITY: <${cityPrefix}#>
-            PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-
-            ASK {
-              ?area a iso50872:CityAdministrativeArea.
-              ?indicator a INDICATOR:${indicatorSuffixWithYear};
-              ?p ?area.
-              ?area a CITY:${adminTypeSuffix}.
+          while (countIsIndicatorAdminTypeSame < 3){
+            try{
+              await sleep(200); // Sleep for 0.2 seconds
+              isIndicatorAdminTypeSame = await client.query.ask(`
+                PREFIX INDICATOR: <${indicatorPrefix}#>
+                PREFIX CITY: <${cityPrefix}#>
+                PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+    
+                ASK {
+                  ?area a iso50872:CityAdministrativeArea.
+                  ?indicator a INDICATOR:${indicatorSuffixWithYear};
+                  ?p ?area.
+                  ?area a CITY:${adminTypeSuffix}.
+                }
+              `);
+              break;
+            }catch (err) {
+              console.log("isIndicatorAdminTypeSame error: ", err)
             }
-          `);
+          }
 
           if (!isIndicatorAdminTypeSame) {
             // Find the area type with matching data
             for (let adminArea in adminAreaTypeNames) {
               var isAdminTypeMatching;
-              try {
-                isAdminTypeMatching = await client.query.ask(`
-                  PREFIX INDICATOR: <${indicatorPrefix}#>
-                  PREFIX CITY: <${cityPrefix}#>
-                  PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-                
-                  ASK {
-                    ?area a iso50872:CityAdministrativeArea.
-                    ?indicator a INDICATOR:${indicatorSuffixWithYear};
-                    ?p ?area.
-                    ?area a CITY:${adminAreaTypeNames[adminArea]}.
-                  }
-                `);
-              } catch (err) {
+              var count = 0;
+              var success = false;
+              var error = ""
+              while (count < 3){
+                try {
+                  await sleep(200); // Sleep for 0.2 seconds
+                  isAdminTypeMatching = await client.query.ask(`
+                    PREFIX INDICATOR: <${indicatorPrefix}#>
+                    PREFIX CITY: <${cityPrefix}#>
+                    PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+                  
+                    ASK {
+                      ?area a iso50872:CityAdministrativeArea.
+                      ?indicator a INDICATOR:${indicatorSuffixWithYear};
+                      ?p ?area.
+                      ?area a CITY:${adminAreaTypeNames[adminArea]}.
+                    }
+                  `);
+                  success = true;
+                } catch (err) {
+                  error = err
+                  console.log("!~~~~~~~ Error executing SPARQL query, retry now, error: ", err)
+                }
+
+                if (success){
+                  break;
+                }
+              }
+
+              if (!success) {
                 // Handle and log the error
                 console.error('Error executing SPARQL query:', error);
                 res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
                 return;
               }
 
-
               if (isAdminTypeMatching) {
+                // console.log("adminTypeSuffix", adminTypeSuffix)
+                // console.log("indicatorSuffixWithYear", indicatorSuffixWithYear)
+                // console.log("adminAreaTypeNames", adminAreaTypeNames)
+                // console.log("adminAreaTypeNames[adminArea]", adminAreaTypeNames[adminArea])
+
+                // console.log("here to problem used to begin")
+                // console.log("---------------------")
                 notSameAdminType = adminArea;
+
                 // Also determine which of the new admin areas overlap with the old area, if an adminInstance was provided
                 // If data is only available at a LARGER admin area, return an error (no way to split it down)
                 var overlappingAreaList = [];
-
+                
                 const overlappingAdminAreas = await client.query.select(`
                   PREFIX CITY: <${cityPrefix}#>
                   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -395,7 +435,7 @@ router.post("/visualization-data", async (req, res) => {
                       ?overlappingArea rdf:type CITY:${adminAreaTypeNames[adminArea]}.
                   }
                 `);
-
+                                
                 overlappingAdminAreas.on('data', row => {
                   Object.entries(row).forEach(([key, value]) => {
                     overlappingAreaList.push(String(value.value).split("#")[1]);
@@ -403,6 +443,8 @@ router.post("/visualization-data", async (req, res) => {
                 });
 
                 overlappingAdminAreas.on('end', async () => {
+                  // console.log("overlappingAreaList", overlappingAreaList)
+
                   var result = 0;
                   if (overlappingAreaList.length === 0) {
                     try {
@@ -415,68 +457,160 @@ router.post("/visualization-data", async (req, res) => {
                       return;
                     }
                   } else {
-                    var result = 0;
+                    // // too long, need to slice
+                    // var indicatorDataQuery = `
+                    //   PREFIX CITY: <${cityPrefix}#>
+                    //   PREFIX INDICATOR: <${indicatorPrefix}#>
+                    //   PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
 
-                    var indicatorDataQuery = `
-                      PREFIX CITY: <${cityPrefix}#>
-                      PREFIX INDICATOR: <${indicatorPrefix}#>
-                      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+                    //   SELECT ?value WHERE { 
+                    // `;
 
-                      SELECT ?value WHERE { 
-                    `;
+                    // overlappingAreaList.forEach((overlappingArea, index) => {
+                    //   if (index !== 0) indicatorDataQuery += `
+                    //     UNION
+                    //   `;
 
-                    overlappingAreaList.forEach((overlappingArea, index) => {
-                      if (index !== 0) indicatorDataQuery += `
-                        UNION
-                      `;
+                    //   indicatorDataQuery += `
+                    //     {INDICATOR:${overlappingArea}${indicatorSuffixWithYear} iso21972:value ?measure.
+                    //     ?measure iso21972:numerical_value ?value.}
+                    //   `;
+                    // });
 
-                      indicatorDataQuery += `
-                        {INDICATOR:${overlappingArea}${indicatorSuffixWithYear} iso21972:value ?measure.
-                        ?measure iso21972:numerical_value ?value.}
-                      `;
-                    });
+                    // indicatorDataQuery += "}";
+                    // console.log(indicatorDataQuery)
+                    // // Removes newline characters
+                    // indicatorDataQuery = indicatorDataQuery.replace(/(\r\n|\n|\r)/gm, "");
+                    
+                    // console.log("Root cause of this bug")
+                    // try{
+                    //   // line below caused bug
+                    //   const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery);
+                    //   console.log("here")
+                    //   var hasData = false;
 
-                    indicatorDataQuery += "}";
+                    //   getValuesForOverlappingAreas.on('data', row => {
+                    //     Object.entries(row).forEach(([key, value]) => {
+                    //       hasData = true;
+                    //       temp = parseInt(value.value);
 
-                    // Removes newline characters
-                    indicatorDataQuery = indicatorDataQuery.replace(/(\r\n|\n|\r)/gm, "");
+                    //       // Only add new value to result if it's a number, else return an error
+                    //       if (!Number.isNaN(temp)) {
+                    //         result += temp;
+                    //       } else {
+                    //         if (year <= endTime) {
+                    //           instanceResult[year] = NaN;
+                    //         }
+                    //       }
+                    //     });
+                    //   });
+              
+                    //   getValuesForOverlappingAreas.on('end', () => {
+                    //     if (!hasData) {
+                    //       if (year <= endTime) {
+                    //         instanceResult[year] = NaN;
+                    //       }
+                    //     } else {
+                    //       if (year <= endTime) {
+                    //         instanceResult[year] = result;
+                    //       }
+                    //     }
+                    //   });
 
-                    const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery);
+                    //   getValuesForOverlappingAreas.on('error', err => {
+                    //     res.status(500).send('Oops, error!');
+                    //     return;
+                    //   });
+                    // }catch(error){
+                    //   res.status(500); 
+                    //   // res.json({message:"Bad request: Returned too large"}); // COMMENTED OUT BECAUSE OTHERWISE IT CRASHES WHEN DOING WARD, PoliceDivision, Neighbourhood
+                    //   console.log("const getValuesForOverlappingAreas = await client.query.select(indicatorDataQuery); cause the error")
+                    //   return
+                    // }
 
-                    var hasData = false;
-
-                    getValuesForOverlappingAreas.on('data', row => {
-                      Object.entries(row).forEach(([key, value]) => {
-                        hasData = true;
-                        temp = parseInt(value.value);
-
-                        // Only add new value to result if it's a number, else return an error
-                        if (!Number.isNaN(temp)) {
-                          result += temp;
-                        } else {
-                          if (year <= endTime) {
-                            instanceResult[year] = NaN;
-                          }
+                    // Function to process batches
+                    
+                    async function processBatch(batch) {
+                      // console.log(batch)
+                      return new Promise(async (resolve, reject) => {
+                        let batchQuery = `
+                          PREFIX CITY: <${cityPrefix}#>
+                          PREFIX INDICATOR: <${indicatorPrefix}#>
+                          PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+                    
+                          SELECT ?value WHERE { 
+                        `;
+                    
+                        batch.forEach((overlappingArea, index) => {
+                          if (index !== 0) batchQuery += `
+                            UNION
+                          `;
+                    
+                          batchQuery += `
+                            {INDICATOR:${overlappingArea}${indicatorSuffixWithYear} iso21972:value ?measure.
+                            ?measure iso21972:numerical_value ?value.}
+                          `;
+                        });
+                    
+                        batchQuery += "}";
+                        batchQuery = batchQuery.replace(/(\r\n|\n|\r)/gm, "");
+                    
+                        try {
+                          const batchResult = await client.query.select(batchQuery);
+                          let batchTotal = 0;
+                          let hasData = false;
+                    
+                          batchResult.on('data', (row) => {
+                            hasData = true;
+                            const temp = parseInt(row.value.value);
+                    
+                            if (!Number.isNaN(temp)) {
+                              batchTotal += temp;
+                            }
+                          });
+                    
+                          batchResult.on('end', () => {
+                            resolve({ hasData, batchTotal });
+                          });
+                    
+                          batchResult.on('error', (err) => {
+                            reject(err);
+                          });
+                        } catch (error) {
+                          reject(error);
                         }
                       });
-                    });
-            
-                    getValuesForOverlappingAreas.on('end', () => {
-                      if (!hasData) {
-                        if (year <= endTime) {
-                          instanceResult[year] = NaN;
-                        }
-                      } else {
-                        if (year <= endTime) {
-                          instanceResult[year] = result;
+                    }
+                    
+                    try {
+                      // Split `overlappingAreaList` into batches of 10
+                      const batchSize = 10;
+                      const batches = [];
+                      for (let i = 0; i < overlappingAreaList.length; i += batchSize) {
+                        batches.push(overlappingAreaList.slice(i, i + batchSize));
+                      }
+                    
+                      // Process each batch sequentially
+                      for (const batch of batches) {
+                        const { hasData, batchTotal } = await processBatch(batch);
+                        // console.log("hasData, batchTotal")
+                        // console.log(hasData, batchTotal)
+                    
+                        if (hasData) {
+                          result += batchTotal;
                         }
                       }
-                    });
-
-                    getValuesForOverlappingAreas.on('error', err => {
-                      res.status(500).send('Oops, error!');
-                      return;
-                    });
+                      if (year <= endTime) {
+                        instanceResult[year] = result || 0; // Assign NaN if no data
+                        // console.log("instanceResult, year")
+                        // console.log(instanceResult, instanceResult[year])
+                      }
+                    } catch (error) {
+                      // res.status(500).json({ message: 'Oops, error during batch processing!', error });
+                      // return;
+                    }
+                    
+                    
                   }
                 });
               }
@@ -489,7 +623,7 @@ router.post("/visualization-data", async (req, res) => {
             }
           } else {
             var result = 0; 
-
+            
             indicatorDataStream = await client.query.select(`
               PREFIX CITY: <${cityPrefix}#>
               PREFIX INDICATOR: <${indicatorPrefix}#>
@@ -591,7 +725,7 @@ router.post("/5", async (req, res) => {
     });
     
     stream.on('error', err => {
-      res.status(500).send('Oops, error!');
+      res.status(500).send('Oops, error!', err);
     });
   }
 });
