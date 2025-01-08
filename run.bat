@@ -1,25 +1,9 @@
-@echo off
+@echo on
+echo Running both backend and frontend scripts...
 
-:: Change to the 'backend' directory
-cd backend
+:: Run the backend start script
+start "Running Backend" cmd /c "backend_start.bat"
 
-:: Install backend dependencies using npm
-npm install
+:: Run the frontend start script
+start "Running Frontend" cmd /c "frontend_start.bat"
 
-:: Run the backend server using nodemon
-npx nodemon index.js
-
-:: Change back to the original directory
-cd ..
-
-:: Change to the 'frontend' directory
-cd frontend
-
-:: Install frontend dependencies using npm
-npm install
-
-:: Start the frontend development server
-npm run start
-
-:: Return to the original directory
-cd ..
