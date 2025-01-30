@@ -143,7 +143,34 @@ export const fetchLocations = async (
   }
 };
 
+export const fetchAllAmenity = async  (setAmenityURLs) => {
+  try{
+    const response = await axios.get("http://localhost:3000/api/all-amenity-URLs");
+    console.log("All Amenity URL Response", response.data)
+    if (response.data.success) {
+      setAmenityURLs(response.data.urls); // ✅ Update state with fetched URLs
+    }
+  }catch (error) {
+    console.error("GET Error:", error);
+  }
+}
 
+export const fetchAmenityLocation = async (
+  neighborhoodName,
+  amenityURL
+) =>{
+  console.log("^^^^neighborhoodName", neighborhoodName)
+  console.log("^^^^amenityURL", amenityURL)
+  try{
+    const response = await axios.post("http://localhost:3000/api/amenity-location", {
+      neighborhoodName: neighborhoodName,
+      amenityURL: amenityURL
+    });
+
+  }catch (error) {
+    console.error("POST Error:", error);
+  }
+};
 
 export const fetchParkLocations = async (
   neighborhoodName

@@ -2,7 +2,7 @@ import { Container, Stack, Grid, Card, CardContent, Typography, Paper } from '@m
 import { Box as JoyBox } from "@mui/joy";
 import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
-import { fetchCities, fetchParkData, fetchParkLocations} from '../helpers/fetchFunctions';
+import { fetchCities, fetchParkData, fetchParkLocations, fetchAllAmenity, fetchAmenityLocation} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
 import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
@@ -38,6 +38,8 @@ function formatParks(data, neighborhood) {
   const result = {};
   let unnamedCount = 0;
 
+  console.log('formatParks',data)
+
   data.forEach((park) => {
     // Determine park name
     let name = park.name;
@@ -45,9 +47,6 @@ function formatParks(data, neighborhood) {
       unnamedCount += 1;
       name = `No name ${unnamedCount}`;
     }
-
-
-    
     result[name] = park.coords.coordinates;
   });
 
@@ -86,6 +85,20 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   const [parkData, setParkData] = useState({});
   const [parkPolygons, setParkPolygons] = useState({});
   const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
+  const [AmenityURLs, setAmenityURLs] = useState([]); // Store fetched Amenity URLs
+
+  useEffect(() => {
+    // Function to fetch URLs
+    const fetchUrls = async () => {
+      fetchAllAmenity(setAmenityURLs)
+    };
+    fetchUrls();
+    fetchAmenityLocation('neighborhood70', 'http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park')
+    // fetchAmenityLocation('neighborhood70', '')
+    
+
+  }, []); // Empty dependency array means this runs only ONCE when the page loads
+
   const categories = {
     'Housing': ['Average Value of Dwellings'],
     'Economy': ['Unemployment Rate', 'Average After Tax Income'],
@@ -106,8 +119,6 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     // 'Arts and Recreasion': "http://ontology.eil.utoronto.ca/tove/cacensus#71ArtsEntertainmentAndRecreation2016"
 
   }
-
-
   const [categoriesData, setCategories] = useState([
     {
       title: 'Housing',
@@ -229,11 +240,6 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 
     let currCity = cityURLs[adminAreaTypesState["currCity"]];
 
-    
-    
-
-
-
     const fetchData = async () => {
       const promises = Object.keys(indicatorURLs).map(async (key) => {
         const url = indicatorURLs[key];
@@ -304,12 +310,17 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     fetchAndFormatParks();
   }, [cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances])
 
-
   useEffect(() => {
     // Log the parkPolygons state whenever it changes
     console.log('Updated park polygons:', parkPolygons);
   }, [parkPolygons]); // This will run whenever parkPolygons changes
-	return (
+
+  console.log(AmenityURLs)
+  // AmenityURLs.forEach(url => {
+  //   console.log(url)
+  // });
+
+  return (
 		<Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
 			<Stack spacing={3}>
 				<Header pageName="Complete Communities Dashboard" />
