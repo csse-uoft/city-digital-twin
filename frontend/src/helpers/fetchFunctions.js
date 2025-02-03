@@ -143,11 +143,27 @@ export const fetchLocations = async (
   }
 };
 
-export const fetchAllAmenity = async  (setAmenityURLs) => {
+export const fetchAllAmenity = async(setAmenityURLs, setAmenityColor) => {
   try{
     const response = await axios.get("http://localhost:3000/api/all-amenity-URLs");
     if (response.data.success) {
       setAmenityURLs(response.data.urls);
+        // Function to generate distinct colors
+      const generateColor = (index) => {
+        const colorPalette = [
+          "#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33A1", "#A133FF", "#33FFF5", "#065535", "#ffc0cb", "#0a75ad", "#ccccff",
+          "#FFA133", "#66FF33", "#FF3366", "#3366FF", "#FF9A33", "#66FF99", "#9966FF", "#ff80ed", "#666666", "#8a2be2", "#f6546a"
+        ];
+      
+        // If more colors are needed, cycle through
+        return colorPalette[index % colorPalette.length];
+      };
+
+      const colors = {};
+      response.data.urls.forEach((url, index) => {
+        colors[url] = generateColor(index);
+      });
+      setAmenityColor(colors)
     }
   }catch (error) {
     console.error("GET Error:", error);
@@ -195,7 +211,7 @@ export const fetchAmenityLocations = async (
           );
         }
         
-        updatedLocationURLs.push({ name: Instance.name, coords: flipped, amenityType: Instance.amenityType, displayType:displayT});
+        updatedLocationURLs.push({ name: Instance.name, coords: flipped, amenityType: Instance.amenityType, rootURL: Instance.type, displayType:displayT});
       });
 
       const cityName = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto';

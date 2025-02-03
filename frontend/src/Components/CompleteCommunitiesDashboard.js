@@ -32,21 +32,23 @@ const URI_to_name = (instance_map, uri) => {
   return null; // Return null if no matching URI is found
 };
 
-function formatParks(data, neighborhood) {
+function formatAmenities(data, neighborhood) {
   const result = {};
   let unnamedCount = 0;
 
-  data.forEach((park) => {
+  data.forEach((amenity) => {
     // Determine park name
-    let name = park.name;
+    let name = amenity.name;
     if (!name) {
       unnamedCount += 1;
       name = `No name ${unnamedCount}`;
     }
-
-
-    
-    result[name] = park.coords.coordinates;
+    result[name] = {
+      coordinates: amenity.coords.coordinates,
+      amenityType: amenity.amenityType,
+      displayType: amenity.displayType,
+      url: amenity.rootURL
+    };
   });
 
   return result;
@@ -64,7 +66,6 @@ function formatParks(data, neighborhood) {
 //   }
 // }
 
-
 const data = [
   { lat: 43.651070, lng: -79.347015, radius: 600, color: 'green', title: 'Node 1' },
   { lat: 43.700110, lng: -79.416300, radius: 800, color: 'green', title: 'Node 2' },
@@ -78,12 +79,23 @@ const data = [
   // Add more nodes as needed
 ];
 
-
 const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
   const [responseData, setResponseData] = useState({});
   const [parkData, setParkData] = useState({});
   const [parkPolygons, setParkPolygons] = useState({});
   const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
+  const [AmenityURLs, setAmenityURLs] = useState([]); // Store fetched Amenity URLs
+  const [AmenityColor, setAmenityColor] = useState({}); // Store URL-color mapping
+  
+  useEffect(() => {
+    const fetchUrls = async () => {
+      fetchAllAmenity(setAmenityURLs, setAmenityColor)
+    };
+    fetchUrls();
+  }, []);
+  
+
+
   const categories = {
     'Housing': ['Average Value of Dwellings'],
     'Economy': ['Unemployment Rate', 'Average After Tax Income'],
@@ -277,14 +289,14 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
           const rawData = await fetchAmenityLocations(neighborhood);
 
           console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
-          const parkData = rawData[0];
+          const amenityData = rawData[0];
           const neighborhoodLocationData = rawData[1];
           setNeighborhoodPolygons(neighborhoodLocationData)
           // Format the fetched parks using formatParks
-          const formattedParks = formatParks(parkData);
-
+          const formattedAmenities = formatAmenities(amenityData);
+          console.log("formatParks, ", formattedAmenities)
           // Add the formatted parks to the newParkPolygons object
-          newParkPolygons[neighborhood] = formattedParks;
+          newParkPolygons[neighborhood] = formattedAmenities;
         } catch (error) {
           console.error(`Error fetching or formatting parks for ${neighborhood}:`, error);
         }
@@ -297,8 +309,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     // Call the function to fetch and format parks
     fetchAndFormatParks();
   }, [cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances])
-
-
+  
   useEffect(() => {
     // Log the parkPolygons state whenever it changes
     console.log('Updated park polygons:', parkPolygons);
@@ -438,7 +449,9 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
   const fullKey = baseURI + neighborhoodKey;
   const neighborhood = parkPolygons[neighborhoodKey];
+
   let overlayCoords = neighborhoodPolygons[fullKey]; // Access the overlay polygon
+  console.log("overlayCoords", overlayCoords)
   if (overlayCoords){
     overlayCoords = overlayCoords.coordinates;
   }
@@ -450,42 +463,35 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       </Typography>
  
       <MapContainer center={[43.7, -79.42]} zoom={12} style={{ height: '400px', width: '100%' }}>
-        <Marker position={[43.662044, -79.35026]}>
-          <Popup>Test Marker</Popup>
-        </Marker>
-
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-        {Object.keys(parkPolygons).map((neighborhoodKey) => {
-          const neighborhood = parkPolygons[neighborhoodKey];
-          return Object.keys(neighborhood).map((parkName) => {
-            const coords = neighborhood[parkName];
-            // console.log("----typeof coords", typeof coords)
-            // console.log("----coords", coords)
-            // console.log("----coords length", coords.length)
-
-            if (coords.length === 2) {
-              return (
-                <Marker key={parkName} position={[coords[0], coords[1]]}>
-                  <Popup>{parkName}</Popup>
-                </Marker>
-              );
-            } else {
-              return (
-                <Polygon key={parkName} positions={coords} color="green">
-                  <Popup>{parkName}</Popup>
-                </Polygon>
-              );
-            }
-          });
-        })}
-        
         {/* Add overlay polygon if it exists */}
         {
           <Polygon key={neighborhoodKey} positions={overlayCoords} color="blue">
             <Tooltip>Overlay for {neighborhoodKey}</Tooltip>
           </Polygon>
         }
+
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+        {Object.keys(parkPolygons).map((neighborhoodKey) => {
+          const neighborhood = parkPolygons[neighborhoodKey];
+          return Object.keys(neighborhood).map((AmenityName) => {
+            const coords = neighborhood[AmenityName];
+
+            if (coords.displayType === 'Point') {
+              return (
+                <Marker key={AmenityName} position={[coords.coordinates[0], coords.coordinates[1]]} color={AmenityColor[coords.url]}>
+                  <Popup>{AmenityName}</Popup>
+                </Marker>
+              );
+            } else {
+              return (
+                <Polygon key={AmenityName} positions={coords.coordinates} color={AmenityColor[coords.url]}>
+                  <Popup>{AmenityName}</Popup>
+                </Polygon>
+              );
+            }
+          });
+        })}
       </MapContainer>
     </div>
   );

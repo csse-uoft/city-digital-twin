@@ -750,16 +750,6 @@ router.get("/all-amenity-URLs", async (req, res) =>{
     }
   `;
 
-  const amenityInstancesQuery = `
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-
-    SELECT ?amenityinstance
-    WHERE {
-        ?amenityinstance a cdt:CompleteCommunityAmenity.
-    }
-  `;
-
   try {
     // Execute the first query for amenity classes
     const stream = await client.query.select(amenityClassesQuery);
@@ -1109,7 +1099,7 @@ router.post("/amenity-location-all", async (req, res) => {
           const url = binding.amenity.value
           const match = url.match(/#\d+([A-Za-z]+)$/);
           if (match) {
-            tp = match[1]
+            amenity_tp = match[1]
           }
         }
 
