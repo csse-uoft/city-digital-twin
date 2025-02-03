@@ -75,6 +75,7 @@ router.get("/indicators", async (req, res) => {
   });
 });
 
+
 // Input form: {cityName: "http://ontology.eil.utoronto.ca/5087/2/City#Toronto"}
 // Output: JSON list of all administrative area types
 // Description: Get all administrative area types (ward, neighbourhood, etc.) for a given city
@@ -137,6 +138,7 @@ router.post("/admin-types", async (req, res) => {
     }
   }
 });
+
 
 // Input: Name of city (cityName), name of administrative area type (adminType)
 // Output: List of all admin area instances for the given type and city
@@ -221,6 +223,7 @@ router.post("/admin-instances", async (req, res) => {
     }
   }
 });
+
 
 // Input: Name of city (cityName), admin area type (adminType), admin area instance (adminInstance), indicators (indicatorNames), time range (timeStart, timeEnd)
 // Output: Corresponding visualization and indicator data from connected database
@@ -545,6 +548,7 @@ router.post("/visualization-data", async (req, res) => {
   }
 });
 
+
 // API 5
 // Select a property (or all matching properties) for a given subject
 // 
@@ -589,6 +593,7 @@ router.post("/5", async (req, res) => {
     });
   }
 });
+
 
 // API 6
 // Return all the geoWKT location data.
@@ -679,6 +684,7 @@ router.post("/6", async (req, res) => {
   }
 });
 
+
 // Returns metrics describing how easily a park is accessible by all neighbourhoods
 router.post("/park-data", async (req, res) => {
   
@@ -732,285 +738,6 @@ router.post("/park-data", async (req, res) => {
   }
 });
 
-// router.post("/park-locations", async (req, res) => {
-//   const neighborhoodName = req.body.neighborhoodName;
-//   try {
-//     const query = `
-//       PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-//       PREFIX gcir: <http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#>
-//       PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-//       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-//       PREFIX osm: <http://ontology.eil.utoronto.ca/OSM#>
-//       PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-//       PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-//       PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-
-//       SELECT ?park ?name ?coordinates
-
-//       WHERE{
-//             ?park a gcir:Park;
-//         loc:hasLocation ?location.
-          
-//           OPTIONAL { ?park genprop:hasName ?name; }
-
-//             ?location geo:asWKT ?coordinates.
-            
-//             toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-//             ?neighlocation geo:asWKT ?neighcoordinates.
-
-//             FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-//       }
-//     `;
-
-//     // Execute the query
-//     const stream = await client.query.select(query);
-
-//     // Collect results from the stream
-//     let rawData = [];
-//     stream.on('data', (row) => {
-//       rawData.push(row);
-//     });
-
-//     stream.on('end', () => {
-//       // Transform the raw data into a more readable format
-//       const formattedData = rawData.map(binding => {
-//         return {
-//           park: binding.park.value,
-//           name: binding.name ? binding.name.value : null,
-//           coordinates: binding.coordinates ? binding.coordinates.value : null
-//         };
-//       });
-      
-//       // Send the formatted data as JSON
-//       res.json({ success: true, data: formattedData });
-//     });
-
-//     // Handle errors in the query or stream
-//     stream.on('error', err => {
-//       console.error('Query error: ', err);
-//       res.status(500).send('Error executing query');
-//     });
-
-//   } catch (err) {
-//     console.error('Server error: ', err);
-//     res.status(500).send('Internal server error');
-//   }
-// });
-
-
-router.post("/park-locations", async (req, res) => {
-  const neighborhoodName = req.body.neighborhoodName;
-  console.log(neighborhoodName)
-
-//   const parkQuery = `
-//   PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-//   PREFIX gcir: <http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#>
-//   PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-//   PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-//   PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-//   PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-//   PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-
-//   SELECT ?park ?name ?coordinates
-
-//   WHERE{
-//         ?park a gcir:Park;
-//           loc:hasLocation ?location.
-      
-//         OPTIONAL { ?park genprop:hasName ?name; }
-
-//         ?location geo:asWKT ?coordinates.
-        
-//         toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-//         ?neighlocation geo:asWKT ?neighcoordinates.
-
-//         FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-//     }
-//   `;
-
-//   const superstoreQuery = `
-//     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-//     PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-//     PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-//     PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-//     PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-//     PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-//     PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-
-
-//     SELECT ?supermarket ?id ?name ?coordinates
-//     WHERE {
-//       ?supermarket a cdt:Supermarket;
-//                   genprop:hasName ?name;
-//                   cdt:osmID ?id;
-//                   loc:hasLocation ?location.
-//       ?location geo:asWKT ?coordinates.
-      
-//       toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-//       ?neighlocation geo:asWKT ?neighcoordinates.
-
-//       FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-//     }
-//   `;
-
-//   const universityQuery = `
-//     PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-//     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-//     PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-//     PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-//     PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-//     PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-//     PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-
-//     SELECT ?amenity ?id ?name ?coordinates
-//     WHERE {
-//       ?amenity a cdt:University;
-//               genprop:hasName ?name;
-//               cdt:osmID ?id;
-//               loc:hasLocation ?location.
-//       ?location geo:asWKT ?coordinates.
-//       toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-//       ?neighlocation geo:asWKT ?neighcoordinates.
-//       FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-//     }
-//   `;
-
-//   const collegeQuery = `
-//     PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-//     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-//     PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-//     PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-//     PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-//     PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-//     PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-//     SELECT ?amenity ?id ?name ?coordinates
-//     WHERE {
-//       ?amenity a cdt:PublicSecondarySchoo;
-//               genprop:hasName ?name;
-//               cdt:osmID ?id;
-//               loc:hasLocation ?location.
-//       ?location geo:asWKT ?coordinates.
-//       toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-//       ?neighlocation geo:asWKT ?neighcoordinates.
-//       FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-//     }
-//   `;
-
-//   try {
-//     const [universityStream, superstoreStream, parkStream, collegeStream] = await Promise.all([
-//       client.query.select(universityQuery),
-//       client.query.select(superstoreQuery),
-//       client.query.select(parkQuery),
-//       client.query.select(collegeQuery)
-//     ]);
-
-//     // Process the data streams
-//     const processStream = async (stream) => {
-//       return new Promise((resolve, reject) => {
-//         const results = [];
-//         stream.on("data", (row) => {
-//           results.push(row);
-//         });
-//         stream.on("end", () => resolve(results));
-//         stream.on("error", (err) => reject(err));
-//       });
-//     };
-
-//     const [universityData, superstoreData, parkData, collegeData] = await Promise.all([
-//       processStream(universityStream),
-//       processStream(superstoreStream),
-//       processStream(parkStream),
-//       processStream(collegeStream)
-//     ]);
-
-//     // Transform the data into readable formats
-//     const formatData = (data, type) => {
-//       console.log("data", data);
-//       return data.map((row) => {
-//         const formatted = {
-//           name: row.name ? row.name.value : null,
-//           coordinates: row.coordinates ? row.coordinates.value : null,
-//           amenityType : type
-//         };
-//         if (type === "park") formatted.url = row.park.value;
-//         if (type === "superstore") formatted.url = row.supermarket.value;
-//         if (type === "university") formatted.url = row.university.value;
-//         if (type === "college") formatted.url = row.amenity.value;
-//         return formatted;
-//       });
-//     };
-
-//     const formattedUniversityData = formatData(universityData, "university");
-//     const formattedSuperstoreData = formatData(superstoreData, "superstore");
-//     const formattedParkData = formatData(parkData, "park");
-//     const formattedCollegeData = formatData(collegeData, "college");
-
-//     // Respond with all data
-//     res.json({
-//       success: true,
-//       data: {
-//         universities: formattedUniversityData,
-//         superstores: formattedSuperstoreData,
-//         parks: formattedParkData,
-//         college: formattedCollegeData
-//       }
-//     });
-//   } catch (err) {
-//     console.error('Server error: ', err);
-//     res.status(500).send('Internal server error');
-//   }
-// });
-
-// // fetch a list of amenity
-// router.get("/all-amenity-class", async (req, res) => {
-//   try{
-//       const amenityClasses  = `
-//           PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-//           PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-      
-//           SELECT ?amenity
-      
-//           WHERE{
-//               ?amenity rdfs:subClassOf cdt:CompleteCommunityAmenity.
-//           }
-//       `;
-  
-//       const amenityinstance  = `
-//           PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-//           PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-      
-//           SELECT ?amenityinstance
-      
-//           WHERE{
-//               ?amenityinstance a cdt:CompleteCommunityAmenity.
-//           }
-//       `;
-
-//       const stream = await client.query.select(amenityClasses);
-
-//       // Collect results from the stream
-//       let amenityURLs = [];
-//       stream.on('data', (row) => {
-//           amenityURLs.push(row.amenity.value);
-//       });
-      
-//       stream.on('end', () => {
-//           console.log(amenityURLs)
-          
-//           // Send the formatted data as JSON
-//           res.json({ success: true, data: amenityURLs });
-//       });
-      
-//       // Handle errors in the query or stream
-//       stream.on('error', err => {
-//           console.error('Query error: ', err);
-//           res.status(500).send('Error executing query');
-//       });
-//   }catch (err) {
-//       console.error('Server error: ', err);
-//       res.status(500).send('Internal server error');
-//   }
-});
 
 router.get("/all-amenity-URLs", async (req, res) =>{
   const amenityClassesQuery = `
@@ -1061,200 +788,284 @@ router.get("/all-amenity-URLs", async (req, res) =>{
 });
 
 
-router.post("/amenity-location", async (req, res) => {
-  const neighborhoodName = req.body.neighborhoodName;
-  const amenityURL = req.body.amenityURL;
+// router.post("/amenity-location-seq", async (req, res) => {
+//   const neighborhoodName = req.body.neighborhoodName;
+//   const amenityURL = req.body.amenityURL;
 
-  console.log(req.body)
+//   console.log(req.body)
   
-  GCIRecreationURL = 'http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl'
-  GCIEducationURL = 'http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl'
-  CDTURL = 'http://ontology.eil.utoronto.ca/CDT'
-  Hospital = 'http://schema.org/Hospital'
-  GCIHealthURL = 'http://ontology.eil.utoronto.ca/CDT'
+//   GCIRecreationURL = 'http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl'
+//   GCIEducationURL = 'http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl'
+//   CDTURL = 'http://ontology.eil.utoronto.ca/CDT'
+//   Hospital = 'http://schema.org/Hospital'
+//   GCIHealthURL = 'http://ontology.eil.utoronto.ca/CDT'
 
-  var amenityQuery = '';
+//   var amenityQuery = '';
 
-  var amenitydName = '';
+//   var amenitydName = '';
 
-  if (amenityURL.includes(GCIRecreationURL)){
-    console.log("GCIRecreationURL");
-    amenitydName = amenityURL.split('#')[1];
-    amenityQuery = `
-        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-        PREFIX gcir: <http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#>
-        PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-        PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-        PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-        PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-        PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+//   if (amenityURL.includes(GCIRecreationURL)){
+//     console.log("GCIRecreationURL");
+//     amenitydName = amenityURL.split('#')[1];
+//     amenityQuery = `
+//         PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+//         PREFIX gcir: <http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#>
+//         PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+//         PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//         PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+//         PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+//         PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
     
-        SELECT ?${amenitydName} ?name ?coordinates
+//         SELECT ?${amenitydName} ?name ?coordinates
     
-        WHERE{
-            ?${amenitydName} a gcir:${amenitydName};
-            loc:hasLocation ?location.
-            ?location geo:asWKT ?coordinates.
-            OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
+//         WHERE{
+//             ?${amenitydName} a gcir:${amenitydName};
+//             loc:hasLocation ?location.
+//             ?location geo:asWKT ?coordinates.
+//             OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
             
-            toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-            ?neighlocation geo:asWKT ?neighcoordinates.
+//             toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+//             ?neighlocation geo:asWKT ?neighcoordinates.
     
-            FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-        }
-    `;
-  } else if (amenityURL.includes(GCIEducationURL)){
-    console.log("GCIEducationURL")
-    amenitydName = amenityURL.split('#')[1]
-    amenityQuery = `
-        PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-        PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-        PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-        PREFIX gcie: <http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#>
+//             FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+//         }
+//     `;
+//   } else if (amenityURL.includes(GCIEducationURL)){
+//     console.log("GCIEducationURL")
+//     amenitydName = amenityURL.split('#')[1]
+//     amenityQuery = `
+//         PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+//         PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+//         PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//         PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+//         PREFIX gcie: <http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#>
+//         PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 
-        SELECT ?amenity ?id ?name ?coordinates
+//         SELECT ?amenity ?id ?name ?coordinates
 
-        WHERE {
-          ?amenity a gcie:${amenitydName};
-          cdt:osmID ?id;
-          loc:hasLocation ?location.
-          OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
+//         WHERE {
+//           ?amenity a gcie:${amenitydName};
+//           cdt:osmID ?id;
+//           loc:hasLocation ?location.
+//           OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
 
-          ?location geo:asWKT ?coordinates.
-          toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-          ?neighlocation geo:asWKT ?neighcoordinates.
-          FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-        }
-    `;
-  } else if (amenityURL.includes(CDTURL)){
-    console.log("CDTURL")
-    amenitydName = amenityURL.split('#')[1]
-    amenityQuery = `
-        PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-        PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-        PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-        PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-        PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-        PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+//           ?location geo:asWKT ?coordinates.
+//           toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+//           ?neighlocation geo:asWKT ?neighcoordinates.
+//           FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+//         }
+//     `;
+//   } else if (amenityURL.includes(CDTURL)){
+//     console.log("CDTURL")
+//     amenitydName = amenityURL.split('#')[1]
+//     amenityQuery = `
+//         PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+//         PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+//         PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//         PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+//         PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+//         PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+//         PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 
-        SELECT ?amenity ?id ?name ?coordinates
+//         SELECT ?amenity ?id ?name ?coordinates
         
-        WHERE {
-        ?amenity a cdt:${amenitydName};
-                cdt:osmID ?id;
-                loc:hasLocation ?location.
-                OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
+//         WHERE {
+//         ?amenity a cdt:${amenitydName};
+//                 cdt:osmID ?id;
+//                 loc:hasLocation ?location.
+//                 OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
 
-        ?location geo:asWKT ?coordinates.
-        toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-        ?neighlocation geo:asWKT ?neighcoordinates.
-        FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-        }
-    `;
-    console.log("query in cdl:", amenityQuery)
-  } else if (amenityURL.includes(Hospital)){
-    console.log("Hospital")
-    amenityQuery = `
-        PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-        PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-        PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-        PREFIX sc: <http://schema.org/>
+//         ?location geo:asWKT ?coordinates.
+//         toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+//         ?neighlocation geo:asWKT ?neighcoordinates.
+//         FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+//         }
+//     `;
+//     console.log("query in cdl:", amenityQuery)
+//   } else if (amenityURL.includes(Hospital)){
+//     console.log("Hospital")
+//     amenityQuery = `
+//         PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+//         PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+//         PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//         PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+//         PREFIX sc: <http://schema.org/>
+//         PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 
-        SELECT ?amenity ?id ?name ?coordinates
+//         SELECT ?amenity ?id ?name ?coordinates
 
-        WHERE {
-          ?amenity a sc:Hospital;
-          cdt:osmID ?id;
-          loc:hasLocation ?location.
-          OPTIONAL {?amenity genprop:hasName ?name}
+//         WHERE {
+//           ?amenity a sc:Hospital;
+//           cdt:osmID ?id;
+//           loc:hasLocation ?location.
+//           OPTIONAL {?amenity genprop:hasName ?name}
 
-          ?location geo:asWKT ?coordinates.
-          toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-          ?neighlocation geo:asWKT ?neighcoordinates.
-          FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-        }
-    `;
-  } else if (amenityURL.includes(GCIHealthURL)){
-    console.log("GCIHealthURL")
-    amenitydName = amenityURL.split('#')[1]
-    amenityQuery = `
-        PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-        PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-        PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-        PREFIX gcih: <http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#>
+//           ?location geo:asWKT ?coordinates.
+//           toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+//           ?neighlocation geo:asWKT ?neighcoordinates.
+//           FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+//         }
+//     `;
+//   } else if (amenityURL.includes(GCIHealthURL)){
+//     console.log("GCIHealthURL")
+//     amenitydName = amenityURL.split('#')[1]
+//     amenityQuery = `
+//         PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+//         PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+//         PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//         PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+//         PREFIX gcih: <http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#>
+//         PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 
-        SELECT ?amenity ?id ?name ?coordinates
+//         SELECT ?amenity ?id ?name ?coordinates
 
-        WHERE {
-          ?amenity a gcih:${amenitydName};
-          cdt:osmID ?id;
-          loc:hasLocation ?location.
-          OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
+//         WHERE {
+//           ?amenity a gcih:${amenitydName};
+//           cdt:osmID ?id;
+//           loc:hasLocation ?location.
+//           OPTIONAL { ?${amenitydName} genprop:hasName ?name; }
 
-          ?location geo:asWKT ?coordinates.
-          toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-          ?neighlocation geo:asWKT ?neighcoordinates.
-          FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
-        }
-    `;
-  }
+//           ?location geo:asWKT ?coordinates.
+//           toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+//           ?neighlocation geo:asWKT ?neighcoordinates.
+//           FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+//         }
+//     `;
+//   }
 
-  console.log("--->query before:", amenityQuery)
-  console.log("--->amenitydName before:", amenitydName)
+//   console.log("--->query before:", amenityQuery)
+//   console.log("--->amenitydName before:", amenitydName)
 
-  if (amenityQuery == ''){
-      res.json({
-          success: false,
-          data: null,
-          msg: "no mathing url"
-        });
-  }else{
-    console.log("--->query else:", amenityQuery)
-    console.log("--->amenitydName else:", amenitydName)
-      try{
-          const stream = await client.query.select(amenityQuery);
+//   if (amenityQuery == ''){
+//       res.json({
+//           success: false,
+//           data: null,
+//           msg: "no mathing url"
+//         });
+//   }else{
+//     console.log("--->query else:", amenityQuery)
+//     console.log("--->amenitydName else:", amenitydName)
+//       try{
+//           const stream = await client.query.select(amenityQuery);
 
-          // Collect results from the stream
-          let rawData = [];
-          stream.on('data', (row) => {
+//           // Collect results from the stream
+//           let rawData = [];
+//           stream.on('data', (row) => {
               
-              console.log(row)
+//               console.log(row)
 
-            rawData.push(row);
-          });
+//             rawData.push(row);
+//           });
       
-          stream.on('end', () => {
-            // Transform the raw data into a more readable format
-            const formattedData = rawData.map(binding => {
-              return {
-                amenity: binding.amenity.value,
-                name: binding.name ? binding.name.value : null,
-                coordinates: binding.coordinates ? binding.coordinates.value : null
-              };
-            });
+//           stream.on('end', () => {
+//             // Transform the raw data into a more readable format
+//             const formattedData = rawData.map(binding => {
+//               return {
+//                 amenity: binding.amenity.value,
+//                 name: binding.name ? binding.name.value : null,
+//                 coordinates: binding.coordinates ? binding.coordinates.value : null
+//               };
+//             });
             
-            // Send the formatted data as JSON
-            res.json({ success: true, data: formattedData });
-          });
+//             // Send the formatted data as JSON
+//             res.json({ success: true, data: formattedData });
+//           });
       
-          // Handle errors in the query or stream
-          stream.on('error', err => {
-            console.error('Query error: ', err);
-            res.status(500).send('Error executing query');
-          });
+//           // Handle errors in the query or stream
+//           stream.on('error', err => {
+//             console.error('Query error: ', err);
+//             res.status(500).send('Error executing query');
+//           });
           
-      }catch (err) {
-          console.error('Server error: ', err);
-          res.status(500).send('Internal server error');
-      }
+//       }catch (err) {
+//           console.error('Server error: ', err);
+//           res.status(500).send('Internal server error');
+//       }
+//   }
+
+
+// });
+
+
+router.post("/amenity-location-all", async (req, res) => {
+  const neighborhoodName = req.body.neighborhoodName;
+
+  const query = `
+    PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+    PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+    PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+    SELECT ?type ?amenity ?id ?name ?coordinates
+
+    WHERE {
+    ?amenity a cdt:CompleteCommunityAmenity;
+    cdt:osmID ?id;
+    loc:hasLocation ?location.
+
+    GRAPH <http://www.ontotext.com/explicit> {  
+    ?amenity a ?type;
+    }    
+
+    OPTIONAL {?amenity genprop:hasName ?name}
+
+    ?location geo:asWKT ?coordinates.
+              toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+              ?neighlocation geo:asWKT ?neighcoordinates.
+              FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+    }
+  `
+  try {
+    // Execute the first query for amenity classes
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on('data', (row) => {
+      rawData.push(row);
+    });
+
+    stream.on('end', () => {
+      // Transform the raw data into a more readable format
+      const formattedData = rawData.map(binding => {
+        var tp = ''
+        if (binding.amenity){
+          const url = binding.amenity.value
+          const match = url.match(/#\d+([A-Za-z]+)$/);
+          if (match) {
+            tp = match[1]
+          }
+        }
+
+        return {
+          amenity: binding.amenity? binding.amenity.value : null,
+          type: binding.type ? binding.type.value : null,
+          decode_type: tp,
+          name: binding.name ? binding.name.value : null,
+          coordinates: binding.coordinates ? binding.coordinates.value : null
+        };
+      });
+      
+      // Send the formatted data as JSON
+      res.json({ success: true, data: formattedData });
+    });
+
+    stream.on('error', (err) => {
+      console.error('Query error: ', err);
+      res.status(500).send('Error executing query');
+    });
+
+  } catch (error) {
+    console.error('Execution error:', error);
+    res.status(500).send('An error occurred while executing the query');
   }
 
 
 });
+
 
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"

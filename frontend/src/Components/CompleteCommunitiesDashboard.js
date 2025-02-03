@@ -2,7 +2,7 @@ import { Container, Stack, Grid, Card, CardContent, Typography, Paper } from '@m
 import { Box as JoyBox } from "@mui/joy";
 import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
-import { fetchCities, fetchParkData, fetchParkLocations, fetchAllAmenity, fetchAmenityLocation} from '../helpers/fetchFunctions';
+import { fetchCities, fetchParkData, fetchAmenityLocations, fetchAllAmenity} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
 import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
@@ -93,10 +93,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       fetchAllAmenity(setAmenityURLs)
     };
     fetchUrls();
-    fetchAmenityLocation('neighborhood70', 'http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park')
+    // fetchAmenityLocation('neighborhood70', 'http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park')
     // fetchAmenityLocation('neighborhood70', '')
-    
-
   }, []); // Empty dependency array means this runs only ONCE when the page loads
 
   const categories = {
@@ -287,7 +285,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 
         try {
           // Fetch the park locations for the current neighborhood
-          const rawData = await fetchParkLocations(neighborhood);
+          const rawData = await fetchAmenityLocations(neighborhood);
+          console.log("-----> radarData",radarData)
           console.log("FORMAT FOR PARK LOCATIONS", rawData)
           const parkData = rawData[0];
           const neighborhoodLocationData = rawData[1];
