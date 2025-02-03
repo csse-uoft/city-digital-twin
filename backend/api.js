@@ -370,8 +370,8 @@ router.post("/visualization-data", async (req, res) => {
                 `);
               } catch (err) {
                 // Handle and log the error
-                console.error('Error executing SPARQL query:', error);
-                res.status(500).json({ message: 'Oops, something went wrong!' , err: error });
+                console.error('Error executing SPARQL query:', err);
+                res.status(500).json({ message: 'Oops, something went wrong!' , err: err });
                 return;
               }
 
@@ -986,6 +986,72 @@ router.get("/all-amenity-URLs", async (req, res) =>{
 
 // });
 
+router.post("/park-locations", async (req, res) => {
+  const neighborhoodName = req.body.neighborhoodName;
+  try {
+    const query = `
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+      PREFIX gcir: <http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#>
+      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+      PREFIX osm: <http://ontology.eil.utoronto.ca/OSM#>
+      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+      SELECT ?park ?name ?coordinates
+
+      WHERE{
+            ?park a gcir:Park;
+        loc:hasLocation ?location.
+          
+          OPTIONAL { ?park genprop:hasName ?name; }
+
+            ?location geo:asWKT ?coordinates.
+            
+            toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+            ?neighlocation geo:asWKT ?neighcoordinates.
+
+            FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+      }
+    `;
+
+    // Execute the query
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on('data', (row) => {
+      rawData.push(row);
+    });
+
+    stream.on('end', () => {
+
+      // Transform the raw data into a more readable format
+      const formattedData = pointData.map(binding => {
+        return {
+          park: binding.park.value,
+          name: binding.name ? binding.name.value : null,
+          coordinates: binding.coordinates ? binding.coordinates.value : null
+        };
+      });
+      
+      // Send the formatted data as JSON
+      res.json({ success: true, data: formattedData });
+    });
+
+    // Handle errors in the query or stream
+    stream.on('error', err => {
+      console.error('Query error: ', err);
+      res.status(500).send('Error executing query');
+    });
+
+  } catch (err) {
+    console.error('Server error: ', err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 
 router.post("/amenity-location-all", async (req, res) => {
   const neighborhoodName = req.body.neighborhoodName;
@@ -1029,9 +1095,16 @@ router.post("/amenity-location-all", async (req, res) => {
     });
 
     stream.on('end', () => {
+      
+      // Determine that the frontend can only render polygon
+      // let pointData = rawData.filter(item => 
+      //   typeof item.coordinates.value === "string" && item.coordinates.value.includes("POINT")
+      // );
+      // console.log("--->pointData: ",pointData)
       // Transform the raw data into a more readable format
+
       const formattedData = rawData.map(binding => {
-        var tp = ''
+        var amenity_tp = ''
         if (binding.amenity){
           const url = binding.amenity.value
           const match = url.match(/#\d+([A-Za-z]+)$/);
@@ -1043,7 +1116,7 @@ router.post("/amenity-location-all", async (req, res) => {
         return {
           amenity: binding.amenity? binding.amenity.value : null,
           type: binding.type ? binding.type.value : null,
-          decode_type: tp,
+          amenityType: amenity_tp,
           name: binding.name ? binding.name.value : null,
           coordinates: binding.coordinates ? binding.coordinates.value : null
         };

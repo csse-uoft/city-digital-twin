@@ -2,16 +2,15 @@ import { Container, Stack, Grid, Card, CardContent, Typography, Paper } from '@m
 import { Box as JoyBox } from "@mui/joy";
 import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
-import { fetchCities, fetchParkData, fetchAmenityLocations, fetchAllAmenity} from '../helpers/fetchFunctions';
+import { fetchCities, fetchParkData, fetchAmenityLocations, fetchParkLocations, fetchAllAmenity} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
 import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
 import { adminAreaInstanceReducer } from '../reducers/adminAreaInstanceReducer';
 import axios from 'axios';
+import "leaflet/dist/leaflet.css";
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesURLs, getSelectedAdminInstancesNames} from '../helpers/reducerHelpers';
-import { TileLayer, Circle, Popup, MapContainer, Polygon } from 'react-leaflet';
-
-
+import { TileLayer, Circle, Popup, MapContainer, Polygon,  Marker} from 'react-leaflet';
 
 const processData = (categories) => {
   return categories.map(category => {
@@ -25,7 +24,6 @@ const processData = (categories) => {
 
 // Take an admin instance area URI and print out its name:
 const URI_to_name = (instance_map, uri) => {
-  console.log("inside the helper", uri)
   for (const name in instance_map) {
     if (instance_map[name].URL === uri) {
       return name;
@@ -38,8 +36,6 @@ function formatParks(data, neighborhood) {
   const result = {};
   let unnamedCount = 0;
 
-  console.log('formatParks',data)
-
   data.forEach((park) => {
     // Determine park name
     let name = park.name;
@@ -47,6 +43,9 @@ function formatParks(data, neighborhood) {
       unnamedCount += 1;
       name = `No name ${unnamedCount}`;
     }
+
+
+    
     result[name] = park.coords.coordinates;
   });
 
@@ -85,18 +84,6 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   const [parkData, setParkData] = useState({});
   const [parkPolygons, setParkPolygons] = useState({});
   const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
-  const [AmenityURLs, setAmenityURLs] = useState([]); // Store fetched Amenity URLs
-
-  useEffect(() => {
-    // Function to fetch URLs
-    const fetchUrls = async () => {
-      fetchAllAmenity(setAmenityURLs)
-    };
-    fetchUrls();
-    // fetchAmenityLocation('neighborhood70', 'http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park')
-    // fetchAmenityLocation('neighborhood70', '')
-  }, []); // Empty dependency array means this runs only ONCE when the page loads
-
   const categories = {
     'Housing': ['Average Value of Dwellings'],
     'Economy': ['Unemployment Rate', 'Average After Tax Income'],
@@ -117,6 +104,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     // 'Arts and Recreasion': "http://ontology.eil.utoronto.ca/tove/cacensus#71ArtsEntertainmentAndRecreation2016"
 
   }
+
+
   const [categoriesData, setCategories] = useState([
     {
       title: 'Housing',
@@ -286,8 +275,8 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
         try {
           // Fetch the park locations for the current neighborhood
           const rawData = await fetchAmenityLocations(neighborhood);
-          console.log("-----> radarData",radarData)
-          console.log("FORMAT FOR PARK LOCATIONS", rawData)
+
+          console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
           const parkData = rawData[0];
           const neighborhoodLocationData = rawData[1];
           setNeighborhoodPolygons(neighborhoodLocationData)
@@ -309,17 +298,12 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     fetchAndFormatParks();
   }, [cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances])
 
+
   useEffect(() => {
     // Log the parkPolygons state whenever it changes
     console.log('Updated park polygons:', parkPolygons);
   }, [parkPolygons]); // This will run whenever parkPolygons changes
-
-  console.log(AmenityURLs)
-  // AmenityURLs.forEach(url => {
-  //   console.log(url)
-  // });
-
-  return (
+	return (
 		<Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
 			<Stack spacing={3}>
 				<Header pageName="Complete Communities Dashboard" />
@@ -464,22 +448,36 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       <Typography variant="h6" component="div">
       {URI_to_name(adminAreaInstancesState, fullKey)}
       </Typography>
-      <MapContainer
-        center={[43.7, -79.42]} // Set a center for all maps
-        zoom={12}
-        style={{ height: '400px', width: '100%' }}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {Object.keys(neighborhood).map((parkName) => {
-          const coords = neighborhood[parkName];
-          {{console.log("PARK COORDS", coords)}}
-          return (
-            <Polygon key={parkName} positions={coords} color="green">
-              <Tooltip>{parkName}</Tooltip>
-            </Polygon>
-          );
+ 
+      <MapContainer center={[43.7, -79.42]} zoom={12} style={{ height: '400px', width: '100%' }}>
+        <Marker position={[43.662044, -79.35026]}>
+          <Popup>Test Marker</Popup>
+        </Marker>
+
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+        {Object.keys(parkPolygons).map((neighborhoodKey) => {
+          const neighborhood = parkPolygons[neighborhoodKey];
+          return Object.keys(neighborhood).map((parkName) => {
+            const coords = neighborhood[parkName];
+            // console.log("----typeof coords", typeof coords)
+            // console.log("----coords", coords)
+            // console.log("----coords length", coords.length)
+
+            if (coords.length === 2) {
+              return (
+                <Marker key={parkName} position={[coords[0], coords[1]]}>
+                  <Popup>{parkName}</Popup>
+                </Marker>
+              );
+            } else {
+              return (
+                <Polygon key={parkName} positions={coords} color="green">
+                  <Popup>{parkName}</Popup>
+                </Polygon>
+              );
+            }
+          });
         })}
         
         {/* Add overlay polygon if it exists */}
@@ -532,7 +530,6 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 };
 
 export default CompleteCommunitiesDashboard;
-
 
 
 

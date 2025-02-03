@@ -167,7 +167,7 @@ export const fetchAmenityLocations = async (
       // this extracts the cooridnates into the updatedLocationURLs variable
       
       response.data.data.forEach((Instance, index) => {
-        console.log("Inside the loop", Instance)
+        // console.log("Inside the loop", Instance)
         var wkt = new Wkt.Wkt();
         wkt.read(Instance.coordinates);
 
@@ -175,13 +175,15 @@ export const fetchAmenityLocations = async (
 
         // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
         // The code requires Lat/Lon, so flip it back.
-
+        var displayT = ''
         if (flipped.type === "Polygon") {
           flipped.coordinates = flipped.coordinates.map((innerArray) =>
             innerArray.map((coords) => [coords[1], coords[0]])
           );
-
+          displayT = "Polygon"
         } else if (flipped.type === "Point"){
+          displayT = "Point"
+          
           flipped.coordinates = [flipped.coordinates[1], flipped.coordinates[0]];
         
         } else {
@@ -193,7 +195,7 @@ export const fetchAmenityLocations = async (
           );
         }
         
-        updatedLocationURLs.push({ name: Instance.name, coords: flipped });
+        updatedLocationURLs.push({ name: Instance.name, coords: flipped, amenityType: Instance.amenityType, displayType:displayT});
       });
 
       const cityName = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto';
@@ -266,122 +268,122 @@ export const fetchAmenityLocations = async (
     }
 };
 
-// export const fetchParkLocations = async (
-//   neighborhoodName
-// ) => {
-//     try {
+export const fetchParkLocations = async (
+  neighborhoodName
+) => {
+    try {
 
-//       const response = await axios.post("http://localhost:3000/api/park-locations", {
-//         neighborhoodName: neighborhoodName
-//       });
+      const response = await axios.post("http://localhost:3000/api/park-locations", {
+        neighborhoodName: neighborhoodName
+      });
       
-//       const updatedLocationURLs = [];
-//       console.log("PRINT RAW DATA", response)
-//       // this extracts the cooridnates into the updatedLocationURLs variable
+      const updatedLocationURLs = [];
+      console.log("PRINT RAW DATA", response)
+      // this extracts the cooridnates into the updatedLocationURLs variable
       
-//       response.data.data.forEach((Instance, index) => {
-//         console.log("Inside the loop", Instance)
-//         var wkt = new Wkt.Wkt();
-//         wkt.read(Instance.coordinates);
+      response.data.data.forEach((Instance, index) => {
+        console.log("Inside the loop", Instance)
+        var wkt = new Wkt.Wkt();
+        wkt.read(Instance.coordinates);
 
-//         var flipped = wkt.toJson();
+        var flipped = wkt.toJson();
 
-//         // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
-//         // The code requires Lat/Lon, so flip it back.
+        // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
+        // The code requires Lat/Lon, so flip it back.
 
-//         if (flipped.type === "Polygon") {
-//           flipped.coordinates = flipped.coordinates.map((innerArray) =>
-//             innerArray.map((coords) => [coords[1], coords[0]])
-//           );
+        if (flipped.type === "Polygon") {
+          flipped.coordinates = flipped.coordinates.map((innerArray) =>
+            innerArray.map((coords) => [coords[1], coords[0]])
+          );
 
-//         } else if (flipped.type === "Point"){
-//           flipped.coordinates = [flipped.coordinates[1], flipped.coordinates[0]];
+        } else if (flipped.type === "Point"){
+          flipped.coordinates = [flipped.coordinates[1], flipped.coordinates[0]];
         
-//         } else {
-//           // flipped is a MULTIpolygon
-//           flipped.coordinates = flipped.coordinates.map((firstInnerArray) => 
-//             firstInnerArray.map((secondInnerArray) => 
-//               secondInnerArray.map((coords) => [coords[1], coords[0]])
-//             )
-//           );
-//         }
+        } else {
+          // flipped is a MULTIpolygon
+          flipped.coordinates = flipped.coordinates.map((firstInnerArray) => 
+            firstInnerArray.map((secondInnerArray) => 
+              secondInnerArray.map((coords) => [coords[1], coords[0]])
+            )
+          );
+        }
         
-//         updatedLocationURLs.push({ name: Instance.name, coords: flipped });
-//       });
+        updatedLocationURLs.push({ name: Instance.name, coords: flipped });
+      });
 
 
 
-//       const cityName = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto';
-//       const areaTypeURL = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighborhood'
+      const cityName = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto';
+      const areaTypeURL = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighborhood'
 
 
-//       const response1 = await axios.post("http://localhost:3000/api/admin-instances", {
-//         cityName: cityName,
-//         adminType: areaTypeURL,
-//       });
+      const response1 = await axios.post("http://localhost:3000/api/admin-instances", {
+        cityName: cityName,
+        adminType: areaTypeURL,
+      });
 
-//       const areaInstaceList = response1.data["adminAreaInstanceNames"];
+      const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
-//       const response2 = await axios.post("http://localhost:3000/api/6", {
-//         cityName: cityName,
-//         adminType: areaTypeURL,
-//       });
+      const response2 = await axios.post("http://localhost:3000/api/6", {
+        cityName: cityName,
+        adminType: areaTypeURL,
+      });
 
 
-//       const NeighborhoodLocationURLs = {};
+      const NeighborhoodLocationURLs = {};
 
-//       // this extracts the cooridnates into the updatedLocationURLs variable
-//       response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
-//         var wkt = new Wkt.Wkt();
-//         wkt.read(Instance["areaLocation"]);
+      // this extracts the cooridnates into the updatedLocationURLs variable
+      response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
+        var wkt = new Wkt.Wkt();
+        wkt.read(Instance["areaLocation"]);
 
-//         var flipped = wkt.toJson();
+        var flipped = wkt.toJson();
 
-//         // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
-//         // The code requires Lat/Lon, so flip it back.
+        // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
+        // The code requires Lat/Lon, so flip it back.
 
-//         if (flipped.type === "Polygon") {
-//           flipped.coordinates = flipped.coordinates.map((innerArray) =>
-//             innerArray.map((coords) => [coords[1], coords[0]])
-//           );
-//         } else {
-//           // flipped is a MULTIpolygon
-//           flipped.coordinates = flipped.coordinates.map((firstInnerArray) => 
-//             firstInnerArray.map((secondInnerArray) => 
-//               secondInnerArray.map((coords) => [coords[1], coords[0]])
-//             )
-//           );
-//         }
+        if (flipped.type === "Polygon") {
+          flipped.coordinates = flipped.coordinates.map((innerArray) =>
+            innerArray.map((coords) => [coords[1], coords[0]])
+          );
+        } else {
+          // flipped is a MULTIpolygon
+          flipped.coordinates = flipped.coordinates.map((firstInnerArray) => 
+            firstInnerArray.map((secondInnerArray) => 
+              secondInnerArray.map((coords) => [coords[1], coords[0]])
+            )
+          );
+        }
         
-//         NeighborhoodLocationURLs[Instance["adminAreaInstance"]] = flipped;
-//       });
+        NeighborhoodLocationURLs[Instance["adminAreaInstance"]] = flipped;
+      });
 
-//       const areaNameToCoordsAndURL = {};
+      const areaNameToCoordsAndURL = {};
 
-//       for (const key in NeighborhoodLocationURLs) {
-//         const areaName = mapAreaURLtoName(areaInstaceList, key);
-//         areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: NeighborhoodLocationURLs[key].coordinates };
-//       }
+      for (const key in NeighborhoodLocationURLs) {
+        const areaName = mapAreaURLtoName(areaInstaceList, key);
+        areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: NeighborhoodLocationURLs[key].coordinates };
+      }
       
-//       return [updatedLocationURLs, NeighborhoodLocationURLs];
+      return [updatedLocationURLs, NeighborhoodLocationURLs];
 
-//       // const areaNameToCoordsAndURL = {};
+      // const areaNameToCoordsAndURL = {};
 
-//       // for (const key in updatedLocationURLs) {
-//       //   const areaName = mapAreaURLtoName(areaInstaceList, key);
-//       //   areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
-//       // }
-//       // // console.log("areaNameToCoords", areaNameToCoordsAndURL)
-//       // dispatchAdminAreaInstances({
-//       //   type: "SET_COORDINATES_AND_URLS",
-//       //   payload: areaNameToCoordsAndURL
-//       // });
+      // for (const key in updatedLocationURLs) {
+      //   const areaName = mapAreaURLtoName(areaInstaceList, key);
+      //   areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
+      // }
+      // // console.log("areaNameToCoords", areaNameToCoordsAndURL)
+      // dispatchAdminAreaInstances({
+      //   type: "SET_COORDINATES_AND_URLS",
+      //   payload: areaNameToCoordsAndURL
+      // });
 
-//       // console.log("locations", updatedLocationURLs);
-//     } catch (error) {
-//       console.error("POST Error:", error);
-//     }
-// };
+      // console.log("locations", updatedLocationURLs);
+    } catch (error) {
+      console.error("POST Error:", error);
+    }
+};
 
 // instanceList is of type [{adminAreaInstance: URL, areaName: name}]
 function mapAreaURLtoName(instanceList, areaURL) {
