@@ -86,15 +86,14 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
   const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
   const [AmenityURLs, setAmenityURLs] = useState([]); // Store fetched Amenity URLs
   const [AmenityColor, setAmenityColor] = useState({}); // Store URL-color mapping
-  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchUrls = async () => {
       fetchAllAmenity(setAmenityURLs, setAmenityColor)
     };
     fetchUrls();
   }, []);
-  
-
 
   const categories = {
     'Housing': ['Average Value of Dwellings'],
@@ -105,6 +104,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     // 'Amenities': ['Parks and Leisure', 'Arts and Recreasion']
 
   }
+
   const indicatorURLs = {
     'Unemployment Rate': "http://ontology.eil.utoronto.ca/tove/cacensus#UnemploymentRate2016", 
     'Average After Tax Income': "http://ontology.eil.utoronto.ca/tove/cacensus#AverageAfterTaxIncome25Sample2016",
@@ -116,7 +116,6 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     // 'Arts and Recreasion': "http://ontology.eil.utoronto.ca/tove/cacensus#71ArtsEntertainmentAndRecreation2016"
 
   }
-
 
   const [categoriesData, setCategories] = useState([
     {
@@ -183,6 +182,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       ]
     }
   ]);
+
   const radarData = processData(categoriesData);
   const handleUpdateCategories = () => {
     setCategories(prevCategories => {
@@ -199,6 +199,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       });
     });
   };
+  
   const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
   const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
   
@@ -278,6 +279,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 
     const fetchAndFormatParks = async () => {
       // Initialize an empty object to store all the parks
+      setLoading(true);
       let newParkPolygons = {};
 
       for (const url of selectedAdminInstancesURLs) {
@@ -303,6 +305,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       }
 
       // Once all parks are fetched and formatted, update the state
+      setLoading(false);  // Data is ready, stop loading
       setParkPolygons(newParkPolygons);
     };
 
@@ -445,57 +448,65 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
           </div>
         );
       })} */}
-      {Object.keys(parkPolygons).map((neighborhoodKey) => {
-  const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
-  const fullKey = baseURI + neighborhoodKey;
-  const neighborhood = parkPolygons[neighborhoodKey];
+{loading ? (
+  <Typography variant="h6" style={{ textAlign: "center", marginTop: "20px" }}>
+    Loading maps...
+  </Typography>
+) : (
+  Object.keys(parkPolygons).map((neighborhoodKey) => {
+    const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+    const fullKey = baseURI + neighborhoodKey;
+    const neighborhood = parkPolygons[neighborhoodKey];
+    let overlayCoords = neighborhoodPolygons[fullKey]?.coordinates;
 
-  let overlayCoords = neighborhoodPolygons[fullKey]; // Access the overlay polygon
-  console.log("overlayCoords", overlayCoords)
-  if (overlayCoords){
-    overlayCoords = overlayCoords.coordinates;
-  }
-  {{console.log("OVERLAY COORDS", overlayCoords)}}
-  return (
-    <div key={neighborhoodKey} style={{ marginBottom: '20px' }}>
-      <Typography variant="h6" component="div">
-      {URI_to_name(adminAreaInstancesState, fullKey)}
-      </Typography>
- 
-      <MapContainer center={[43.7, -79.42]} zoom={12} style={{ height: '400px', width: '100%' }}>
-        {/* Add overlay polygon if it exists */}
-        {
-          <Polygon key={neighborhoodKey} positions={overlayCoords} color="blue">
-            <Tooltip>Overlay for {neighborhoodKey}</Tooltip>
-          </Polygon>
-        }
+    return (
+      <div key={neighborhoodKey} style={{ marginBottom: '20px' }}>
+        <Typography variant="h6" component="div">
+          {URI_to_name(adminAreaInstancesState, fullKey)}
+        </Typography>
 
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <MapContainer
+          center={[43.7, -79.42]}
+          zoom={12}
+          style={{ height: '400px', width: '100%' }}
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {Object.keys(parkPolygons).map((neighborhoodKey) => {
-          const neighborhood = parkPolygons[neighborhoodKey];
-          return Object.keys(neighborhood).map((AmenityName) => {
-            const coords = neighborhood[AmenityName];
+          {overlayCoords && (
+            <Polygon positions={overlayCoords} color="blue">
+              <Popup>{`Overlay for ${neighborhoodKey}`}</Popup>
+            </Polygon>
+          )}
 
-            if (coords.displayType === 'Point') {
+          {Object.entries(neighborhood).map(([amenityName, amenityObj]) => {
+            if (amenityObj.displayType === 'Point') {
               return (
-                <Marker key={AmenityName} position={[coords.coordinates[0], coords.coordinates[1]]} color={AmenityColor[coords.url]}>
-                  <Popup>{AmenityName}</Popup>
+                <Marker
+                  key={amenityName}
+                  position={[amenityObj.coordinates[0], amenityObj.coordinates[1]]}
+                >
+                  <Popup>{amenityName}</Popup>
                 </Marker>
               );
-            } else if (coords.displayType === 'Polygon') {
+            } else if (amenityObj.displayType === 'Polygon') {
               return (
-                <Polygon key={AmenityName} positions={coords.coordinates} color={AmenityColor[coords.url]}>
-                  <Popup>{AmenityName}</Popup>
+                <Polygon
+                  key={amenityName}
+                  positions={amenityObj.coordinates}
+                  color={AmenityColor[amenityObj.url] || 'green'}
+                >
+                  <Popup>{amenityName}</Popup>
                 </Polygon>
               );
             }
-          });
-        })}
-      </MapContainer>
-    </div>
-  );
-})}
+            return null;
+          })}
+        </MapContainer>
+      </div>
+    );
+  })
+)}
+
     </div>
           </Grid>
           {/* <JoyBox sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
