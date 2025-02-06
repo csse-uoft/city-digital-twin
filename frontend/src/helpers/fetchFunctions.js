@@ -179,11 +179,10 @@ export const fetchAmenityLocations = async (
       });
 
       const updatedLocationURLs = [];
-      console.log("PRINT RAW DATA", response)
+      console.log("** ---> PRINT RAW DATA DATA", response.data.data)
       // this extracts the cooridnates into the updatedLocationURLs variable
       
       response.data.data.forEach((Instance, index) => {
-        // console.log("Inside the loop", Instance)
         var wkt = new Wkt.Wkt();
         wkt.read(Instance.coordinates);
 
@@ -202,25 +201,33 @@ export const fetchAmenityLocations = async (
           
           flipped.coordinates = [flipped.coordinates[1], flipped.coordinates[0]];
         
-        } else {
+        } else if (flipped.type === "MultiPolygon") {
           // flipped is a MULTIpolygon
           flipped.coordinates = flipped.coordinates.map((firstInnerArray) => 
             firstInnerArray.map((secondInnerArray) => 
               secondInnerArray.map((coords) => [coords[1], coords[0]])
             )
-          );
+          )
+        }else{
+          console.log("Never seen this type before")
+          console.log("Inside the loop", Instance)
+          console.log(flipped.type)
         }
-        
+
         updatedLocationURLs.push({ name: Instance.name, coords: flipped, amenityType: Instance.amenityType, rootURL: Instance.type, displayType:displayT});
       });
+      console.log('sssssssssssssssssS111111111')
+
 
       const cityName = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto';
       const areaTypeURL = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighborhood'
+      console.log('sssssssssssssssssS')
 
       const response1 = await axios.post("http://localhost:3000/api/admin-instances", {
         cityName: cityName,
         adminType: areaTypeURL,
       });
+      console.log('sssssssssssssssssS222222222')
 
       const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
@@ -231,6 +238,7 @@ export const fetchAmenityLocations = async (
 
       const NeighborhoodLocationURLs = {};
 
+      console.log('sssssssssssssssssS33333')
       // this extracts the cooridnates into the updatedLocationURLs variable
       response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
         var wkt = new Wkt.Wkt();
@@ -263,7 +271,8 @@ export const fetchAmenityLocations = async (
         const areaName = mapAreaURLtoName(areaInstaceList, key);
         areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: NeighborhoodLocationURLs[key].coordinates };
       }
-      
+      console.log("HHHHHHHHHH")
+      console.log("*--* ---> updatedLocationURLs", updatedLocationURLs)
       return [updatedLocationURLs, NeighborhoodLocationURLs];
 
       // const areaNameToCoordsAndURL = {};
@@ -280,6 +289,7 @@ export const fetchAmenityLocations = async (
 
       // console.log("locations", updatedLocationURLs);
     } catch (error) {
+      console.log('eeeeeeeeeeeeeeeeeeeeeeee')
       console.error("POST Error:", error);
     }
 };

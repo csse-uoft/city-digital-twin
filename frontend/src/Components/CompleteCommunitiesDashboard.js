@@ -483,7 +483,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
                   <Popup>{AmenityName}</Popup>
                 </Marker>
               );
-            } else {
+            } else if (coords.displayType === 'Polygon') {
               return (
                 <Polygon key={AmenityName} positions={coords.coordinates} color={AmenityColor[coords.url]}>
                   <Popup>{AmenityName}</Popup>

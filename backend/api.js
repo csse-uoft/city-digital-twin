@@ -1111,6 +1111,8 @@ router.post("/amenity-location-all", async (req, res) => {
           coordinates: binding.coordinates ? binding.coordinates.value : null
         };
       });
+
+      console.log(formattedData)
       
       // Send the formatted data as JSON
       res.json({ success: true, data: formattedData });
