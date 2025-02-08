@@ -409,9 +409,18 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
             )}
           </Polygon>
         )});
+        // Change
+        // setMapPolygons((oldPolygons) => ({
+        //   ...oldPolygons,
+        //   [indicator]: { polygons: newPolygons, index: ind },
+        // }));
+        const indicatorTitle = selectedIndicators[ind]; 
         setMapPolygons((oldPolygons) => ({
           ...oldPolygons,
-          [indicator]: { polygons: newPolygons, index: ind },
+          [indicator]: { 
+            polygons: newPolygons,
+            title: indicatorTitle   // store the actual selected indicator name
+          },
         }));
       });
 
@@ -655,7 +664,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                   }}
                   sx={{}}
                 >
-                  {selectedIndicators[mapPolygons[indicator].index]}
+                  {mapPolygons[indicator].title}
                 </Typography>
                 <JoyBox
                   sx={{
