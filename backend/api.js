@@ -6,7 +6,6 @@ require('dotenv').config();
 
 const endpointUrl = process.env.ENDPOINT_URL;
 
-const endpointUrl = process.env.ENDPOINT_URL;
 const client = new SparqlClient({ endpointUrl });
 
 function sleep(ms) {
