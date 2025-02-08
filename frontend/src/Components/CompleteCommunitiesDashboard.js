@@ -290,13 +290,13 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
           // Fetch the park locations for the current neighborhood
           const rawData = await fetchAmenityLocations(neighborhood);
 
-          console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
+          // console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
           const amenityData = rawData[0];
           const neighborhoodLocationData = rawData[1];
           setNeighborhoodPolygons(neighborhoodLocationData)
           // Format the fetched parks using formatParks
           const formattedAmenities = formatAmenities(amenityData);
-          console.log("formatParks, ", formattedAmenities)
+          // console.log("formatParks, ", formattedAmenities)
           // Add the formatted parks to the newParkPolygons object
           newParkPolygons[neighborhood] = formattedAmenities;
         } catch (error) {
