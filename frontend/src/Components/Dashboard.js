@@ -449,6 +449,8 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
 					dispatchAdminAreaTypes={dispatchAdminAreaTypes}
 					adminAreaInstancesState={adminAreaInstancesState}
 					dispatchAdminAreaInstances={dispatchAdminAreaInstances}
+          isGeneratingVisualization={visLoading}
+
 				/>
         <JoyBox>
           <JoyBox
@@ -495,7 +497,8 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                           <NewDropdown
                             key={`indicator-${index}`}
                             id="indicator-input"
-                            disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
+                            // disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
+                            disabled={visLoading || getCurrentAdminTypeURL(adminAreaTypesState) === null}
                             label={`Indicator #${parseInt(index) + 1}`}
                             value={value}
                             options={Object.keys(indicatorURLs)}

@@ -7,7 +7,7 @@ import { NewDropdownMultiSelect } from '../SearchPageComponents/NewDropdownMulti
 import { fetchAdministration, fetchLocations } from '../../helpers/fetchFunctions';
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getCurrentAdminTypeName } from '../../helpers/reducerHelpers';
 
-const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances}) => {
+const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAreaTypes, adminAreaInstancesState, dispatchAdminAreaInstances, isGeneratingVisualization}) => {
   const [cityLoading, setCityLoading] = useState(false);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
                 key="city-input"
                 label="City"
                 value={adminAreaTypesState.currCity}
-                disabled={false}
+                disabled={isGeneratingVisualization}
                 options={Object.keys(cityURLs)}
                 desc="Select the city which you want the indicator data for."
                 onChange={async (event, newValue) => {
@@ -91,7 +91,8 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
                 key={"admin-type-input"}
                 label="Administrative Area Type"
                 value={getCurrentAdminTypeName(adminAreaTypesState)}
-                disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
+                // disabled={!(Object.keys(adminAreaTypesState).includes('currCity'))}
+                disabled={isGeneratingVisualization || !(Object.keys(adminAreaTypesState).includes('currCity'))}
                 options={Object.keys(adminAreaTypesState).filter(key => key !== 'currCity')}
                 desc="Select the demarcation type for analysis."
                 onChange={(event, newValue) => {
@@ -112,7 +113,7 @@ const LocationSelect = ({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdm
                 id="admin-instances-multiinput"
                 key={"admin-instances-multiinput"}
                 label="Administrative Area Instance"
-                disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
+                disabled={isGeneratingVisualization || getCurrentAdminTypeURL(adminAreaTypesState) === null }
                 options={Object.keys(adminAreaInstancesState)}
                 desc="Select the individual demarcation areas you want to analyze."
                 onChange={(event, newValue) => {
