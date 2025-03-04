@@ -214,7 +214,7 @@ export const fetchAmenityLocations = async (
           console.log(flipped.type)
         }
 
-        updatedLocationURLs.push({ name: Instance.name, coords: flipped, amenityType: Instance.amenityType, rootURL: Instance.type, displayType:displayT});
+        updatedLocationURLs.push({ name: Instance.name, coords: flipped, amenityType: Instance.amenityType, rootURL: Instance.type, color:Instance.color, displayType:displayT});
       });
 
 
