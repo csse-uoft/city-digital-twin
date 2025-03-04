@@ -47,7 +47,8 @@ function formatAmenities(data, neighborhood) {
       coordinates: amenity.coords.coordinates,
       amenityType: amenity.amenityType,
       displayType: amenity.displayType,
-      url: amenity.rootURL
+      url: amenity.rootURL,
+      color: amenity.color
     };
   });
 
@@ -493,7 +494,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
                 <Polygon
                   key={amenityName}
                   positions={amenityObj.coordinates}
-                  color={AmenityColor[amenityObj.url] || 'green'}
+                  color={amenityObj.color || AmenityColor[amenityObj.url]}
                 >
                   <Popup>{amenityName}</Popup>
                 </Polygon>

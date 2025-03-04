@@ -918,44 +918,6 @@ router.get("/all-amenity-URLs", async (req, res) =>{
 });
 
 
-router.get("/all-amenity-URLs", async (req, res) =>{
-  const amenityClassesQuery = `
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
-
-    SELECT ?amenity
-    WHERE {
-        ?amenity rdfs:subClassOf cdt:CompleteCommunityAmenity.
-    }
-  `;
-
-  try {
-    // Execute the first query for amenity classes
-    const stream = await client.query.select(amenityClassesQuery);
-
-    // Collect results from the stream
-    let rawData = [];
-    stream.on('data', (row) => {
-      rawData.push(row.amenity.value); // Collect each result row
-    });
-
-    stream.on('end', () => {
-      // Format the data
-      // Send the formatted data as JSON response
-      res.json({ success: true, urls: rawData });
-    });
-
-    stream.on('error', (err) => {
-      console.error('Query error: ', err);
-      res.status(500).send('Error executing query');
-    });
-  } catch (error) {
-    console.error('Execution error:', error);
-    res.status(500).send('An error occurred while executing the query');
-  }
-
-});
-
 router.post("/park-locations", async (req, res) => {
   const neighborhoodName = req.body.neighborhoodName;
   try {
@@ -1046,8 +1008,12 @@ router.post("/amenity-location-all", async (req, res) => {
       ?amenity a ?type;
     }    
 
-    ?type cdt:displayColor ?color .
-    
+    OPTIONAL {
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?type cdt:displayColor ?color
+        }
+    }
+            
     OPTIONAL {?amenity genprop:hasName ?name}
 
     ?location geo:asWKT ?coordinates.
