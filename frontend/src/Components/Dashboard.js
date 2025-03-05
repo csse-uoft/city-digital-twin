@@ -81,6 +81,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ;
+
+console.log(API_BASE_URL)
 
 /*
  * Implements the search page. 

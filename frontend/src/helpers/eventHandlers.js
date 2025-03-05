@@ -1,6 +1,9 @@
 import axios from "axios";
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getSelectedAdminInstancesURLs } from "./reducerHelpers.js";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ;
+
+
 export const handleDeleteIndicator = (years, selectedIndicators, setYears, setSelectedIndicators, setCurrentSelectedMultiIndicators) => {
   var tempIndicator = { ...selectedIndicators }; // Create a shallow copy of the selectedIndicators object
   var tempYears = [...years]
@@ -160,7 +163,7 @@ export const handleUpdateIndicators = (id, value, setSelectedIndicators) => {
 
 //   const fetchData = async () => {
 //     const promises = Object.keys(selectedIndicators).map(async (index) => {
-//       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/visualization-data`, {
+//       const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
 //         cityName: cityURLs[adminAreaTypesState["currCity"]],
 //         adminType: currentAdminType,
 //         adminInstance: selectedAdminInstancesURLs,
@@ -169,7 +172,7 @@ export const handleUpdateIndicators = (id, value, setSelectedIndicators) => {
 //         endTime: years[parseInt(index)].value2,
 //       });
 
-//       const unitType = await axios.post(`${process.env.REACT_APP_API_URL}/api/5`, {
+//       const unitType = await axios.post(`${API_BASE_URL}/api/5`, {
 //         subject: indicatorURLs[selectedIndicators[index]],
 //         predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit",
 //       });
@@ -215,7 +218,7 @@ export const handleUpdateIndicators = (id, value, setSelectedIndicators) => {
 //     try {
 //       // await Promise.all(
 //       //   Object.keys(selectedIndicators).map(async (index) => {
-//       //     const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/visualization-data`, {
+//       //     const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
 //       //       cityName: cityURLs[adminURLs["currCity"]],
 //       //       adminType: currentAdminType,
 //       //       adminInstance: currentAdminInstances,
@@ -224,7 +227,7 @@ export const handleUpdateIndicators = (id, value, setSelectedIndicators) => {
 //       //       endTime: years[parseInt(index)].value2,
 //       //     });
 
-//       //     const unitType = await axios.post(`${process.env.REACT_APP_API_URL}/api/5`, {
+//       //     const unitType = await axios.post(`${API_BASE_URL}/api/5`, {
 //       //       subject: indicatorURLs[selectedIndicators[index]],
 //       //       predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit"
 //       //     });
@@ -318,7 +321,7 @@ export const handleGenerateVisualization = async (
       const fetchVisualizationData = async () => {
         const promises = Object.keys(selectedIndicators).map(async (index) => {
           // 5a) Post request to get the actual data values
-          const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/visualization-data`, {
+          const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
             cityName: cityURLs[adminAreaTypesState["currCity"]],
             adminType: currentAdminType,
             adminInstance: selectedAdminInstances,
@@ -328,7 +331,7 @@ export const handleGenerateVisualization = async (
           });
 
           // 5b) Get the unit if available
-          const unitType = await axios.post(`${process.env.REACT_APP_API_URL}/api/5`, {
+          const unitType = await axios.post(`${API_BASE_URL}/api/5`, {
             subject: indicatorURLs[selectedIndicators[index]],
             predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit",
           });

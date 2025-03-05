@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #   networks:
+  #     - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3001:3001"  # Match the internal port if needed
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      # - REACT_APP_API_URL=http://backend:3000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

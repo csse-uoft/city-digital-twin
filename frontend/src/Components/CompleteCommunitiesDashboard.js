@@ -12,6 +12,8 @@ import "leaflet/dist/leaflet.css";
 import { getCurrentAdminTypeURL, getSelectedAdminInstancesURLs, getSelectedAdminInstancesNames} from '../helpers/reducerHelpers';
 import { TileLayer, Circle, Popup, MapContainer, Polygon,  Marker} from 'react-leaflet';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ;
+
 const processData = (categories) => {
   return categories.map(category => {
     const data = { title: category.title };
@@ -244,7 +246,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     const fetchData = async () => {
       const promises = Object.keys(indicatorURLs).map(async (key) => {
         const url = indicatorURLs[key];
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/visualization-data`, {
+        const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
           cityName: currCity,
           adminType: currentAdminType,
           adminInstance: selectedAdminInstancesURLs,
