@@ -3,7 +3,7 @@ export const fetchParkLocations = async (
   ) => {
       try {
   
-        const response = await axios.post("http://localhost:3000/api/park-locations", {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/park-locations`, {
           neighborhoodName: neighborhoodName
         });
         
@@ -47,14 +47,14 @@ export const fetchParkLocations = async (
         const areaTypeURL = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighborhood'
   
   
-        const response1 = await axios.post("http://localhost:3000/api/admin-instances", {
+        const response1 = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin-instances`, {
           cityName: cityName,
           adminType: areaTypeURL,
         });
   
         const areaInstaceList = response1.data["adminAreaInstanceNames"];
   
-        const response2 = await axios.post("http://localhost:3000/api/6", {
+        const response2 = await axios.post(`${process.env.REACT_APP_API_URL}/api/6`, {
           cityName: cityName,
           adminType: areaTypeURL,
         });

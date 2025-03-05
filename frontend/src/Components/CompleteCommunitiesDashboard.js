@@ -244,7 +244,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     const fetchData = async () => {
       const promises = Object.keys(indicatorURLs).map(async (key) => {
         const url = indicatorURLs[key];
-        const response = await axios.post("http://localhost:3000/api/visualization-data", {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/visualization-data`, {
           cityName: currCity,
           adminType: currentAdminType,
           adminInstance: selectedAdminInstancesURLs,
@@ -494,7 +494,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
                 <Polygon
                   key={amenityName}
                   positions={amenityObj.coordinates}
-                  color={amenityObj.color || AmenityColor[amenityObj.url]}
+                  color={amenityObj.color || AmenityColor[amenityObj.url] || 'green'}
                 >
                   <Popup>{amenityName}</Popup>
                 </Polygon>
