@@ -22,7 +22,6 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      # - REACT_APP_API_URL=http://backend:3000
     depends_on:
       - backend
     networks:

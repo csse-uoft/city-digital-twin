@@ -1000,26 +1000,26 @@ router.post("/amenity-location-all", async (req, res) => {
     SELECT ?type ?color ?amenity ?id ?name ?coordinates
 
     WHERE {
-    ?amenity a cdt:CompleteCommunityAmenity;
-    cdt:osmID ?id;
-    loc:hasLocation ?location.
+      ?amenity a cdt:CompleteCommunityAmenity;
+      cdt:osmID ?id;
+      loc:hasLocation ?location.
 
-    GRAPH <http://www.ontotext.com/explicit> {  
-      ?amenity a ?type;
-    }    
+      GRAPH <http://www.ontotext.com/explicit> {  
+        ?amenity a ?type;
+      }    
 
-    OPTIONAL {
-        GRAPH <http://www.ontotext.com/explicit> {
-            ?type cdt:displayColor ?color
-        }
-    }
-            
-    OPTIONAL {?amenity genprop:hasName ?name}
+      OPTIONAL {
+          GRAPH <http://www.ontotext.com/explicit> {
+              ?type cdt:displayColor ?color
+          }
+      }
+              
+      OPTIONAL {?amenity genprop:hasName ?name}
 
-    ?location geo:asWKT ?coordinates.
-              toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-              ?neighlocation geo:asWKT ?neighcoordinates.
-              FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+      ?location geo:asWKT ?coordinates.
+      toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+      ?neighlocation geo:asWKT ?neighcoordinates.
+      FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
     }
   `
   try {

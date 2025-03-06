@@ -173,7 +173,8 @@ export const fetchAllAmenity = async(setAmenityURLs, setAmenityColor) => {
 }
 
 export const fetchAmenityLocations = async (
-  neighborhoodName
+  neighborhoodName,
+  adminAreaTypesState
 ) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/amenity-location-all`, {
@@ -221,12 +222,23 @@ export const fetchAmenityLocations = async (
 
 
       const cityName = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto';
-      const areaTypeURL = 'http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighborhood'
+
+
+      const getSelectedURL = (obj) => {
+        for (const key in obj) {
+            if (obj[key]?.selected === true) {
+                return obj[key].URL;
+            }
+        }
+      };
+
+      const areaTypeURL = getSelectedURL(adminAreaTypesState);
 
       const response1 = await axios.post(`${API_BASE_URL}/api/admin-instances`, {
         cityName: cityName,
         adminType: areaTypeURL,
       });
+
 
       const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
@@ -234,7 +246,7 @@ export const fetchAmenityLocations = async (
         cityName: cityName,
         adminType: areaTypeURL,
       });
-
+      console.log("areaTypeURL",areaTypeURL)
       const NeighborhoodLocationURLs = {};
 
       // this extracts the cooridnates into the updatedLocationURLs variable

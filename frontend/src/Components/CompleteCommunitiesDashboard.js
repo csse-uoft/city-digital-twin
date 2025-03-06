@@ -291,7 +291,7 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
 
         try {
           // Fetch the park locations for the current neighborhood
-          const rawData = await fetchAmenityLocations(neighborhood);
+          const rawData = await fetchAmenityLocations(neighborhood, adminAreaTypesState);
 
           // console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
           const amenityData = rawData[0];
@@ -461,7 +461,6 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
     const fullKey = baseURI + neighborhoodKey;
     const neighborhood = parkPolygons[neighborhoodKey];
     let overlayCoords = neighborhoodPolygons[fullKey]?.coordinates;
-
     return (
       <div key={neighborhoodKey} style={{ marginBottom: '20px' }}>
         <Typography variant="h6" component="div">
