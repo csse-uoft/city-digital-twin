@@ -3,6 +3,21 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL ;
 
+export const testBackendConnection = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/health-check`);
+
+    if (response.data.success) {
+      console.log("Backend connection successful");
+      return true
+    }
+  } catch (error) {
+    console.log("Failed to connect to backend:", error);
+    return null;
+  }
+};
+
+
 export const fetchCities = async (setCityURLs) => {
   
   const response = await axios.get(`${API_BASE_URL}/api/cities`);

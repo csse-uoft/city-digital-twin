@@ -12,6 +12,12 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Test if frontend connected with backend
+router.get("/health-check", async (req, res) => {
+  res.json({success: true, message: "success"});
+});
+
+
 // returns all cities in the knowledge graph
 router.get("/cities", async (req, res) => {
   const query = `

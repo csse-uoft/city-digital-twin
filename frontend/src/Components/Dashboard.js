@@ -29,6 +29,7 @@ import {
   fetchAdministration,
   fetchIndicators,
   fetchLocations,
+  testBackendConnection,
 } from "../helpers/fetchFunctions";
 
 import {
@@ -256,6 +257,14 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
   // Upon initial page load, fetch list of indicators
   useEffect(() => {
     fetchIndicators(setIndicatorURLs);
+    const checkBackend = async () => {
+      console.log("Checking backend connection...");
+      const result = await testBackendConnection();
+      if (!result) {
+        alert("Could not connect to the backend. Please check your connection.");
+      }
+    };
+    checkBackend();
   }, []);
 
 

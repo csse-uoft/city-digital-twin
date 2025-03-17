@@ -2,7 +2,7 @@ import { Container, Stack, Grid, Card, CardContent, Typography, Paper } from '@m
 import { Box as JoyBox } from "@mui/joy";
 import { Header } from './SearchPageComponents/Header';
 import { useState, useEffect, useReducer } from 'react';
-import { fetchCities, fetchParkData, fetchAmenityLocations, fetchParkLocations, fetchAllAmenity} from '../helpers/fetchFunctions';
+import { fetchCities, fetchParkData, fetchAmenityLocations, fetchParkLocations, fetchAllAmenity, testBackendConnection} from '../helpers/fetchFunctions';
 import LocationSelect from './OtherComponents/LocationSelect';
 import { RadarChart, PolarAngleAxis, Radar, PolarGrid, PolarRadiusAxis, Tooltip, Legend } from 'recharts';
 import { adminAreaTypeReducer } from '../reducers/adminAreaTypeReducer';
@@ -96,6 +96,14 @@ const CompleteCommunitiesDashboard = ({cityURLs, setCityURLs, adminAreaTypesStat
       fetchAllAmenity(setAmenityURLs, setAmenityColor)
     };
     fetchUrls();
+    const checkBackend = async () => {
+      console.log("Checking backend connection...");
+      const result = await testBackendConnection();
+      if (!result) {
+        alert("Could not connect to the backend. Please check your connection.");
+      }
+    };
+    checkBackend();
   }, []);
 
   const categories = {
