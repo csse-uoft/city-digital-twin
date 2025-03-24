@@ -1085,6 +1085,64 @@ router.post("/amenity-location-all", async (req, res) => {
 
 });
 
+// Returns metrics describing how easily a park is accessible by all neighbourhoods
+router.post("/amenity-score", async (req, res) => {
+  try {
+    const query = `
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+      PREFIX uoft: <http://ontology.eil.utoronto.ca/tove/cacensus#>
+      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+
+      SELECT ?type ?name ?value
+
+      WHERE{
+          ?neighbourhood a toronto:Neighborhood;
+          rdfs:comment ?name.
+
+          ?indicator a cdt:PercentWalkingDistance;
+          uoft:hasLocation ?neighbourhood;
+        iso21972:value ?measure.
+        
+          GRAPH <http://www.ontotext.com/explicit> {  
+        ?indicator a ?type;
+        }    
+        
+        ?measure iso21972:numerical_value ?value.
+      }
+    `;
+
+    // Execute the query
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    const results = [];
+    stream.on("data", (row) => {
+      results.push({
+        type: row.type.value,
+        name: row.name.value,
+        value: row.value.value,
+      });
+    });
+
+    // Handle stream end (when all data has been processed)
+    stream.on("end", () => {
+      res.json(results); // Send the collected results as JSON response
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+
 
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"
