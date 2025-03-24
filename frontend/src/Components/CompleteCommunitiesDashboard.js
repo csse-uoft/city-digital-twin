@@ -1,51 +1,22 @@
-import {
-  Container,
-  Stack,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Paper,
-} from "@mui/material";
+import { Container, Stack, Grid, Typography } from "@mui/material";
 import { CircularProgress, Box as JoyBox } from "@mui/joy";
 import { Header } from "./SearchPageComponents/Header";
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect } from "react";
 import {
-  fetchCities,
-  fetchParkData,
   fetchAmenityLocations,
-  fetchParkLocations,
   fetchAllAmenity,
   testBackendConnection,
   fetchAmenityData,
 } from "../helpers/fetchFunctions";
 import LocationSelect from "./OtherComponents/LocationSelect";
-import {
-  RadarChart,
-  PolarAngleAxis,
-  Radar,
-  PolarGrid,
-  PolarRadiusAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
-import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
-import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
-import axios from "axios";
+
 import "leaflet/dist/leaflet.css";
 import {
   getCurrentAdminTypeURL,
   getSelectedAdminInstancesURLs,
   getSelectedAdminInstancesNames,
 } from "../helpers/reducerHelpers";
-import {
-  TileLayer,
-  Circle,
-  Popup,
-  MapContainer,
-  Polygon,
-  Marker,
-} from "react-leaflet";
+import { TileLayer, Popup, MapContainer, Polygon, Marker } from "react-leaflet";
 import AmenityRadarChart from "./DataVisComponents/AmenityRadarChart";
 
 // Take an admin instance area URI and print out its name:
@@ -89,7 +60,6 @@ const CompleteCommunitiesDashboard = ({
   adminAreaInstancesState,
   dispatchAdminAreaInstances,
 }) => {
-  const [responseData, setResponseData] = useState({});
   const [amenityData, setAmenityData] = useState({});
   const [parkPolygons, setParkPolygons] = useState({});
   const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
@@ -224,121 +194,128 @@ const CompleteCommunitiesDashboard = ({
           adminAreaInstancesState={adminAreaInstancesState}
           dispatchAdminAreaInstances={dispatchAdminAreaInstances}
         />
-
-        <JoyBox sx={{ marginBottom: "50px" }}>
-          <JoyBox
-            sx={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "20px",
-            }}
-          >
-            <Typography
-              variant="h5"
-              style={{
-                fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
-                fontSize: 35,
-                fontWeight: "bold",
-                color: "#0b2f4e",
+        {selectedAdminInstancesURLs.length > 0 ? (
+          <JoyBox sx={{ marginBottom: "50px" }}>
+            <JoyBox
+              sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "20px",
               }}
             >
-              Complete Communities Data
-            </Typography>
-          </JoyBox>
-          <AmenityRadarChart amenityData={amenityData} />
-          <Grid item xs={12} md={6} style={{ marginTop: "8%" }}>
-            <div>
-              {loading ? (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    textAlign: "center",
-                    marginTop: "20px",
-                  }}
-                >
-                  <Typography variant="h6">Loading maps </Typography>
-                  <CircularProgress />
-                </div>
-              ) : (
-                Object.keys(parkPolygons).map((neighborhoodKey) => {
-                  const baseURI =
-                    "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
-                  const fullKey = baseURI + neighborhoodKey;
-                  const neighborhood = parkPolygons[neighborhoodKey];
-                  let overlayCoords =
-                    neighborhoodPolygons[fullKey]?.coordinates;
-                  return (
-                    <div>
-                      <div
-                        key={neighborhoodKey}
-                        style={{
-                          marginBottom: "20px",
-                          display: "flex",
-                          justifyContent: "center",
-                          marginTop: "5%",
-                        }}
-                      >
-                        <Typography variant="h4" component="div">
-                          {URI_to_name(adminAreaInstancesState, fullKey)}
-                        </Typography>
-                      </div>
+              <Typography
+                variant="h5"
+                style={{
+                  fontFamily: "Trade Gothic Next LT Pro Cn, sans-serif",
+                  fontSize: 35,
+                  fontWeight: "bold",
+                  color: "#0b2f4e",
+                }}
+              >
+                Complete Communities Data
+              </Typography>
+            </JoyBox>
+
+            <AmenityRadarChart amenityData={amenityData} />
+
+            <Grid item xs={12} md={6} style={{ marginTop: "8%" }}>
+              <div>
+                {loading ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      marginTop: "20px",
+                    }}
+                  >
+                    <Typography variant="h6">Loading maps </Typography>
+                    <CircularProgress />
+                  </div>
+                ) : (
+                  Object.keys(parkPolygons).map((neighborhoodKey) => {
+                    const baseURI =
+                      "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+                    const fullKey = baseURI + neighborhoodKey;
+                    const neighborhood = parkPolygons[neighborhoodKey];
+                    let overlayCoords =
+                      neighborhoodPolygons[fullKey]?.coordinates;
+                    return (
                       <div>
-                        <MapContainer
-                          center={[43.7, -79.42]}
-                          zoom={12}
-                          style={{ height: "400px", width: "100%" }}
+                        <div
+                          key={neighborhoodKey}
+                          style={{
+                            marginBottom: "20px",
+                            display: "flex",
+                            justifyContent: "center",
+                            marginTop: "5%",
+                          }}
                         >
-                          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                          <Typography variant="h4" component="div">
+                            {URI_to_name(adminAreaInstancesState, fullKey)}
+                          </Typography>
+                        </div>
+                        <div>
+                          <MapContainer
+                            center={[43.7, -79.42]}
+                            zoom={12}
+                            style={{ height: "400px", width: "100%" }}
+                          >
+                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-                          {overlayCoords && (
-                            <Polygon positions={overlayCoords} color="blue">
-                              <Popup>{`Overlay for ${neighborhoodKey}`}</Popup>
-                            </Polygon>
-                          )}
+                            {overlayCoords && (
+                              <Polygon positions={overlayCoords} color="blue">
+                                <Popup>{`Overlay for ${neighborhoodKey}`}</Popup>
+                              </Polygon>
+                            )}
 
-                          {Object.entries(neighborhood).map(
-                            ([amenityName, amenityObj]) => {
-                              if (amenityObj.displayType === "Point") {
-                                return (
-                                  <Marker
-                                    key={amenityName}
-                                    position={[
-                                      amenityObj.coordinates[0],
-                                      amenityObj.coordinates[1],
-                                    ]}
-                                  >
-                                    <Popup>{amenityName}</Popup>
-                                  </Marker>
-                                );
-                              } else if (amenityObj.displayType === "Polygon") {
-                                return (
-                                  <Polygon
-                                    key={amenityName}
-                                    positions={amenityObj.coordinates}
-                                    color={
-                                      amenityObj.color ||
-                                      AmenityColor[amenityObj.url] ||
-                                      "green"
-                                    }
-                                  >
-                                    <Popup>{amenityName}</Popup>
-                                  </Polygon>
-                                );
+                            {Object.entries(neighborhood).map(
+                              ([amenityName, amenityObj]) => {
+                                if (amenityObj.displayType === "Point") {
+                                  return (
+                                    <Marker
+                                      key={amenityName}
+                                      position={[
+                                        amenityObj.coordinates[0],
+                                        amenityObj.coordinates[1],
+                                      ]}
+                                    >
+                                      <Popup>{amenityName}</Popup>
+                                    </Marker>
+                                  );
+                                } else if (
+                                  amenityObj.displayType === "Polygon"
+                                ) {
+                                  return (
+                                    <Polygon
+                                      key={amenityName}
+                                      positions={amenityObj.coordinates}
+                                      color={
+                                        amenityObj.color ||
+                                        AmenityColor[amenityObj.url] ||
+                                        "green"
+                                      }
+                                    >
+                                      <Popup>{amenityName}</Popup>
+                                    </Polygon>
+                                  );
+                                }
+                                return null;
                               }
-                              return null;
-                            }
-                          )}
-                        </MapContainer>
+                            )}
+                          </MapContainer>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </Grid>
-        </JoyBox>
+                    );
+                  })
+                )}
+              </div>
+            </Grid>
+          </JoyBox>
+        ) : (
+          <div></div>
+        )}
       </Stack>
     </Container>
   );
