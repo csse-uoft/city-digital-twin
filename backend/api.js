@@ -20,77 +20,92 @@ router.get("/health-check", async (req, res) => {
 
 // returns all cities in the knowledge graph
 router.get("/cities", async (req, res) => {
-  const query = `
-    PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    
-    select ?city where {
-      ?city rdf:type i50872:City.
-    }
-  `;
+  try {
+    const query = `
+      PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      
+      SELECT ?city WHERE {
+        ?city rdf:type i50872:City.
+      }
+    `;
 
-  const stream = await client.query.select(query);
+    const stream = await client.query.select(query);
 
-  var result = [];
-  var totalResults = 0;
-  
-  stream.on('data', row => {
-    Object.entries(row).forEach(([key, value]) => {
-      result.push(value.value);
-      totalResults++;
+    let result = [];
+    let totalResults = 0;
+
+    stream.on('data', row => {
+      Object.entries(row).forEach(([key, value]) => {
+        result.push(value.value);
+        totalResults++;
+      });
     });
-  });
 
-  stream.on('end', () => {
-    res.json({message: "success", cityNames: result, totalResults: totalResults});
-  });
-  
-  stream.on('error', err => {
-    res.status(500).send('Oops, error!');
-  });
+    stream.on('end', () => {
+      res.json({ message: "success", cityNames: result, totalResults: totalResults });
+    });
+
+    stream.on('error', err => {
+      console.error("Stream error:", err);
+      res.status(500).send('Oops, stream error!');
+    });
+
+  } catch (err) {
+    console.error("Query error when fetching all cities:", err);
+    res.status(500).send('Oops, query failed!');
+  }
 });
+
 
 
 //returns all indicators in the knowledge graph
 router.get("/indicators", async (req, res) => {
-  const query = `
-    PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  try {
+    const query = `
+      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-    SELECT DISTINCT ?class
-    FROM NAMED <http://www.ontotext.com/implicit>
-    FROM NAMED <http://www.ontotext.com/explicit>
-    WHERE {
-        ?class rdfs:subClassOf iso21972:Indicator.
-      
-        GRAPH <http://www.ontotext.com/explicit> {  
-        ?instance a ?class;
-        iso21972:value ?measure.  
-        }
-    }
-  `;
+      SELECT DISTINCT ?class
+      FROM NAMED <http://www.ontotext.com/implicit>
+      FROM NAMED <http://www.ontotext.com/explicit>
+      WHERE {
+          ?class rdfs:subClassOf iso21972:Indicator.
+        
+          GRAPH <http://www.ontotext.com/explicit> {  
+            ?instance a ?class;
+                      iso21972:value ?measure.  
+          }
+      }
+    `;
 
-  const stream = await client.query.select(query);
+    const stream = await client.query.select(query);
 
-  var result = [];
-  var totalResults = 0;
+    let result = [];
+    let totalResults = 0;
 
-  stream.on('data', row => {
-    // Version for simply putting each result value into the final array
-    Object.entries(row).forEach(([key, value]) => {
-      result.push(value.value);
-      totalResults++;
+    stream.on('data', row => {
+      Object.entries(row).forEach(([key, value]) => {
+        result.push(value.value);
+        totalResults++;
+      });
     });
-  });
 
-  stream.on('end', () => {
-    res.json({message: "success", indicatorNames: result, totalResults: totalResults});
-  });
-  
-  stream.on('error', err => {
-    res.status(500).send('Oops, error!');
-  });
+    stream.on('end', () => {
+      res.json({ message: "success", indicatorNames: result, totalResults: totalResults });
+    });
+
+    stream.on('error', err => {
+      console.error("Stream error:", err);
+      res.status(500).send("Oops, stream error!");
+    });
+
+  } catch (err) {
+    console.error("Query error when fetching all indicators:", err);
+    res.status(500).send("Oops, query failed!");
+  }
 });
+
 
 
 // Input form: {cityName: "http://ontology.eil.utoronto.ca/5087/2/City#Toronto"}
