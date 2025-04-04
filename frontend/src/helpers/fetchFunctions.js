@@ -474,10 +474,7 @@ export const fetchParkData = async () => {
 };
 
 export const fetchAmenityData = async () => {
-  const response = await axios.post(
-    "http://localhost:3000/api/amenity-score",
-    {}
-  );
+  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {});
   console.log("Return Response", response);
   return response;
 };
