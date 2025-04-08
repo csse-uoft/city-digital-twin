@@ -844,59 +844,6 @@ router.post("/6", async (req, res) => {
 });
 
 
-// Returns metrics describing how easily a park is accessible by all neighbourhoods
-router.post("/park-data", async (req, res) => {
-  
-  try {
-    const query = `
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-      PREFIX osm: <http://ontology.eil.utoronto.ca/OSM#>
-      PREFIX uoft: <http://ontology.eil.utoronto.ca/tove/cacensus#>
-      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-
-      SELECT ?name ?value
-      WHERE {
-        ?neighborhood a toronto:Neighborhood;
-          rdfs:comment ?name.
-
-        ?parkindicator a osm:PercentWalkingDistance400Park;
-          uoft:hasLocation ?neighborhood;
-          iso21972:value ?measure.
-
-        ?measure iso21972:numerical_value ?value.
-      }
-    `;
-
-    // Execute the query
-    const stream = await client.query.select(query);
-
-    // Collect results from the stream
-    const results = [];
-    stream.on('data', row => {
-      results.push({
-        name: row.name.value,
-        value: row.value.value,
-      });
-    });
-
-    // Handle stream end (when all data has been processed)
-    stream.on('end', () => {
-      res.json(results); // Send the collected results as JSON response
-    });
-
-    // Handle errors in the query or stream
-    stream.on('error', err => {
-      console.error('Query error: ', err);
-      res.status(500).send('Error executing query');
-    });
-
-  } catch (err) {
-    console.error('Server error: ', err);
-    res.status(500).send('Internal server error');
-  }
-});
-
 // Return all urls for all amenities
 // Sample output: ["http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#School","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicMiddleSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicPrimarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateMiddleSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivatePrimarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateSecondarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicSecondarySchool","http://ontology.eil.utoronto.ca/CDT#Kindergarten","http://ontology.eil.utoronto.ca/CDT#College","http://ontology.eil.utoronto.ca/CDT#University","http://ontology.eil.utoronto.ca/CDT#Supermarket","http://ontology.eil.utoronto.ca/CDT#Greengrocer","http://ontology.eil.utoronto.ca/CDT#Clinic","http://ontology.eil.utoronto.ca/CDT#DoctorsOffice","http://ontology.eil.utoronto.ca/CDT#Pharmacy","http://schema.org/Hospital","http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#PublicHospital","http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#PrivateHospital"]
 router.get("/all-amenity-URLs", async (req, res) =>{
@@ -1104,10 +1051,11 @@ router.post("/amenity-location-all", async (req, res) => {
 
 });
 
-// Returns metrics describing how easily a park is accessible by all neighbourhoods
+// Returns metrics describing how easily a amenties is accessible by all neighbourhoods
+// NOTE, now only fetch score for neighbourhood for now
 router.post("/amenity-score", async (req, res) => {
-  const location_id = req.body.location_id;
-
+  const location_id = req.body.locationID;
+  console.log(location_id)
   try {
     const query = `
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

@@ -28,7 +28,13 @@ const URI_to_name = (instance_map, uri) => {
   return null; // Return null if no matching URI is found
 };
 
-function formatAmenities(data, locationID) {
+/**
+ * Formats a list of amenity objects into a keyed dictionary by amenity name.
+ * 
+ * If an amenity has no name, it assigns a default name like "No name 1", "No name 2", etc.
+ * The output groups each amenity under its name and includes key properties like coordinates, type, display style, and color.
+ */
+function formatAmenities(data) {
   const result = {};
   let unnamedCount = 0;
 
@@ -62,8 +68,6 @@ const CompleteCommunitiesDashboard = ({
   const [amenityData, setAmenityData] = useState({});
   const [parkPolygons, setParkPolygons] = useState({});
   const [locationIDPolygons, setlocationIDPolygons] = useState({});
-  const [AmenityURLs, setAmenityURLs] = useState([]); // Store fetched Amenity URLs
-  const [AmenityColor, setAmenityColor] = useState({}); // Store URL-color mapping
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -90,12 +94,18 @@ const CompleteCommunitiesDashboard = ({
     console.log("Print Admin Area instance states", adminAreaInstancesState);
 
     const fetchAmenityDataResults = async () => {
+      // update this if we want to query score for \
+      var locationID = ''
+      if (currentAdminType){
+        locationID = currentAdminType.split("#")[1];
+      }
+
       let amenityDataResults = {}; // Store amenity data by area
       try {
         const adminNames = getSelectedAdminInstancesNames(
           adminAreaInstancesState
         );
-        const data = await fetchAmenityData();
+        const data = await fetchAmenityData(locationID);
 
         adminNames.forEach((name) => {
           const amenitiesForArea = data.data.filter((obj) => obj.name === name);
@@ -121,7 +131,7 @@ const CompleteCommunitiesDashboard = ({
     };
 
     const locationIDfetchAndFormatAmenties = async () => {
-      // Initialize an empty object to store all the parks
+      // Initialize an empty object to store all the Amenties
       setLoading(true);
       let newParkPolygons = {};
 
@@ -136,29 +146,29 @@ const CompleteCommunitiesDashboard = ({
             adminAreaTypesState
           );
 
-          // console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
+          // console.log("**** FORMAT FOR Amenties LOCATIONS", rawData)
           const amenityData = rawData[0];
           const locationIDLocationData = rawData[1];
           setlocationIDPolygons(locationIDLocationData);
-          // Format the fetched parks using formatParks
+          // Format the fetched Amenties using formatAmenties
           const formattedAmenities = formatAmenities(amenityData);
-          // console.log("formatParks, ", formattedAmenities)
-          // Add the formatted parks to the newParkPolygons object
+          // console.log("formatAmenties, ", formattedAmenities)
+          // Add the formatted Amenties to the newParkPolygons object
           newParkPolygons[locationID] = formattedAmenities;
         } catch (error) {
           console.error(
-            `Error fetching or formatting parks for ${locationID}:`,
+            `Error fetching or formatting Amenties for ${locationID}:`,
             error
           );
         }
       }
 
-      // Once all parks are fetched and formatted, update the state
+      // Once all Amenties are fetched and formatted, update the state
       setLoading(false); // Data is ready, stop loading
       setParkPolygons(newParkPolygons);
     };
 
-    // Call the function to fetch and format parks
+    // Call the function to fetch and format Amenties
     fetchAmenityDataResults();
     locationIDfetchAndFormatAmenties();
   }, [
@@ -288,7 +298,6 @@ const CompleteCommunitiesDashboard = ({
                                       positions={amenityObj.coordinates}
                                       color={
                                         amenityObj.color ||
-                                        AmenityColor[amenityObj.url] ||
                                         "green"
                                       }
                                     >

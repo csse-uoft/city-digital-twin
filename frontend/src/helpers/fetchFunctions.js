@@ -338,12 +338,17 @@ function mapAreaURLtoName(instanceList, areaURL) {
   return null;
 }
 
-export const fetchParkData = async () => {
-  const response = await axios.post(`${API_BASE_URL}/api/park-data`, {});
-  return response;
-};
 
-export const fetchAmenityData = async () => {
-  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {});
+/**
+ * Fetches amenity score data from the backend API.
+ *
+ * Sends a POST request to the `/api/amenity-score` endpoint.
+ * This endpoint is expected to return a structured response containing
+ * amenity scores for various neighborhoods or regions.
+ *
+ * NOTE, it only fetch score for neighbourhood for now
+ */
+export const fetchAmenityData = async (locationID) => {
+  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {locationID: locationID,});
   return response;
 };
