@@ -34,6 +34,7 @@ const transformDataForRadar = (amenityData) => {
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#a4de6c"]; // Customize as needed
 
 const AmenityRadarChart = ({ amenityData }) => {
+  console.log("Checking amenity data1", amenityData);
   const data = transformDataForRadar(amenityData);
   const neighborhoodNames = Object.keys(amenityData);
 

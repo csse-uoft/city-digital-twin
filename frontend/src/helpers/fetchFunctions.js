@@ -3,17 +3,24 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
+/**
+ * Test the connection to the backend server.
+ *
+ * Sends a GET request to the `/api/health-check` endpoint to verify if the backend is reachable.
+ * Logs the result to the console and returns a boolean if successful, or `null` if the request fails.
+ */
 export const testBackendConnection = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/health-check`);
-
     if (response.data.success) {
       console.log("Backend connection successful");
       return true;
+    }else{
+      return false;
     }
   } catch (error) {
     console.log("Failed to connect to backend:", error);
-    return null;
+    return false;
   }
 };
 
@@ -159,62 +166,36 @@ export const fetchLocations = async (
   }
 };
 
-export const fetchAllAmenity = async (setAmenityURLs, setAmenityColor) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/all-amenity-URLs`);
-    if (response.data.success) {
-      setAmenityURLs(response.data.urls);
-      // Function to generate distinct colors
-      const generateColor = (index) => {
-        const colorPalette = [
-          "#FF5733",
-          "#33FF57",
-          "#3357FF",
-          "#F3FF33",
-          "#FF33A1",
-          "#A133FF",
-          "#33FFF5",
-          "#065535",
-          "#ffc0cb",
-          "#0a75ad",
-          "#ccccff",
-          "#FFA133",
-          "#66FF33",
-          "#FF3366",
-          "#3366FF",
-          "#FF9A33",
-          "#66FF99",
-          "#9966FF",
-          "#ff80ed",
-          "#666666",
-          "#8a2be2",
-          "#f6546a",
-        ];
-
-        // If more colors are needed, cycle through
-        return colorPalette[index % colorPalette.length];
-      };
-
-      const colors = {};
-      response.data.urls.forEach((url, index) => {
-        colors[url] = generateColor(index);
-      });
-      setAmenityColor(colors);
-    }
-  } catch (error) {
-    console.error("GET Error:", error);
-  }
-};
-
+/**
+ * Fetches amenity locations for a given location (neighborhood) and admin area type,
+ * processes their geometries, and returns structured coordinate data.
+ *
+ * This function performs the following:
+ * 1. Sends a POST request to fetch amenities that intersect with the specified location.
+ * 2. Converts WKT coordinates to GeoJSON and flips them (Lon/Lat → Lat/Lon).
+ * 3. Sends additional requests to get admin area instance names and geometry.
+ * 4. Flips and maps those geometries into a dictionary of areaName → { URL, coordinates }.
+ *
+ * @async
+ * @function fetchAmenityLocations
+ * @param {string} location_id - The location/neighborhood identifier (e.g., "neighborhood70").
+ * @param {Object} adminAreaTypesState - The frontend state object holding selected administrative area types and their URLs.
+ * @returns {Promise<[Array<Object>, Object]>} A tuple:
+ *   - `updatedLocationURLs`: Array of amenity objects with name, coordinates, amenityType, color, and geometry type.
+ *   - `NeighborhoodLocationURLs`: Object mapping area instance URIs to flipped coordinate geometries.
+ *
+ * @example
+ * const [amenities, areas] = await fetchAmenityLocations("neighborhood70", adminAreaTypesState);
+ */
 export const fetchAmenityLocations = async (
-  neighborhoodName,
+  locationID,
   adminAreaTypesState
 ) => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/api/amenity-location-all`,
       {
-        neighborhoodName: neighborhoodName,
+        location_id: locationID,
       }
     );
 
@@ -262,7 +243,7 @@ export const fetchAmenityLocations = async (
         displayType: displayT,
       });
     });
-
+    // 2. Retrieve admin area info based on selected area type
     const cityName = "http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto";
 
     const getSelectedURL = (obj) => {
@@ -275,13 +256,15 @@ export const fetchAmenityLocations = async (
 
     const areaTypeURL = getSelectedURL(adminAreaTypesState);
 
+    // Get admin area instance names
     const response1 = await axios.post(`${API_BASE_URL}/api/admin-instances`, {
       cityName: cityName,
       adminType: areaTypeURL,
     });
 
     const areaInstaceList = response1.data["adminAreaInstanceNames"];
-
+    
+    // Get geometry (WKT) of those admin area instances
     const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
       cityName: cityName,
       adminType: areaTypeURL,
@@ -340,119 +323,6 @@ export const fetchAmenityLocations = async (
 
     // console.log("locations", updatedLocationURLs);
   } catch (error) {
-    console.log("eeeeeeeeeeeeeeeeeeeeeeee");
-    console.error("POST Error:", error);
-  }
-};
-
-export const fetchParkLocations = async (neighborhoodName) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/api/park-locations`, {
-      neighborhoodName: neighborhoodName,
-    });
-
-    const updatedLocationURLs = [];
-    console.log("PRINT RAW DATA", response);
-    // this extracts the cooridnates into the updatedLocationURLs variable
-
-    response.data.data.forEach((Instance, index) => {
-      console.log("Inside the loop", Instance);
-      var wkt = new Wkt.Wkt();
-      wkt.read(Instance.coordinates);
-
-      var flipped = wkt.toJson();
-
-      // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
-      // The code requires Lat/Lon, so flip it back.
-
-      if (flipped.type === "Polygon") {
-        flipped.coordinates = flipped.coordinates.map((innerArray) =>
-          innerArray.map((coords) => [coords[1], coords[0]])
-        );
-      } else if (flipped.type === "Point") {
-        flipped.coordinates = [flipped.coordinates[1], flipped.coordinates[0]];
-      } else {
-        // flipped is a MULTIpolygon
-        flipped.coordinates = flipped.coordinates.map((firstInnerArray) =>
-          firstInnerArray.map((secondInnerArray) =>
-            secondInnerArray.map((coords) => [coords[1], coords[0]])
-          )
-        );
-      }
-
-      updatedLocationURLs.push({ name: Instance.name, coords: flipped });
-    });
-
-    const cityName = "http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto";
-    const areaTypeURL =
-      "http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighborhood";
-
-    const response1 = await axios.post(`${API_BASE_URL}/api/admin-instances`, {
-      cityName: cityName,
-      adminType: areaTypeURL,
-    });
-
-    const areaInstaceList = response1.data["adminAreaInstanceNames"];
-
-    const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
-      cityName: cityName,
-      adminType: areaTypeURL,
-    });
-
-    const NeighborhoodLocationURLs = {};
-
-    // this extracts the cooridnates into the updatedLocationURLs variable
-    response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
-      var wkt = new Wkt.Wkt();
-      wkt.read(Instance["areaLocation"]);
-
-      var flipped = wkt.toJson();
-
-      // The coordinates are FLIPPED in the database (Lon/Lat instead of Lat/Lon).
-      // The code requires Lat/Lon, so flip it back.
-
-      if (flipped.type === "Polygon") {
-        flipped.coordinates = flipped.coordinates.map((innerArray) =>
-          innerArray.map((coords) => [coords[1], coords[0]])
-        );
-      } else {
-        // flipped is a MULTIpolygon
-        flipped.coordinates = flipped.coordinates.map((firstInnerArray) =>
-          firstInnerArray.map((secondInnerArray) =>
-            secondInnerArray.map((coords) => [coords[1], coords[0]])
-          )
-        );
-      }
-
-      NeighborhoodLocationURLs[Instance["adminAreaInstance"]] = flipped;
-    });
-
-    const areaNameToCoordsAndURL = {};
-
-    for (const key in NeighborhoodLocationURLs) {
-      const areaName = mapAreaURLtoName(areaInstaceList, key);
-      areaNameToCoordsAndURL[areaName] = {
-        URL: key,
-        coordinates: NeighborhoodLocationURLs[key].coordinates,
-      };
-    }
-
-    return [updatedLocationURLs, NeighborhoodLocationURLs];
-
-    // const areaNameToCoordsAndURL = {};
-
-    // for (const key in updatedLocationURLs) {
-    //   const areaName = mapAreaURLtoName(areaInstaceList, key);
-    //   areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
-    // }
-    // // console.log("areaNameToCoords", areaNameToCoordsAndURL)
-    // dispatchAdminAreaInstances({
-    //   type: "SET_COORDINATES_AND_URLS",
-    //   payload: areaNameToCoordsAndURL
-    // });
-
-    // console.log("locations", updatedLocationURLs);
-  } catch (error) {
     console.error("POST Error:", error);
   }
 };
@@ -475,6 +345,5 @@ export const fetchParkData = async () => {
 
 export const fetchAmenityData = async () => {
   const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {});
-  console.log("Return Response", response);
   return response;
 };

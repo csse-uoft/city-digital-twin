@@ -12,7 +12,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Test if frontend connected with backend
+// Test if backend recieve the call from frontend
 router.get("/health-check", async (req, res) => {
   res.json({success: true, message: "success"});
 });
@@ -56,7 +56,6 @@ router.get("/cities", async (req, res) => {
     res.status(500).send('Oops, query failed!');
   }
 });
-
 
 
 //returns all indicators in the knowledge graph
@@ -105,7 +104,6 @@ router.get("/indicators", async (req, res) => {
     res.status(500).send("Oops, query failed!");
   }
 });
-
 
 
 // Input form: {cityName: "http://ontology.eil.utoronto.ca/5087/2/City#Toronto"}
@@ -899,8 +897,10 @@ router.post("/park-data", async (req, res) => {
   }
 });
 
-
+// Return all urls for all amenities
+// Sample output: ["http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#School","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicMiddleSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicPrimarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateMiddleSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivatePrimarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateSecondarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicSecondarySchool","http://ontology.eil.utoronto.ca/CDT#Kindergarten","http://ontology.eil.utoronto.ca/CDT#College","http://ontology.eil.utoronto.ca/CDT#University","http://ontology.eil.utoronto.ca/CDT#Supermarket","http://ontology.eil.utoronto.ca/CDT#Greengrocer","http://ontology.eil.utoronto.ca/CDT#Clinic","http://ontology.eil.utoronto.ca/CDT#DoctorsOffice","http://ontology.eil.utoronto.ca/CDT#Pharmacy","http://schema.org/Hospital","http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#PublicHospital","http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#PrivateHospital"]
 router.get("/all-amenity-URLs", async (req, res) =>{
+  // Query to use for accessing urls
   const amenityClassesQuery = `
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
@@ -938,7 +938,7 @@ router.get("/all-amenity-URLs", async (req, res) =>{
 
 });
 
-
+// Not used anymore, should remove
 router.post("/park-locations", async (req, res) => {
   const neighborhoodName = req.body.neighborhoodName;
   try {
@@ -1005,10 +1005,14 @@ router.post("/park-locations", async (req, res) => {
   }
 });
 
-
+// Description: Retrieves amenities that intersect with a given neighborhood/location in Toronto.
+// The neighborhood/location is specified by `location_id`, which should match a class name in the ontology (e.g., toronto:neighborhood70).
+// Output: Corresponding visualization and indicator data from connected database
 router.post("/amenity-location-all", async (req, res) => {
-  const neighborhoodName = req.body.neighborhoodName;
+  // Extract location_id from the request body
+  const location_id = req.body.location_id;
 
+  // SPARQL query to retrieve amenities intersecting with the specified location
   const query = `
     PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
@@ -1038,7 +1042,7 @@ router.post("/amenity-location-all", async (req, res) => {
       OPTIONAL {?amenity genprop:hasName ?name}
 
       ?location geo:asWKT ?coordinates.
-      toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
+      toronto:${location_id} iso50871:hasLocation ?neighlocation.
       ?neighlocation geo:asWKT ?neighcoordinates.
       FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
     }
@@ -1102,6 +1106,8 @@ router.post("/amenity-location-all", async (req, res) => {
 
 // Returns metrics describing how easily a park is accessible by all neighbourhoods
 router.post("/amenity-score", async (req, res) => {
+  const location_id = req.body.location_id;
+
   try {
     const query = `
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1158,7 +1164,6 @@ router.post("/amenity-score", async (req, res) => {
 });
 
 
-
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"
 function splitURI(URI) {
@@ -1177,6 +1182,7 @@ function splitURI(URI) {
   return [prefix, suffix];
 }
 
+
 function isURI(URI) {
 
   URI = String(URI);
@@ -1187,6 +1193,7 @@ function isURI(URI) {
 
   return hasHTTP && (hasHashtag || hasSlash);
 }
+
 
 function includesAllInputs(requiredInputs, inputType) {
   if (!Array.isArray(requiredInputs) || typeof inputType !== "string") {

@@ -4,7 +4,6 @@ import { Header } from "./SearchPageComponents/Header";
 import { useState, useEffect } from "react";
 import {
   fetchAmenityLocations,
-  fetchAllAmenity,
   testBackendConnection,
   fetchAmenityData,
 } from "../helpers/fetchFunctions";
@@ -29,7 +28,7 @@ const URI_to_name = (instance_map, uri) => {
   return null; // Return null if no matching URI is found
 };
 
-function formatAmenities(data, neighborhood) {
+function formatAmenities(data, locationID) {
   const result = {};
   let unnamedCount = 0;
 
@@ -62,16 +61,12 @@ const CompleteCommunitiesDashboard = ({
 }) => {
   const [amenityData, setAmenityData] = useState({});
   const [parkPolygons, setParkPolygons] = useState({});
-  const [neighborhoodPolygons, setNeighborhoodPolygons] = useState({});
+  const [locationIDPolygons, setlocationIDPolygons] = useState({});
   const [AmenityURLs, setAmenityURLs] = useState([]); // Store fetched Amenity URLs
   const [AmenityColor, setAmenityColor] = useState({}); // Store URL-color mapping
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUrls = async () => {
-      fetchAllAmenity(setAmenityURLs, setAmenityColor);
-    };
-    fetchUrls();
     const checkBackend = async () => {
       console.log("Checking backend connection...");
       const result = await testBackendConnection();
@@ -125,34 +120,34 @@ const CompleteCommunitiesDashboard = ({
       }
     };
 
-    const fetchAndFormatParks = async () => {
+    const locationIDfetchAndFormatAmenties = async () => {
       // Initialize an empty object to store all the parks
       setLoading(true);
       let newParkPolygons = {};
 
       for (const url of selectedAdminInstancesURLs) {
-        // Extract the neighborhood part from the URL
-        const neighborhood = url.split("#")[1];
+        // Extract the location_id part from the URL
+        const locationID = url.split("#")[1];
 
         try {
-          // Fetch the park locations for the current neighborhood
+          // Fetch the park locations for the current location_id
           const rawData = await fetchAmenityLocations(
-            neighborhood,
+            locationID,
             adminAreaTypesState
           );
 
           // console.log("**** FORMAT FOR PARK LOCATIONS", rawData)
           const amenityData = rawData[0];
-          const neighborhoodLocationData = rawData[1];
-          setNeighborhoodPolygons(neighborhoodLocationData);
+          const locationIDLocationData = rawData[1];
+          setlocationIDPolygons(locationIDLocationData);
           // Format the fetched parks using formatParks
           const formattedAmenities = formatAmenities(amenityData);
           // console.log("formatParks, ", formattedAmenities)
           // Add the formatted parks to the newParkPolygons object
-          newParkPolygons[neighborhood] = formattedAmenities;
+          newParkPolygons[locationID] = formattedAmenities;
         } catch (error) {
           console.error(
-            `Error fetching or formatting parks for ${neighborhood}:`,
+            `Error fetching or formatting parks for ${locationID}:`,
             error
           );
         }
@@ -165,7 +160,7 @@ const CompleteCommunitiesDashboard = ({
 
     // Call the function to fetch and format parks
     fetchAmenityDataResults();
-    fetchAndFormatParks();
+    locationIDfetchAndFormatAmenties();
   }, [
     cityURLs,
     setCityURLs,
@@ -218,7 +213,7 @@ const CompleteCommunitiesDashboard = ({
             </JoyBox>
 
             <AmenityRadarChart amenityData={amenityData} />
-
+            
             <Grid item xs={12} md={6} style={{ marginTop: "8%" }}>
               <div>
                 {loading ? (
@@ -234,17 +229,17 @@ const CompleteCommunitiesDashboard = ({
                     <CircularProgress />
                   </div>
                 ) : (
-                  Object.keys(parkPolygons).map((neighborhoodKey) => {
+                  Object.keys(parkPolygons).map((locationIDKey) => {
                     const baseURI =
                       "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
-                    const fullKey = baseURI + neighborhoodKey;
-                    const neighborhood = parkPolygons[neighborhoodKey];
+                    const fullKey = baseURI + locationIDKey;
+                    const locationID = parkPolygons[locationIDKey];
                     let overlayCoords =
-                      neighborhoodPolygons[fullKey]?.coordinates;
+                      locationIDPolygons[fullKey]?.coordinates;
                     return (
                       <div>
                         <div
-                          key={neighborhoodKey}
+                          key={locationIDKey}
                           style={{
                             marginBottom: "20px",
                             display: "flex",
@@ -266,11 +261,11 @@ const CompleteCommunitiesDashboard = ({
 
                             {overlayCoords && (
                               <Polygon positions={overlayCoords} color="blue">
-                                <Popup>{`Overlay for ${neighborhoodKey}`}</Popup>
+                                <Popup>{`Overlay for ${locationIDKey}`}</Popup>
                               </Polygon>
                             )}
 
-                            {Object.entries(neighborhood).map(
+                            {Object.entries(locationID).map(
                               ([amenityName, amenityObj]) => {
                                 if (amenityObj.displayType === "Point") {
                                   return (
