@@ -1054,9 +1054,10 @@ router.post("/amenity-location-all", async (req, res) => {
 // Returns metrics describing how easily a amenties is accessible by all neighbourhoods
 // NOTE, now only fetch score for neighbourhood for now
 router.post("/amenity-score", async (req, res) => {
-  const location_id = req.body.locationID;
-  console.log(location_id)
+  const adminType = req.body.adminType;
+  console.log(adminType)
   try {
+    // update this query once you know how to query other type of adminType
     const query = `
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>

@@ -97,7 +97,7 @@ const CompleteCommunitiesDashboard = ({
       // update this if we want to query score for \
       var locationID = ''
       if (currentAdminType){
-        locationID = currentAdminType.split("#")[1];
+        adminType = currentAdminType.split("#")[1];
       }
 
       let amenityDataResults = {}; // Store amenity data by area
@@ -105,7 +105,7 @@ const CompleteCommunitiesDashboard = ({
         const adminNames = getSelectedAdminInstancesNames(
           adminAreaInstancesState
         );
-        const data = await fetchAmenityData(locationID);
+        const data = await fetchAmenityData(adminType);
 
         adminNames.forEach((name) => {
           const amenitiesForArea = data.data.filter((obj) => obj.name === name);

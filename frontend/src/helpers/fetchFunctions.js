@@ -348,7 +348,7 @@ function mapAreaURLtoName(instanceList, areaURL) {
  *
  * NOTE, it only fetch score for neighbourhood for now
  */
-export const fetchAmenityData = async (locationID) => {
-  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {locationID: locationID,});
+export const fetchAmenityData = async (adminType) => {
+  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {adminType: adminType,});
   return response;
 };
