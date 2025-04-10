@@ -39,7 +39,7 @@ function formatAmenities(data) {
   let unnamedCount = 0;
 
   data.forEach((amenity) => {
-    // Determine park name
+    // Determine Amenity name
     let name = amenity.name;
     if (!name) {
       unnamedCount += 1;
@@ -66,7 +66,7 @@ const CompleteCommunitiesDashboard = ({
   dispatchAdminAreaInstances,
 }) => {
   const [amenityData, setAmenityData] = useState({});
-  const [parkPolygons, setParkPolygons] = useState({});
+  const [amenityPolygons, setAmenityPolygons] = useState({});
   const [locationIDPolygons, setlocationIDPolygons] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -133,14 +133,14 @@ const CompleteCommunitiesDashboard = ({
     const locationIDfetchAndFormatAmenties = async () => {
       // Initialize an empty object to store all the Amenties
       setLoading(true);
-      let newParkPolygons = {};
+      let newAmenityPolygons = {};
 
       for (const url of selectedAdminInstancesURLs) {
         // Extract the location_id part from the URL
         const locationID = url.split("#")[1];
 
         try {
-          // Fetch the park locations for the current location_id
+          // Fetch the amenity locations for the current location_id
           const rawData = await fetchAmenityLocations(
             locationID,
             adminAreaTypesState
@@ -153,8 +153,8 @@ const CompleteCommunitiesDashboard = ({
           // Format the fetched Amenties using formatAmenties
           const formattedAmenities = formatAmenities(amenityData);
           // console.log("formatAmenties, ", formattedAmenities)
-          // Add the formatted Amenties to the newParkPolygons object
-          newParkPolygons[locationID] = formattedAmenities;
+          // Add the formatted Amenties to the newAmenityPolygons object
+          newAmenityPolygons[locationID] = formattedAmenities;
         } catch (error) {
           console.error(
             `Error fetching or formatting Amenties for ${locationID}:`,
@@ -165,7 +165,7 @@ const CompleteCommunitiesDashboard = ({
 
       // Once all Amenties are fetched and formatted, update the state
       setLoading(false); // Data is ready, stop loading
-      setParkPolygons(newParkPolygons);
+      setAmenityPolygons(newAmenityPolygons);
     };
 
     // Call the function to fetch and format Amenties
@@ -181,9 +181,9 @@ const CompleteCommunitiesDashboard = ({
   ]);
 
   useEffect(() => {
-    // Log the parkPolygons state whenever it changes
-    console.log("Updated park polygons:", parkPolygons);
-  }, [parkPolygons]); // This will run whenever parkPolygons changes
+    // Log the amenityPolygons state whenever it changes
+    console.log("Updated amenity polygons:", amenityPolygons);
+  }, [amenityPolygons]); // This will run whenever amenityPolygons changes
 
   // Main Component for Complete Communities Dashboard Page
   return (
@@ -246,16 +246,13 @@ const CompleteCommunitiesDashboard = ({
                   </div>
                 ) : (
                   // Render maps for each selected location
-                  Object.keys(parkPolygons).map((locationIDKey) => {
-                    const baseURI =
-                      "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+                  Object.keys(amenityPolygons).map((locationIDKey) => {
+                    const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                     const fullKey = baseURI + locationIDKey;
-                    const locationID = parkPolygons[locationIDKey];
-                    let overlayCoords =
-                      locationIDPolygons[fullKey]?.coordinates;
+                    const locationID = amenityPolygons[locationIDKey];
+                    let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                     return (
                       <div>
-
                         {/* Location Title */}
                         <div
                           key={locationIDKey}
