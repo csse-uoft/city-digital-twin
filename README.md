@@ -64,7 +64,7 @@ You can use the provided script to automatically install dependencies and start 
 
 ### Provided Script: `setup.sh`
 
-Step to run backend
+Step to run backend (run backend first)
 
 
 ```bash

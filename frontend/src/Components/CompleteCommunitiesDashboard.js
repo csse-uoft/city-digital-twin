@@ -95,7 +95,7 @@ const CompleteCommunitiesDashboard = ({
 
     const fetchAmenityDataResults = async () => {
       // update this if we want to query score for \
-      var locationID = ''
+      var adminType = ''
       if (currentAdminType){
         adminType = currentAdminType.split("#")[1];
       }
@@ -184,6 +184,8 @@ const CompleteCommunitiesDashboard = ({
     // Log the parkPolygons state whenever it changes
     console.log("Updated park polygons:", parkPolygons);
   }, [parkPolygons]); // This will run whenever parkPolygons changes
+
+  // Main Component for Complete Communities Dashboard Page
   return (
     <Container
       maxWidth="lg"
@@ -191,6 +193,7 @@ const CompleteCommunitiesDashboard = ({
     >
       <Stack spacing={3}>
         <Header pageName="Complete Communities Dashboard" />
+        {/* Component for selecting city and admin area */}
         <LocationSelect
           cityURLs={cityURLs}
           setCityURLs={setCityURLs}
@@ -199,6 +202,7 @@ const CompleteCommunitiesDashboard = ({
           adminAreaInstancesState={adminAreaInstancesState}
           dispatchAdminAreaInstances={dispatchAdminAreaInstances}
         />
+        {/* Only render data section when areas are selected */}
         {selectedAdminInstancesURLs.length > 0 ? (
           <JoyBox sx={{ marginBottom: "50px" }}>
             <JoyBox
@@ -222,8 +226,10 @@ const CompleteCommunitiesDashboard = ({
               </Typography>
             </JoyBox>
 
+            {/* Radar Chart showing amenities data */}
             <AmenityRadarChart amenityData={amenityData} />
             
+            {/* Maps Section */}
             <Grid item xs={12} md={6} style={{ marginTop: "8%" }}>
               <div>
                 {loading ? (
@@ -239,6 +245,7 @@ const CompleteCommunitiesDashboard = ({
                     <CircularProgress />
                   </div>
                 ) : (
+                  // Render maps for each selected location
                   Object.keys(parkPolygons).map((locationIDKey) => {
                     const baseURI =
                       "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
@@ -248,6 +255,8 @@ const CompleteCommunitiesDashboard = ({
                       locationIDPolygons[fullKey]?.coordinates;
                     return (
                       <div>
+
+                        {/* Location Title */}
                         <div
                           key={locationIDKey}
                           style={{
@@ -261,6 +270,8 @@ const CompleteCommunitiesDashboard = ({
                             {URI_to_name(adminAreaInstancesState, fullKey)}
                           </Typography>
                         </div>
+
+                        {/* Map Display */}
                         <div>
                           <MapContainer
                             center={[43.7, -79.42]}
@@ -269,12 +280,14 @@ const CompleteCommunitiesDashboard = ({
                           >
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
+                            {/* Polygon Overlay for Location Boundary */}
                             {overlayCoords && (
                               <Polygon positions={overlayCoords} color="blue">
                                 <Popup>{`Overlay for ${locationIDKey}`}</Popup>
                               </Polygon>
                             )}
 
+                            {/* Render Amenities on the Map */}
                             {Object.entries(locationID).map(
                               ([amenityName, amenityObj]) => {
                                 if (amenityObj.displayType === "Point") {
