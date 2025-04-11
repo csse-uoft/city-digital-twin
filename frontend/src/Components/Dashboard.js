@@ -29,6 +29,7 @@ import {
   fetchAdministration,
   fetchIndicators,
   fetchLocations,
+  testBackendConnection,
 } from "../helpers/fetchFunctions";
 
 import {
@@ -81,6 +82,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
+const API_BASE_URL = process.env.REACT_APP_API_URL ;
+
+console.log(API_BASE_URL)
 
 /*
  * Implements the search page. 
@@ -253,6 +257,14 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
   // Upon initial page load, fetch list of indicators
   useEffect(() => {
     fetchIndicators(setIndicatorURLs);
+    const checkBackend = async () => {
+      console.log("Checking backend connection...");
+      const result = await testBackendConnection();
+      if (!result) {
+        alert("Could not connect to the backend. Please check your connection.");
+      }
+    };
+    checkBackend();
   }, []);
 
 
@@ -442,6 +454,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
       <Stack spacing={3}>
         <Header pageName={"Search Indicators"}/>
 
+        {/* Location and Admin Area Selection */}
         <LocationSelect
 					cityURLs={cityURLs}
 					setCityURLs={setCityURLs}
@@ -449,6 +462,8 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
 					dispatchAdminAreaTypes={dispatchAdminAreaTypes}
 					adminAreaInstancesState={adminAreaInstancesState}
 					dispatchAdminAreaInstances={dispatchAdminAreaInstances}
+          isGeneratingVisualization={visLoading}
+
 				/>
         <JoyBox>
           <JoyBox
@@ -459,6 +474,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
               marginBottom: "20px",
             }}
           >
+            {/* Section Title */}
             <Typography
               variant="h5"
               style={{
@@ -471,6 +487,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
               Indicator Information
             </Typography>
           </JoyBox>
+          {/* User Input Form Section */}
           <JoySheet
             variant="outlined"
             sx={{ p: 2, borderRadius: "sm", paddingBottom: "50px" }}
@@ -495,7 +512,8 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                           <NewDropdown
                             key={`indicator-${index}`}
                             id="indicator-input"
-                            disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
+                            // disabled={getCurrentAdminTypeURL(adminAreaTypesState) === null}
+                            disabled={visLoading || getCurrentAdminTypeURL(adminAreaTypesState) === null}
                             label={`Indicator #${parseInt(index) + 1}`}
                             value={value}
                             options={Object.keys(indicatorURLs)}
@@ -586,6 +604,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
             marginTop: "40px",
           }}
         >
+          {/* Generate Visualization Button */}
           <JoyButton
             disabled={ getCurrentAdminTypeURL(adminAreaTypesState) === null }
             size="lg"
@@ -708,8 +727,10 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                       />
                     </JoyBox>
                   </Grid>
-
+                  
+                  {/* Graph Section */}
                   <Grid sm="12" md="6">
+                    {/* Dropdowns for Graph Types */}
                     <Grid container sx={{ display: "flex", justifyContent: "center", textAlign: 'center', alignItems: 'center'}}>
                       <Grid sm='6' md='12' lg='6'  sx={{maxWidth: '140px', display: 'flex', justifyContent: 'center'}}>
                         <NewDropdownStateValue 
@@ -748,6 +769,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                     </Grid>
 
                     <ResponsiveContainer width="100%" height={300}>
+                      {/* Conditional rendering based on selected graph type */}
                       {graphTypes[indicator] === "Line" ? (
                         // Render LineChart based on graphTypes[indicator]
                         <LineChart
@@ -798,6 +820,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
                     </ResponsiveContainer>
 
                     {/* Graph 3 is a pie chart */}
+                    {/* Pie or Area Chart for Comparison */}
                     <JoyBox sx={{ display: "flex", justifyContent: "center" }}>
                       {comparisonGraphTypes[indicator] === "Pie" ? (
                         <Box
@@ -853,6 +876,7 @@ function Dashboard({cityURLs, setCityURLs, adminAreaTypesState, dispatchAdminAre
               </Stack>
             </Paper>
           ))}
+          {/* Multi-Indicator Comparison Graph */}
           <Grid container spacing={2} sx={{ paddingTop: "150px"}}>
             <Grid item xs={12} md={12} lg={3}>
               <JoyBox sx={{paddingTop: '15%', display: 'flex', justifyContent: 'center'}} key={selectedIndicators}>

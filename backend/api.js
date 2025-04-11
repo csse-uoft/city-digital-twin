@@ -12,78 +12,97 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Test if backend recieve the call from frontend
+router.get("/health-check", async (req, res) => {
+  res.json({success: true, message: "success"});
+});
+
+
 // returns all cities in the knowledge graph
 router.get("/cities", async (req, res) => {
-  const query = `
-    PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    
-    select ?city where {
-      ?city rdf:type i50872:City.
-    }
-  `;
+  try {
+    const query = `
+      PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      
+      SELECT ?city WHERE {
+        ?city rdf:type i50872:City.
+      }
+    `;
 
-  const stream = await client.query.select(query);
+    const stream = await client.query.select(query);
 
-  var result = [];
-  var totalResults = 0;
-  
-  stream.on('data', row => {
-    Object.entries(row).forEach(([key, value]) => {
-      result.push(value.value);
-      totalResults++;
+    let result = [];
+    let totalResults = 0;
+
+    stream.on('data', row => {
+      Object.entries(row).forEach(([key, value]) => {
+        result.push(value.value);
+        totalResults++;
+      });
     });
-  });
 
-  stream.on('end', () => {
-    res.json({message: "success", cityNames: result, totalResults: totalResults});
-  });
-  
-  stream.on('error', err => {
-    res.status(500).send('Oops, error!');
-  });
+    stream.on('end', () => {
+      res.json({ message: "success", cityNames: result, totalResults: totalResults });
+    });
+
+    stream.on('error', err => {
+      console.error("Stream error:", err);
+      res.status(500).send('Oops, stream error!');
+    });
+
+  } catch (err) {
+    console.error("Query error when fetching all cities:", err);
+    res.status(500).send('Oops, query failed!');
+  }
 });
 
 
 //returns all indicators in the knowledge graph
 router.get("/indicators", async (req, res) => {
-  const query = `
-    PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  try {
+    const query = `
+      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-    SELECT DISTINCT ?class
-    FROM NAMED <http://www.ontotext.com/implicit>
-    FROM NAMED <http://www.ontotext.com/explicit>
-    WHERE {
-        ?class rdfs:subClassOf iso21972:Indicator.
-      
-        GRAPH <http://www.ontotext.com/explicit> {  
-        ?instance a ?class;
-        iso21972:value ?measure.  
-        }
-    }
-  `;
+      SELECT DISTINCT ?class
+      FROM NAMED <http://www.ontotext.com/implicit>
+      FROM NAMED <http://www.ontotext.com/explicit>
+      WHERE {
+          ?class rdfs:subClassOf iso21972:Indicator.
+        
+          GRAPH <http://www.ontotext.com/explicit> {  
+            ?instance a ?class;
+                      iso21972:value ?measure.  
+          }
+      }
+    `;
 
-  const stream = await client.query.select(query);
+    const stream = await client.query.select(query);
 
-  var result = [];
-  var totalResults = 0;
+    let result = [];
+    let totalResults = 0;
 
-  stream.on('data', row => {
-    // Version for simply putting each result value into the final array
-    Object.entries(row).forEach(([key, value]) => {
-      result.push(value.value);
-      totalResults++;
+    stream.on('data', row => {
+      Object.entries(row).forEach(([key, value]) => {
+        result.push(value.value);
+        totalResults++;
+      });
     });
-  });
 
-  stream.on('end', () => {
-    res.json({message: "success", indicatorNames: result, totalResults: totalResults});
-  });
-  
-  stream.on('error', err => {
-    res.status(500).send('Oops, error!');
-  });
+    stream.on('end', () => {
+      res.json({ message: "success", indicatorNames: result, totalResults: totalResults });
+    });
+
+    stream.on('error', err => {
+      console.error("Stream error:", err);
+      res.status(500).send("Oops, stream error!");
+    });
+
+  } catch (err) {
+    console.error("Query error when fetching all indicators:", err);
+    res.status(500).send("Oops, query failed!");
+  }
 });
 
 
@@ -825,61 +844,10 @@ router.post("/6", async (req, res) => {
 });
 
 
-// Returns metrics describing how easily a park is accessible by all neighbourhoods
-router.post("/park-data", async (req, res) => {
-  
-  try {
-    const query = `
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-      PREFIX osm: <http://ontology.eil.utoronto.ca/OSM#>
-      PREFIX uoft: <http://ontology.eil.utoronto.ca/tove/cacensus#>
-      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-
-      SELECT ?name ?value
-      WHERE {
-        ?neighborhood a toronto:Neighborhood;
-          rdfs:comment ?name.
-
-        ?parkindicator a osm:PercentWalkingDistance400Park;
-          uoft:hasLocation ?neighborhood;
-          iso21972:value ?measure.
-
-        ?measure iso21972:numerical_value ?value.
-      }
-    `;
-
-    // Execute the query
-    const stream = await client.query.select(query);
-
-    // Collect results from the stream
-    const results = [];
-    stream.on('data', row => {
-      results.push({
-        name: row.name.value,
-        value: row.value.value,
-      });
-    });
-
-    // Handle stream end (when all data has been processed)
-    stream.on('end', () => {
-      res.json(results); // Send the collected results as JSON response
-    });
-
-    // Handle errors in the query or stream
-    stream.on('error', err => {
-      console.error('Query error: ', err);
-      res.status(500).send('Error executing query');
-    });
-
-  } catch (err) {
-    console.error('Server error: ', err);
-    res.status(500).send('Internal server error');
-  }
-});
-
-
+// Return all urls for all amenities
+// Sample output: ["http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#School","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicMiddleSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicPrimarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateMiddleSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivatePrimarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PrivateSecondarySchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicSchool","http://ontology.eil.utoronto.ca/GCI/Education/GCI-Education.owl#PublicSecondarySchool","http://ontology.eil.utoronto.ca/CDT#Kindergarten","http://ontology.eil.utoronto.ca/CDT#College","http://ontology.eil.utoronto.ca/CDT#University","http://ontology.eil.utoronto.ca/CDT#Supermarket","http://ontology.eil.utoronto.ca/CDT#Greengrocer","http://ontology.eil.utoronto.ca/CDT#Clinic","http://ontology.eil.utoronto.ca/CDT#DoctorsOffice","http://ontology.eil.utoronto.ca/CDT#Pharmacy","http://schema.org/Hospital","http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#PublicHospital","http://ontology.eil.utoronto.ca/GCI/Health/GCI-Health.owl#PrivateHospital"]
 router.get("/all-amenity-URLs", async (req, res) =>{
+  // Query to use for accessing urls
   const amenityClassesQuery = `
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
@@ -917,6 +885,7 @@ router.get("/all-amenity-URLs", async (req, res) =>{
 
 });
 
+// Not used anymore, should remove
 router.post("/park-locations", async (req, res) => {
   const neighborhoodName = req.body.neighborhoodName;
   try {
@@ -983,10 +952,14 @@ router.post("/park-locations", async (req, res) => {
   }
 });
 
-
+// Description: Retrieves amenities that intersect with a given neighborhood/location in Toronto.
+// The neighborhood/location is specified by `location_id`, which should match a class name in the ontology (e.g., toronto:neighborhood70).
+// Output: Corresponding visualization and indicator data from connected database
 router.post("/amenity-location-all", async (req, res) => {
-  const neighborhoodName = req.body.neighborhoodName;
+  // Extract location_id from the request body
+  const location_id = req.body.location_id;
 
+  // SPARQL query to retrieve amenities intersecting with the specified location
   const query = `
     PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
@@ -996,23 +969,29 @@ router.post("/amenity-location-all", async (req, res) => {
     PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
     PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 
-    SELECT ?type ?amenity ?id ?name ?coordinates
+    SELECT ?type ?color ?amenity ?id ?name ?coordinates
 
     WHERE {
-    ?amenity a cdt:CompleteCommunityAmenity;
-    cdt:osmID ?id;
-    loc:hasLocation ?location.
+      ?amenity a cdt:CompleteCommunityAmenity;
+      cdt:osmID ?id;
+      loc:hasLocation ?location.
 
-    GRAPH <http://www.ontotext.com/explicit> {  
-    ?amenity a ?type;
-    }    
+      GRAPH <http://www.ontotext.com/explicit> {  
+        ?amenity a ?type;
+      }    
 
-    OPTIONAL {?amenity genprop:hasName ?name}
+      OPTIONAL {
+          GRAPH <http://www.ontotext.com/explicit> {
+              ?type cdt:displayColor ?color
+          }
+      }
+              
+      OPTIONAL {?amenity genprop:hasName ?name}
 
-    ?location geo:asWKT ?coordinates.
-              toronto:${neighborhoodName} iso50871:hasLocation ?neighlocation.
-              ?neighlocation geo:asWKT ?neighcoordinates.
-              FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
+      ?location geo:asWKT ?coordinates.
+      toronto:${location_id} iso50871:hasLocation ?neighlocation.
+      ?neighlocation geo:asWKT ?neighcoordinates.
+      FILTER(geof:sfIntersects(?coordinates, ?neighcoordinates))
     }
   `
   try {
@@ -1049,7 +1028,8 @@ router.post("/amenity-location-all", async (req, res) => {
           type: binding.type ? binding.type.value : null,
           amenityType: amenity_tp,
           name: binding.name ? binding.name.value : null,
-          coordinates: binding.coordinates ? binding.coordinates.value : null
+          coordinates: binding.coordinates ? binding.coordinates.value : null,
+          color: binding.color ? binding.color.value : null
         };
       });
 
@@ -1071,6 +1051,67 @@ router.post("/amenity-location-all", async (req, res) => {
 
 });
 
+// Returns metrics describing how easily a amenties is accessible by all neighbourhoods
+// NOTE, now only fetch score for neighbourhood for now
+router.post("/amenity-score", async (req, res) => {
+  const adminType = req.body.adminType;
+  console.log(adminType)
+  try {
+    // update this query once you know how to query other type of adminType
+    const query = `
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT#>
+      PREFIX uoft: <http://ontology.eil.utoronto.ca/tove/cacensus#>
+      PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+
+      SELECT ?type ?name ?value
+
+      WHERE{
+          ?neighbourhood a toronto:Neighborhood;
+          rdfs:comment ?name.
+
+          ?indicator a cdt:PercentWalkingDistance;
+          uoft:hasLocation ?neighbourhood;
+        iso21972:value ?measure.
+        
+          GRAPH <http://www.ontotext.com/explicit> {  
+        ?indicator a ?type;
+        }    
+        
+        ?measure iso21972:numerical_value ?value.
+      }
+    `;
+
+    // Execute the query
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    const results = [];
+    stream.on("data", (row) => {
+      results.push({
+        type: row.type.value,
+        name: row.name.value,
+        value: row.value.value,
+      });
+    });
+
+    // Handle stream end (when all data has been processed)
+    stream.on("end", () => {
+      res.json(results); // Send the collected results as JSON response
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
 
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"
@@ -1090,6 +1131,7 @@ function splitURI(URI) {
   return [prefix, suffix];
 }
 
+
 function isURI(URI) {
 
   URI = String(URI);
@@ -1100,6 +1142,7 @@ function isURI(URI) {
 
   return hasHTTP && (hasHashtag || hasSlash);
 }
+
 
 function includesAllInputs(requiredInputs, inputType) {
   if (!Array.isArray(requiredInputs) || typeof inputType !== "string") {
