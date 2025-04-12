@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  graphdb:
+    image: ontotext/graphdb:10.8.4
+    ports:
+      - "7200:7200"
+      - "7300:7300"
+    volumes:
+      - /mnt/graphdb-data/conf:/opt/graphdb/dist/conf
+      - /mnt/graphdb-data/data:/opt/graphdb/dist/data
+      - /mnt/graphdb-data/work:/opt/graphdb/dist/work
+      - /mnt/graphdb-data/logs:/opt/graphdb/dist/logs
+    environment:
+      - TZ=America/New_York
+      - GDB_HEAP_SIZE=16G
+    entrypoint: /opt/graphdb/dist/bin/graphdb -XX:MaxDirectMemorySize=16G
+    restart: always
+    logging:
+      options:
+        max-size: "5m"
+        max-file: "3"
