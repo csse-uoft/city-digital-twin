@@ -22,29 +22,29 @@ REMOTE_HOST="ec2-3-97-59-180.ca-central-1.compute.amazonaws.com"
 REMOTE_FOLDER="/root/graphdb-data"
 
 # Local directory to copy to
-LOCAL_FOLDER="/mnt/graphdb-data"
+LOCAL_FOLDER="$(pwd)"
 
 # Path to Docker Compose file
 DOCKER_COMPOSE_FILE="./docker-compose.yml"
 
-###############################################################################
-# Step 1: Check and clone graphdb-data
-###############################################################################
+# ###############################################################################
+# # Step 1: Check and clone graphdb-data
+# ###############################################################################
 
-if [ -d "${LOCAL_FOLDER}" ]; then
-    echo "❌ Local folder '${LOCAL_FOLDER}' already exists. Aborting to avoid overwriting existing data."
-    exit 1
-fi
+# if [ -d "${LOCAL_FOLDER}" ]; then
+#     echo "❌ Local folder '${LOCAL_FOLDER}' already exists. Aborting to avoid overwriting existing data."
+#     exit 1
+# fi
 
-echo "📦 Cloning graphdb from ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER} to ${LOCAL_FOLDER}..."
+# echo "📦 Cloning graphdb from ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER} to ${LOCAL_FOLDER}..."
 
-rsync -avh -P --rsh="ssh -p${SSH_PORT} -i ${KEY_FILE}" \
-    "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER}" "${LOCAL_FOLDER}"
+# rsync -avh -P --rsh="ssh -p${SSH_PORT} -i ${KEY_FILE}" \
+#     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER}" "${LOCAL_FOLDER}"
 
-if [ $? -ne 0 ]; then
-    echo "❌ Error during rsync."
-    exit 1
-fi
+# if [ $? -ne 0 ]; then
+#     echo "❌ Error during rsync."
+#     exit 1
+# fi
 
 echo "✅ Graphdb cloned successfully."
 
@@ -70,16 +70,16 @@ sed -i "s|.*:/opt/graphdb/dist/logs|      - ${ESCAPED_LOCAL_FOLDER}/logs:/opt/gr
 
 echo "✅ Volume paths updated in docker-compose.yml."
 
-###############################################################################
-# Step 3: Start Docker Compose
-###############################################################################
+# ###############################################################################
+# # Step 3: Start Docker Compose
+# ###############################################################################
 
-echo "🚀 Starting GraphDB service with Docker Compose..."
-sudo docker compose up -d
+# echo "🚀 Starting GraphDB service with Docker Compose..."
+# sudo docker compose up -d
 
-if [ $? -eq 0 ]; then
-    echo "✅ GraphDB service is now running."
-else
-    echo "❌ Failed to start GraphDB service."
-    exit 1
-fi
+# if [ $? -eq 0 ]; then
+#     echo "✅ GraphDB service is now running."
+# else
+#     echo "❌ Failed to start GraphDB service."
+#     exit 1
+# fi
