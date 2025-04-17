@@ -30,7 +30,7 @@ const URI_to_name = (instance_map, uri) => {
 
 /**
  * Formats a list of amenity objects into a keyed dictionary by amenity name.
- * 
+ *
  * If an amenity has no name, it assigns a default name like "No name 1", "No name 2", etc.
  * The output groups each amenity under its name and includes key properties like coordinates, type, display style, and color.
  */
@@ -95,8 +95,8 @@ const CompleteCommunitiesDashboard = ({
 
     const fetchAmenityDataResults = async () => {
       // update this if we want to query score for \
-      var adminType = ''
-      if (currentAdminType){
+      var adminType = "";
+      if (currentAdminType) {
         adminType = currentAdminType.split("#")[1];
       }
 
@@ -109,10 +109,9 @@ const CompleteCommunitiesDashboard = ({
 
         adminNames.forEach((name) => {
           const amenitiesForArea = data.data.filter((obj) => obj.name === name);
-          console.log("Testing, testing 1", amenitiesForArea);
+
           if (amenitiesForArea.length > 0) {
             amenitiesForArea.forEach(({ type, value }) => {
-              console.log("Testing, testing", type);
               const amenityType = type.split("#").pop();
 
               if (!amenityDataResults[name]) {
@@ -123,7 +122,7 @@ const CompleteCommunitiesDashboard = ({
             });
           }
         });
-        console.log("Amenity data", amenityDataResults);
+
         setAmenityData(amenityDataResults);
       } catch (error) {
         console.error("Error fetching amenity data:", error);
@@ -146,13 +145,12 @@ const CompleteCommunitiesDashboard = ({
             adminAreaTypesState
           );
 
-          // console.log("**** FORMAT FOR Amenties LOCATIONS", rawData)
           const amenityData = rawData[0];
           const locationIDLocationData = rawData[1];
           setlocationIDPolygons(locationIDLocationData);
           // Format the fetched Amenties using formatAmenties
           const formattedAmenities = formatAmenities(amenityData);
-          // console.log("formatAmenties, ", formattedAmenities)
+
           // Add the formatted Amenties to the newAmenityPolygons object
           newAmenityPolygons[locationID] = formattedAmenities;
         } catch (error) {
@@ -179,11 +177,6 @@ const CompleteCommunitiesDashboard = ({
     adminAreaInstancesState,
     dispatchAdminAreaInstances,
   ]);
-
-  useEffect(() => {
-    // Log the amenityPolygons state whenever it changes
-    console.log("Updated amenity polygons:", amenityPolygons);
-  }, [amenityPolygons]); // This will run whenever amenityPolygons changes
 
   // Main Component for Complete Communities Dashboard Page
   return (
@@ -228,7 +221,7 @@ const CompleteCommunitiesDashboard = ({
 
             {/* Radar Chart showing amenities data */}
             <AmenityRadarChart amenityData={amenityData} />
-            
+
             {/* Maps Section */}
             <Grid item xs={12} md={6} style={{ marginTop: "8%" }}>
               <div>
@@ -247,10 +240,12 @@ const CompleteCommunitiesDashboard = ({
                 ) : (
                   // Render maps for each selected location
                   Object.keys(amenityPolygons).map((locationIDKey) => {
-                    const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+                    const baseURI =
+                      "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                     const fullKey = baseURI + locationIDKey;
                     const locationID = amenityPolygons[locationIDKey];
-                    let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
+                    let overlayCoords =
+                      locationIDPolygons[fullKey]?.coordinates;
                     return (
                       <div>
                         {/* Location Title */}
@@ -306,10 +301,7 @@ const CompleteCommunitiesDashboard = ({
                                     <Polygon
                                       key={amenityName}
                                       positions={amenityObj.coordinates}
-                                      color={
-                                        amenityObj.color ||
-                                        "green"
-                                      }
+                                      color={amenityObj.color || "green"}
                                     >
                                       <Popup>{amenityName}</Popup>
                                     </Polygon>

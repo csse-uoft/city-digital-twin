@@ -18,7 +18,7 @@ export default function FAQ() {
   const categoryLogos = {
     "Canadian Urban Data Catalogue": dataLogo,
     "City Digital Twin Project": repositoryLogo,
-    "Jobs": jobLogo,
+    Jobs: jobLogo,
     "Contact Us": applicationLogo,
     "How to use the dashboard": dashboard,
     "General Questions": generalLogo,
@@ -42,21 +42,18 @@ export default function FAQ() {
     return acc;
   }, {});
 
-  faqItems.forEach(item => {
+  faqItems.forEach((item) => {
     const category = predefinedCategories.includes(item.category)
       ? item.category
       : "General Questions";
     categorizedFaqItems[category].push(item);
   });
 
-  useEffect(() => {
-    if (selectedCategory) {
-      console.log("Selected Category:", selectedCategory);
-    }
-  }, [selectedCategory]);
-
   return (
-    <Container maxWidth="lg" sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}>
+    <Container
+      maxWidth="lg"
+      sx={{ marginTop: { xs: "100px", md: "30px" }, paddingBottom: "100px" }}
+    >
       <Stack spacing={5}>
         <Typography
           variant="h4"
@@ -74,7 +71,14 @@ export default function FAQ() {
 
         {/* Display list of categories if no category is selected */}
         {!selectedCategory ? (
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
             {predefinedCategories.map((category, index) => (
               <Button
                 key={index}
@@ -88,11 +92,11 @@ export default function FAQ() {
                   fontSize: "16px",
                   backgroundColor: "#FBFCFE",
                   color: "#171a1c",
-                  textTransform: "none", 
+                  textTransform: "none",
                   width: "40%",
                   border: "1px solid black",
-                  '&:hover': {
-                    backgroundColor: "#f5f5f5"
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
                   },
                 }}
                 onClick={() => setSelectedCategory(category)}
@@ -106,8 +110,8 @@ export default function FAQ() {
                     width: 30,
                     height: 30,
                     marginRight: "15px",
-                    borderRadius: "4px"
-                  }} 
+                    borderRadius: "4px",
+                  }}
                 />
                 {category}
               </Button>
@@ -115,13 +119,15 @@ export default function FAQ() {
           </Box>
         ) : (
           // Display FAQs for the selected category
-          <AccordionGroup sx={{ 
-            // maxWidth: "80%", // Adjust as needed
-            margin: "0 auto", // Centers the element horizontally
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            }}>
+          <AccordionGroup
+            sx={{
+              // maxWidth: "80%", // Adjust as needed
+              margin: "0 auto", // Centers the element horizontally
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             <Button
               variant="contained"
               onClick={() => setSelectedCategory(null)}
@@ -133,15 +139,19 @@ export default function FAQ() {
                 fontSize: "18px",
                 fontWeight: "bold",
                 padding: "10px 20px",
-                '&:hover': {
-                  backgroundColor: "#f5f5f5" // Light gray on hover
+                "&:hover": {
+                  backgroundColor: "#f5f5f5", // Light gray on hover
                 },
               }}
             >
               Back to Categories
             </Button>
             {categorizedFaqItems[selectedCategory].map((item, index) => (
-              <FAQQuestion key={index} question={item.question} answer={item.answer} />
+              <FAQQuestion
+                key={index}
+                question={item.question}
+                answer={item.answer}
+              />
             ))}
           </AccordionGroup>
         )}

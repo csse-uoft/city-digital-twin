@@ -26,7 +26,7 @@ export const testBackendConnection = async () => {
 
 export const fetchCities = async (setCityURLs) => {
   const response = await axios.get(`${API_BASE_URL}/api/cities`);
-  // console.log("City Response", response.data)
+
   response.data.cityNames.forEach((URL, index) => {
     const [, cityName] = URL.split("#");
 
@@ -48,14 +48,12 @@ export const fetchAdministration = async (
         cityName: cityURLs[city],
       });
 
-      // setAdminURLs({ currCity: city });
       dispatchAdminAreaTypes({
         type: "SET_CURRENT_CITY",
         payload: city,
       });
       const adminAreaTypeURLs = {};
 
-      // console.log("admin areas", response.data.adminAreaTypeNames);
       response.data.adminAreaTypeNames.forEach((URL, index) => {
         const [, adminName] = URL.split("#");
 
@@ -114,7 +112,6 @@ export const fetchLocations = async (
         cityName: cityURLs[adminAreaTypesState["currCity"]],
         adminType: adminAreaTypesState[admin].URL,
       });
-      console.log("Raw locations", response2);
 
       const updatedLocationURLs = {};
 
@@ -153,13 +150,11 @@ export const fetchLocations = async (
           coordinates: updatedLocationURLs[key].coordinates,
         };
       }
-      // console.log("areaNameToCoords", areaNameToCoordsAndURL)
+
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
         payload: areaNameToCoordsAndURL,
       });
-
-      // console.log("locations", updatedLocationURLs);
     } catch (error) {
       console.error("POST Error:", error);
     }
@@ -200,7 +195,7 @@ export const fetchAmenityLocations = async (
     );
 
     const updatedLocationURLs = [];
-    // console.log("** ---> PRINT RAW DATA DATA", response.data.data)
+
     // this extracts the cooridnates into the updatedLocationURLs variable
 
     response.data.data.forEach((Instance, index) => {
@@ -228,10 +223,6 @@ export const fetchAmenityLocations = async (
             secondInnerArray.map((coords) => [coords[1], coords[0]])
           )
         );
-      } else {
-        console.log("Never seen this type before");
-        console.log("Inside the loop", Instance);
-        console.log(flipped.type);
       }
 
       updatedLocationURLs.push({
@@ -269,7 +260,6 @@ export const fetchAmenityLocations = async (
       cityName: cityName,
       adminType: areaTypeURL,
     });
-    console.log("areaTypeURL", areaTypeURL);
     const NeighborhoodLocationURLs = {};
 
     // this extracts the cooridnates into the updatedLocationURLs variable
@@ -308,20 +298,6 @@ export const fetchAmenityLocations = async (
       };
     }
     return [updatedLocationURLs, NeighborhoodLocationURLs];
-
-    // const areaNameToCoordsAndURL = {};
-
-    // for (const key in updatedLocationURLs) {
-    //   const areaName = mapAreaURLtoName(areaInstaceList, key);
-    //   areaNameToCoordsAndURL[areaName] = { URL: key, coordinates: updatedLocationURLs[key].coordinates };
-    // }
-    // // console.log("areaNameToCoords", areaNameToCoordsAndURL)
-    // dispatchAdminAreaInstances({
-    //   type: "SET_COORDINATES_AND_URLS",
-    //   payload: areaNameToCoordsAndURL
-    // });
-
-    // console.log("locations", updatedLocationURLs);
   } catch (error) {
     console.error("POST Error:", error);
   }
@@ -331,7 +307,6 @@ export const fetchAmenityLocations = async (
 function mapAreaURLtoName(instanceList, areaURL) {
   for (const instance of instanceList) {
     if (instance.adminAreaInstance === areaURL) {
-      // console.log("instance.areaName", instance.areaName)
       return instance.areaName;
     }
   }
@@ -351,5 +326,6 @@ export const fetchAmenityData = async (adminType) => {
   const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {
     adminType: adminType,
   });
+
   return response;
 };

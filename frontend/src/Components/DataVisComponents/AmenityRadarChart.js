@@ -10,7 +10,6 @@ import {
 } from "recharts";
 
 const transformDataForRadar = (amenityData) => {
-  console.log("Checking amenity data", amenityData);
   const amenityTypes = new Set();
 
   // Get all possible amenity types across neighborhoods
@@ -22,7 +21,6 @@ const transformDataForRadar = (amenityData) => {
   const radarData = [...amenityTypes].map((type) => {
     const entry = { amenity: type };
     Object.entries(amenityData).forEach(([neighborhood, amenities]) => {
-      console.log("ERROR HERE", amenities[type]);
       entry[neighborhood] = parseFloat(amenities[type]) || 0;
     });
     return entry;
@@ -34,7 +32,6 @@ const transformDataForRadar = (amenityData) => {
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#a4de6c"]; // Customize as needed
 
 const AmenityRadarChart = ({ amenityData }) => {
-  console.log("Checking amenity data1", amenityData);
   const data = transformDataForRadar(amenityData);
   const neighborhoodNames = Object.keys(amenityData);
 

@@ -1,23 +1,32 @@
 import axios from "axios";
-import { getCurrentAdminTypeURL, getSelectedAdminInstancesNames, getSelectedAdminInstancesURLs } from "./reducerHelpers.js";
+import {
+  getCurrentAdminTypeURL,
+  getSelectedAdminInstancesNames,
+  getSelectedAdminInstancesURLs,
+} from "./reducerHelpers.js";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ;
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
-
-export const handleDeleteIndicator = (years, selectedIndicators, setYears, setSelectedIndicators, setCurrentSelectedMultiIndicators) => {
+export const handleDeleteIndicator = (
+  years,
+  selectedIndicators,
+  setYears,
+  setSelectedIndicators,
+  setCurrentSelectedMultiIndicators
+) => {
   var tempIndicator = { ...selectedIndicators }; // Create a shallow copy of the selectedIndicators object
-  var tempYears = [...years]
+  var tempYears = [...years];
   var len = Object.keys(tempIndicator).length;
-  
+
   if (len > 1) {
     delete tempIndicator[len - 1]; // Delete the last key-value pair
-    tempYears.pop()
+    tempYears.pop();
   }
 
   setYears(tempYears);
   setSelectedIndicators(tempIndicator); // Set the state with the new object
   setCurrentSelectedMultiIndicators([]);
-}
+};
 
 export const handleSum = (indicator, chartData) => {
   let data = JSON.parse(JSON.stringify(chartData[indicator]));
@@ -77,8 +86,6 @@ export const handleAddIndicator = (
 
   const newSelectedIndicators = { ...selectedIndicators, [newId]: newValue };
   setSelectedIndicators(newSelectedIndicators);
-
-  console.log("add indicator:", newSelectedIndicators);
 };
 
 export const handleAddYears = (years, setYears) => {
@@ -123,151 +130,6 @@ export const handleUpdateIndicators = (id, value, setSelectedIndicators) => {
   }));
 };
 
-// old handleGenerateVisualization method
-// export const handleGenerateVisualization = async (
-//   years,
-//   cityURLs,
-//   adminAreaTypesState,
-//   indicatorURLs,
-//   selectedIndicators,
-//   adminAreaInstancesState,
-//   showVisError,
-//   setMapPolygons,
-//   setShowVisError,
-//   setIndicatorData,
-//   setBeginGeneration,
-//   setShowingVisualization,
-//   setVisLoading
-// ) => {
-//   const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
-//   const selectedAdminInstancesURLs = getSelectedAdminInstancesURLs(adminAreaInstancesState);
-
-//   const checkIfInputsFilled = () => {
-//     return (
-//       typeof adminAreaTypesState["currCity"] !== "undefined" &&
-//       typeof currentAdminType === "string" &&
-//       currentAdminType !== "" &&
-//       selectedAdminInstancesURLs.every((instance) => {
-//         return typeof instance === "string" && instance !== "";
-//       }) &&
-//       Object.keys(selectedIndicators).every((index) => {
-//         return selectedIndicators[index] !== "";
-//       }) &&
-//       years.every((item) => {
-//         return item.value1 > 0 && item.value2 > 0;
-//       })
-//     );
-//   };
-//   setVisLoading(true);
-//   setMapPolygons([]);
-
-//   const fetchData = async () => {
-//     const promises = Object.keys(selectedIndicators).map(async (index) => {
-//       const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
-//         cityName: cityURLs[adminAreaTypesState["currCity"]],
-//         adminType: currentAdminType,
-//         adminInstance: selectedAdminInstancesURLs,
-//         indicatorName: indicatorURLs[selectedIndicators[index]],
-//         startTime: years[parseInt(index)].value1,
-//         endTime: years[parseInt(index)].value2,
-//       });
-
-//       const unitType = await axios.post(`${API_BASE_URL}/api/5`, {
-//         subject: indicatorURLs[selectedIndicators[index]],
-//         predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit",
-//       });
-
-//       if (unitType.data["propertyValue"].length === 0) {
-//         unitType.data["propertyValue"].push("NONE");
-//       }
-
-//       console.log(
-//         "final data",
-//         index,
-//         unitType.data["propertyValue"],
-//         response.data["indicatorDataValues"]
-//       );
-
-//       return {
-//         indicator: indicatorURLs[selectedIndicators[index]],
-//         data: response.data["indicatorDataValues"],
-//         unit: unitType.data["propertyValue"],
-//       };
-//     });
-
-//     const results = await Promise.all(promises);
-
-//     const newData = results.reduce((acc, { indicator, data, unit }) => {
-//       acc[indicator] = { data, unit };
-//       return acc;
-//     }, {});
-
-//     setIndicatorData((prevData) => ({
-//       ...prevData,
-//       ...newData,
-//     }));
-//   };
-
-//   if (checkIfInputsFilled()) {
-//     if (showVisError) {
-//       setShowVisError(false);
-//     }
-
-//     setIndicatorData({});
-
-//     try {
-//       // await Promise.all(
-//       //   Object.keys(selectedIndicators).map(async (index) => {
-//       //     const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
-//       //       cityName: cityURLs[adminURLs["currCity"]],
-//       //       adminType: currentAdminType,
-//       //       adminInstance: currentAdminInstances,
-//       //       indicatorName: indicatorURLs[selectedIndicators[index]],
-//       //       startTime: years[parseInt(index)].value1,
-//       //       endTime: years[parseInt(index)].value2,
-//       //     });
-
-//       //     const unitType = await axios.post(`${API_BASE_URL}/api/5`, {
-//       //       subject: indicatorURLs[selectedIndicators[index]],
-//       //       predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit"
-//       //     });
-
-//       //     if (!unitType.data["propertyValue"]) {
-//       //       unitType.data["propertyValue"] = "NONE";
-//       //     }
-
-//       //     console.log(
-//       //       "final data",
-//       //       index,
-//       //       response.data["indicatorDataValues"],
-//       //       unitType.data["propertyValue"]
-//       //     );
-//       //     // setIndicatorData((prevData) => ({
-//       //     //   ...prevData,
-//       //     //   [indicatorURLs[selectedIndicators[index]]]:
-//       //     //     response.data["indicatorDataValues"],
-//       //     // }));
-
-//       //     setIndicatorData((prevData) => ({
-//       //       ...prevData,
-//       //       [indicatorURLs[selectedIndicators[index]]]:
-//       //         {data: response.data["indicatorDataValues"], unit: unitType.data["propertyValue"]},
-//       //     }));
-//       //   })
-//       // );
-//       await fetchData();
-//       setBeginGeneration(true);
-//     } catch (error) {
-//       console.error("POST Error:", error);
-//     }
-//   } else {
-//     setShowVisError(true);
-//     console.log("Can't generate visualization: missing data");
-//     setShowingVisualization(false);
-//   }
-//   setVisLoading(false);
-// };
-
 export const handleGenerateVisualization = async (
   years,
   cityURLs,
@@ -285,7 +147,9 @@ export const handleGenerateVisualization = async (
 ) => {
   // 1) Get the chosen admin type and selected admin instance URLs.
   const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
-  const selectedAdminInstances = getSelectedAdminInstancesURLs(adminAreaInstancesState);
+  const selectedAdminInstances = getSelectedAdminInstancesURLs(
+    adminAreaInstancesState
+  );
 
   // 2) Define a helper function to check if all required fields are valid.
   const isInputValid = () => {
@@ -296,9 +160,13 @@ export const handleGenerateVisualization = async (
       typeof currentAdminType === "string" &&
       currentAdminType.trim() !== "" &&
       // Each selected instance must be valid
-      selectedAdminInstances.every((instance) => instance && instance.trim() !== "") &&
+      selectedAdminInstances.every(
+        (instance) => instance && instance.trim() !== ""
+      ) &&
       // Each indicator dropdown must have a value
-      Object.values(selectedIndicators).every((val) => val && val.trim() !== "") &&
+      Object.values(selectedIndicators).every(
+        (val) => val && val.trim() !== ""
+      ) &&
       // Each year range must be valid (start > 0, end > 0, etc.)
       years.every((item) => item.value1 > 0 && item.value2 > 0)
     );
@@ -321,19 +189,23 @@ export const handleGenerateVisualization = async (
       const fetchVisualizationData = async () => {
         const promises = Object.keys(selectedIndicators).map(async (index) => {
           // 5a) Post request to get the actual data values
-          const response = await axios.post(`${API_BASE_URL}/api/visualization-data`, {
-            cityName: cityURLs[adminAreaTypesState["currCity"]],
-            adminType: currentAdminType,
-            adminInstance: selectedAdminInstances,
-            indicatorName: indicatorURLs[selectedIndicators[index]],
-            startTime: years[parseInt(index)].value1,
-            endTime: years[parseInt(index)].value2,
-          });
+          const response = await axios.post(
+            `${API_BASE_URL}/api/visualization-data`,
+            {
+              cityName: cityURLs[adminAreaTypesState["currCity"]],
+              adminType: currentAdminType,
+              adminInstance: selectedAdminInstances,
+              indicatorName: indicatorURLs[selectedIndicators[index]],
+              startTime: years[parseInt(index)].value1,
+              endTime: years[parseInt(index)].value2,
+            }
+          );
 
           // 5b) Get the unit if available
           const unitType = await axios.post(`${API_BASE_URL}/api/5`, {
             subject: indicatorURLs[selectedIndicators[index]],
-            predicate: "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit",
+            predicate:
+              "http://ontology.eil.utoronto.ca/ISO21972/iso21972#hasUnit",
           });
 
           // If there's no unit, store "NONE" so we don't break references
@@ -369,7 +241,6 @@ export const handleGenerateVisualization = async (
 
       // 8) Optionally show the visualization immediately (or let your useEffect do it)
       // setShowingVisualization(true);
-
     } catch (error) {
       console.error("POST Error:", error);
       // If any error occurred, you can optionally show an error or hide the visualization

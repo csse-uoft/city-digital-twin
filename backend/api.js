@@ -479,13 +479,6 @@ router.post("/visualization-data", async (req, res) => {
               }
 
               if (isAdminTypeMatching) {
-                // console.log("adminTypeSuffix", adminTypeSuffix)
-                // console.log("indicatorSuffixWithYear", indicatorSuffixWithYear)
-                // console.log("adminAreaTypeNames", adminAreaTypeNames)
-                // console.log("adminAreaTypeNames[adminArea]", adminAreaTypeNames[adminArea])
-
-                // console.log("here to problem used to begin")
-                // console.log("---------------------")
                 notSameAdminType = adminArea;
 
                 // Also determine which of the new admin areas overlap with the old area, if an adminInstance was provided
@@ -510,8 +503,6 @@ router.post("/visualization-data", async (req, res) => {
                 });
 
                 overlappingAdminAreas.on("end", async () => {
-                  // console.log("overlappingAreaList", overlappingAreaList)
-
                   var result = 0;
                   if (overlappingAreaList.length === 0) {
                     try {
@@ -531,7 +522,6 @@ router.post("/visualization-data", async (req, res) => {
                     // Function to process batches
 
                     async function processBatch(batch) {
-                      // console.log(batch)
                       return new Promise(async (resolve, reject) => {
                         let batchQuery = `
                           PREFIX CITY: <${cityPrefix}#>
@@ -604,8 +594,6 @@ router.post("/visualization-data", async (req, res) => {
                         const { hasData, batchTotal } = await processBatch(
                           batch
                         );
-                        // console.log("hasData, batchTotal")
-                        // console.log(hasData, batchTotal)
 
                         if (hasData) {
                           result += batchTotal;
@@ -613,8 +601,6 @@ router.post("/visualization-data", async (req, res) => {
                       }
                       if (year <= endTime) {
                         instanceResult[year] = result || 0; // Assign NaN if no data
-                        // console.log("instanceResult, year")
-                        // console.log(instanceResult, instanceResult[year])
                       }
                     } catch (error) {
                       // res.status(500).json({ message: 'Oops, error during batch processing!', error });
@@ -944,13 +930,6 @@ router.post("/amenity-location-all", async (req, res) => {
     });
 
     stream.on("end", () => {
-      // Determine that the frontend can only render polygon
-      // let pointData = rawData.filter(item =>
-      //   typeof item.coordinates.value === "string" && item.coordinates.value.includes("POINT")
-      // );
-      // console.log("--->pointData: ",pointData)
-      // Transform the raw data into a more readable format
-
       const formattedData = rawData.map((binding) => {
         var amenity_tp = "";
         if (binding.amenity) {
