@@ -15,7 +15,7 @@ export const testBackendConnection = async () => {
     if (response.data.success) {
       console.log("Backend connection successful");
       return true;
-    }else{
+    } else {
       return false;
     }
   } catch (error) {
@@ -263,7 +263,7 @@ export const fetchAmenityLocations = async (
     });
 
     const areaInstaceList = response1.data["adminAreaInstanceNames"];
-    
+
     // Get geometry (WKT) of those admin area instances
     const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
       cityName: cityName,
@@ -338,7 +338,6 @@ function mapAreaURLtoName(instanceList, areaURL) {
   return null;
 }
 
-
 /**
  * Fetches amenity score data from the backend API.
  *
@@ -349,6 +348,8 @@ function mapAreaURLtoName(instanceList, areaURL) {
  * NOTE, it only fetch score for neighbourhood for now
  */
 export const fetchAmenityData = async (adminType) => {
-  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {adminType: adminType,});
+  const response = await axios.post(`${API_BASE_URL}/api/amenity-score`, {
+    adminType: adminType,
+  });
   return response;
 };
