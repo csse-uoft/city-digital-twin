@@ -13,9 +13,12 @@ services:
     environment:
       - TZ=America/New_York
       - GDB_HEAP_SIZE=16G
+      # - JAVA_OPTS=-Xms2G -Xmx2G -XX:MaxDirectMemorySize=8G
+
     entrypoint: /opt/graphdb/dist/bin/graphdb -XX:MaxDirectMemorySize=16G
     restart: always
     logging:
       options:
         max-size: "5m"
         max-file: "3"
+

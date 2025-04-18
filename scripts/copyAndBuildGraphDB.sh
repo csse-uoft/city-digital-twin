@@ -10,19 +10,19 @@
 KEY_FILE="./linxin_tove.pem"
 
 # SSH port (default is 22)
-SSH_PORT="22"
+SSH_PORT="14376"
 
 # Remote SSH user
-REMOTE_USER="ec2-user"
+REMOTE_USER="ubuntu"
 
 # Remote host (EC2 instance public DNS)
-REMOTE_HOST="ec2-3-97-59-180.ca-central-1.compute.amazonaws.com"
+REMOTE_HOST="206.12.97.46"
 
 # Remote directory to copy from
 REMOTE_FOLDER="/root/graphdb-data"
 
 # Local directory to copy to
-LOCAL_FOLDER="$(pwd)"
+LOCAL_FOLDER="$(pwd)/graphdb-data"
 
 # Path to Docker Compose file
 DOCKER_COMPOSE_FILE="./docker-compose.yml"
@@ -31,20 +31,20 @@ DOCKER_COMPOSE_FILE="./docker-compose.yml"
 # # Step 1: Check and clone graphdb-data
 # ###############################################################################
 
-# if [ -d "${LOCAL_FOLDER}" ]; then
-#     echo "❌ Local folder '${LOCAL_FOLDER}' already exists. Aborting to avoid overwriting existing data."
-#     exit 1
-# fi
+if [ -d "${LOCAL_FOLDER}" ]; then
+    echo "❌ Local folder '${LOCAL_FOLDER}' already exists. Aborting to avoid overwriting existing data."
+    exit 1
+fi
 
-# echo "📦 Cloning graphdb from ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER} to ${LOCAL_FOLDER}..."
+echo "📦 Cloning graphdb from ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER} to ${LOCAL_FOLDER}..."
 
-# rsync -avh -P --rsh="ssh -p${SSH_PORT} -i ${KEY_FILE}" \
-#     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER}" "${LOCAL_FOLDER}"
+rsync -avh -P --rsh="ssh -p${SSH_PORT} -i ${KEY_FILE}" \
+    "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER}" "${LOCAL_FOLDER}"
 
-# if [ $? -ne 0 ]; then
-#     echo "❌ Error during rsync."
-#     exit 1
-# fi
+if [ $? -ne 0 ]; then
+    echo "❌ Error during rsync."
+    exit 1
+fi
 
 echo "✅ Graphdb cloned successfully."
 
@@ -74,12 +74,12 @@ echo "✅ Volume paths updated in docker-compose.yml."
 # # Step 3: Start Docker Compose
 # ###############################################################################
 
-# echo "🚀 Starting GraphDB service with Docker Compose..."
-# sudo docker compose up -d
+echo "🚀 Starting GraphDB service with Docker Compose..."
+sudo docker compose up -d
 
-# if [ $? -eq 0 ]; then
-#     echo "✅ GraphDB service is now running."
-# else
-#     echo "❌ Failed to start GraphDB service."
-#     exit 1
-# fi
+if [ $? -eq 0 ]; then
+    echo "✅ GraphDB service is now running."
+else
+    echo "❌ Failed to start GraphDB service."
+    exit 1
+fi

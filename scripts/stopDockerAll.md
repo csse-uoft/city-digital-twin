@@ -10,11 +10,6 @@ It will:
    - `city-digital-twin-backend`
    - `city-digital-twin-frontend`
    - `mnt-graphdb-1`
-
-2. Remove the following Docker containers:
-   - `city-digital-twin-backend`
-   - `city-digital-twin-frontend`
-
 ---
 
 ## Usage

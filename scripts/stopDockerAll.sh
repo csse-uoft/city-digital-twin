@@ -16,5 +16,4 @@ sleep $TIMER
 
 echo "Stopping services..."
 docker stop city-digital-twin-backend city-digital-twin-frontend mnt-graphdb-1
-docker rm city-digital-twin-backend city-digital-twin-frontend 
 echo "Services stopped."
