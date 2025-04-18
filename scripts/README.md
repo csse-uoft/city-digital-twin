@@ -35,11 +35,13 @@ This will:
 
 ```yaml
 volumes:
-  - /mnt/graphdb-data/conf:/opt/graphdb/dist/conf
-  - /mnt/graphdb-data/data:/opt/graphdb/dist/data
-  - /mnt/graphdb-data/work:/opt/graphdb/dist/work
-  - /mnt/graphdb-data/logs:/opt/graphdb/dist/logs
+  - XXX/graphdb-data/conf:/opt/graphdb/dist/conf
+  - XXX/graphdb-data/data:/opt/graphdb/dist/data
+  - XXX/graphdb-data/work:/opt/graphdb/dist/work
+  - XXX/graphdb-data/logs:/opt/graphdb/dist/logs
 ```
+
+Where`XXX` is path to your graphdb-data folder
 
 ---
 
@@ -50,8 +52,8 @@ sudo bash buildAndRunDockerFrontBack.sh
 ```
 
 This will:
-- Build and run the backend on port `3000`
-- Build and run the frontend on port `3001`
+- Build and run the backend container on port `3000`
+- Build and run the frontend container on port `3001`
 
 ---
 
@@ -100,6 +102,7 @@ This will:
 
 
 ## ✅ Final Notes
+- There is each individual markdown file that explain how to update the script.
 - Check docker and docker-compose is install and up-to-date. Tested working verison: `Docker version 28.0.1, build 068a01e` and `Docker Compose version v2.24.2`
 - Ensure Docker and Docker Compose are installed and running.
 - GraphDB is optional if you're only testing frontend/backend.

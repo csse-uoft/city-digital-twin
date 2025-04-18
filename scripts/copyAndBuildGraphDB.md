@@ -32,7 +32,7 @@ Update the following variables in `copyAndBuildGraphDB.sh` as needed:
 | `REMOTE_USER` | EC2 username | `ec2-user` |
 | `REMOTE_HOST` | EC2 public DNS | `ec2-3-97-59-180.ca-central-1.compute.amazonaws.com` |
 | `REMOTE_FOLDER` | Remote GraphDB data path | `/root/graphdb-data` |
-| `LOCAL_FOLDER` | Local path for GraphDB data | Dynamically set to `$(pwd)/graphdb-data` (current working directory) |
+| `LOCAL_FOLDER` | Local path for GraphDB data | Dynamically set to `$(pwd)` (current working directory) |
 | `DOCKER_COMPOSE_FILE` | Path to Docker Compose file | `./docker-compose.yml` |
 
 ---
