@@ -22,10 +22,9 @@ city-digital-twin/
 ├── backend/
 │   ├── .env
 │   └── (source code)
-├── frontend/
-│   ├── .env
-│   └── (source code)
-└── setup.sh  (your setup script)
+└── frontend/
+    ├── .env
+    └── (source code)
 ```
 
 ---
