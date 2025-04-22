@@ -3,7 +3,43 @@
 This guide walks you through the step-by-step process of setting up and running the **GraphDB**, **Backend**, and **Frontend** services using the provided automation scripts.
 
 ---
+## Prerequisites
 
+Make sure you have the following installed:
+
+- Node.js (v16 or higher recommended)
+- npm (Node Package Manager)
+- Git
+- `Docker version 28.0.1, build 068a01e` and `Docker Compose version v2.24.2`
+---
+
+## Directory Structure
+
+```
+city-digital-twin/
+├── backend/
+│   ├── .env
+│   └── (source code)
+└── frontend/
+    ├── .env
+    └── (source code)
+docker-compose.yml (provvided)
+graphdb-data/
+├── conf/
+│   ├── (source code)
+├── data/
+│   ├── (source code)
+├── logs/
+│   ├── (source code)
+├── repositories/
+│   ├── (source code)
+├── (other folder)
+│   ├── (source code)
+└── (source code)
+copyAndBuildGraphDB.sh
+buildAndRunDockerFrontBack.sh
+(other scripts)
+```
 ## 📁 Step 1: Clone and Set Up Frontend & Backend Codebase
 
 ```bash
@@ -103,7 +139,7 @@ This will:
 
 ## ✅ Final Notes
 - There is each individual markdown file that explain how to update the script.
-- Check docker and docker-compose is install and up-to-date. Tested working verison: `Docker version 28.0.1, build 068a01e` and `Docker Compose version v2.24.2`
+
 - Ensure Docker and Docker Compose are installed and running.
 - GraphDB is optional if you're only testing frontend/backend.
 - `.env` files are auto-generated with correct API and database URLs.
