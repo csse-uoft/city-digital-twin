@@ -27,11 +27,11 @@ Update the following variables in `copyAndBuildGraphDB.sh` as needed:
 
 | Variable | Description | Default Value |
 |----------|-------------|---------------|
-| `KEY_FILE` | SSH private key path | `./linxin_tove.pem` |
-| `SSH_PORT` | SSH port | `22` |
-| `REMOTE_USER` | EC2 username | `ec2-user` |
-| `REMOTE_HOST` | EC2 public DNS | `ec2-3-97-59-180.ca-central-1.compute.amazonaws.com` |
-| `REMOTE_FOLDER` | Remote GraphDB data path | `/root/graphdb-data` |
+| `KEY_FILE` | SSH private key path | `./digital_twin.pem` |
+| `SSH_PORT` | SSH port | `14376` |
+| `REMOTE_USER` | EC2 username | `ubuntu` |
+| `REMOTE_HOST` | EC2 public DNS | `206.12.97.46` |
+| `REMOTE_FOLDER` | Remote GraphDB data path | `/mnt/graphdb-data` |
 | `LOCAL_FOLDER` | Local path for GraphDB data | Dynamically set to `$(pwd)` (current working directory) |
 | `DOCKER_COMPOSE_FILE` | Path to Docker Compose file | `./docker-compose.yml` |
 
