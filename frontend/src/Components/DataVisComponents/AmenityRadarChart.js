@@ -29,7 +29,7 @@ const transformDataForRadar = (amenityData) => {
   return radarData;
 };
 
-const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#a4de6c"]; // Customize as needed
+const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#a4de6c"];
 
 const AmenityRadarChart = ({ amenityData }) => {
   const data = transformDataForRadar(amenityData);

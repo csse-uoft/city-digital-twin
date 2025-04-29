@@ -65,9 +65,120 @@ const CompleteCommunitiesDashboard = ({
   adminAreaInstancesState,
   dispatchAdminAreaInstances,
 }) => {
+  /*
+  Holds the Radar data scores for different Amenities.
+  Example Data:
+  {
+    "South Riverdale (70)": {
+        "PercentWalkingDistance400Park": "0.99",
+        "PercentWalkingDistance400School": "0.95",
+        "PercentWalkingDistance400Kindergarten": "0.00",
+        "PercentWalkingDistance400College": "0.00",
+        "PercentWalkingDistance400University": "0.00",
+        "PercentWalkingDistance400Pharmacy": "0.60",
+        "PercentWalkingDistance400HospitalClinicDoctors": "0.46",
+        "PercentWalkingDistance400RestaurantFastFood": "0.99"
+    },
+    "Waterfront Communities-The Island (77)": {
+        "PercentWalkingDistance400Park": "1.00",
+        "PercentWalkingDistance400School": "0.38",
+        "PercentWalkingDistance400Kindergarten": "0.28",
+        "PercentWalkingDistance400College": "0.14",
+        "PercentWalkingDistance400University": "0.07",
+        "PercentWalkingDistance400Pharmacy": "0.44",
+        "PercentWalkingDistance400HospitalClinicDoctors": "0.39",
+        "PercentWalkingDistance400RestaurantFastFood": "0.95"
+    }
+  }
+  */
   const [amenityData, setAmenityData] = useState({});
+
+  /*
+  Stores amenity location polygon or lat/lon points as well as amenity type and colour for each a admin area instance.
+  Example Data:
+  {
+      "neighborhood70": {
+          "Cherry Beach Clarke Beach Park": {
+              "coordinates": [
+                  [
+                      [
+                          43.637616,
+                          -79.344694
+                      ],
+                      [
+                          43.637631,
+                          -79.344619
+                      ],
+                      [
+                          43.637624,
+                          -79.344549
+                      ],
+                      [
+                          43.6376,
+                          -79.344486
+                      ],
+                      [
+                          43.637571,
+                          -79.344427
+                      ]
+                  ]
+              ],
+              "amenityType": "Park",
+              "displayType": "Polygon",
+              "url": "http://ontology.eil.utoronto.ca/GCI/Recreation/GCIRecreation.owl#Park",
+              "color": "#24b34a"
+          },
+          "Total Health Pharmacy": {
+              "coordinates": [
+                  43.668566,
+                  -79.338033
+              ],
+              "amenityType": "Pharmacy",
+              "displayType": "Point",
+              "url": "http://ontology.eil.utoronto.ca/CDT#Pharmacy",
+              "color": "#42c2f5"
+          }
+      }
+  }
+  */
   const [amenityPolygons, setAmenityPolygons] = useState({});
+
+  /*
+  Contains the polygons (outlines) for all the admin area instances.
+  {
+    "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood70": {
+        "coordinates": [
+            [
+                [
+                    43.664476361615655,
+                    -79.30399000790015
+                ],
+                [
+                    43.66432741893238,
+                    -79.30393653024714
+                ],
+                [
+                    43.664327409823166,
+                    -79.30393652615308
+                ],
+                .
+                .
+                .
+            ]
+        ],
+        "type": "Polygon"
+    },
+    
+    . 
+    .
+    .
+}
+  */
   const [locationIDPolygons, setlocationIDPolygons] = useState({});
+
+  /*
+   * Hides components while fetching information
+   */
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -93,6 +204,9 @@ const CompleteCommunitiesDashboard = ({
     console.log("Current City", cityURLs);
     console.log("Print Admin Area instance states", adminAreaInstancesState);
 
+    /*
+     * Fetches the amenity scores for the radar graph.
+     */
     const fetchAmenityDataResults = async () => {
       // update this if we want to query score for \
       var adminType = "";
@@ -129,6 +243,9 @@ const CompleteCommunitiesDashboard = ({
       }
     };
 
+    /*
+     * Fetches the admin instance outlines (polygons) as well as the amenity locations
+     */
     const locationIDfetchAndFormatAmenties = async () => {
       // Initialize an empty object to store all the Amenties
       setLoading(true);

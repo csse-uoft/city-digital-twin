@@ -147,6 +147,10 @@ function Dashboard({
    */
   const [mapPolygons, setMapPolygons] = useState({});
 
+  /*
+   * Whether the visualizations should be shown or not.
+   * Format: A boolean value, true if the visualizations should show or false if they should not.
+   */
   const [showingVisualization, setShowingVisualization] = useState(false);
 
   /*
@@ -155,6 +159,9 @@ function Dashboard({
    */
   const [beginGeneration, setBeginGeneration] = useState(false);
 
+  /*
+   * The URIs of the currently selected administrative area instances.
+   */
   const [currentSelectedMultiIndicators, setCurrentSelectedMultiIndicators] =
     useState([]);
 
