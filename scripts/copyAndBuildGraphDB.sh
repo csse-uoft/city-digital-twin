@@ -31,22 +31,22 @@ DOCKER_COMPOSE_FILE="./docker-compose.yml"
 # # Step 1: Check and clone graphdb-data
 # ###############################################################################
 
-# if [ -d "${LOCAL_FOLDER}/graphdb-data" ]; then
-#     echo "❌ Local folder '${LOCAL_FOLDER}' already exists. Aborting to avoid overwriting existing data."
-#     exit 1
-# fi
+if [ -d "${LOCAL_FOLDER}/graphdb-data" ]; then
+    echo "❌ Local folder '${LOCAL_FOLDER}' already exists. Aborting to avoid overwriting existing data."
+    exit 1
+fi
 
-# echo "📦 Cloning graphdb from ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER} to ${LOCAL_FOLDER}..."
+echo "📦 Cloning graphdb from ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER} to ${LOCAL_FOLDER}..."
 
-# rsync -avh -P --rsh="ssh -p${SSH_PORT} -i ${KEY_FILE}" \
-#     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER}" "${LOCAL_FOLDER}"
+rsync -avh -P --rsh="ssh -p${SSH_PORT} -i ${KEY_FILE}" \
+    "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_FOLDER}" "${LOCAL_FOLDER}"
 
-# if [ $? -ne 0 ]; then
-#     echo "❌ Error during rsync."
-#     exit 1
-# fi
+if [ $? -ne 0 ]; then
+    echo "❌ Error during rsync."
+    exit 1
+fi
 
-# echo "✅ Graphdb cloned successfully."
+echo "✅ Graphdb cloned successfully."
 
 ###############################################################################
 # Step 2: Update docker-compose.yml volume paths
@@ -75,7 +75,7 @@ echo "✅ Volume paths updated in docker-compose.yml."
 # ###############################################################################
 
 echo "🚀 Starting GraphDB service with Docker Compose..."
-sudo docker compose up -d
+sudo docker-compose up -d
 
 if [ $? -eq 0 ]; then
     echo "✅ GraphDB service is now running."
