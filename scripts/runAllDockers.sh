@@ -30,4 +30,4 @@ echo "Handling backend service on port 3000..."
 start_or_resume_container city-digital-twin-backend 3000:3000 city-digital-twin-backend
 
 echo "Starting graphdb service using docker-compose..."
-sudo docker compose up -d
+sudo docker-compose up -d
