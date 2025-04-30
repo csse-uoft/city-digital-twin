@@ -61,7 +61,13 @@ This tells the frontend where to send API requests. (It should points to the bac
 
 You can use the provided script to automatically install dependencies and start both services.
 
-### Provided Script: `setup.sh`
+### Using a Script
+
+On Windows: Run the `run_windowns.bat` script.
+
+On Mac: Run the `run_shell` script.
+
+### To Run Manually:
 
 Step to run backend (run backend first)
 
@@ -82,7 +88,7 @@ cd frontend
 
 npm install
 
-npm run start
+npm run dev-start
 ```
 ---
 

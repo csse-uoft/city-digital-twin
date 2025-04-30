@@ -92,61 +92,37 @@ function Dashboard({
   adminAreaInstancesState,
   dispatchAdminAreaInstances,
 }) {
+  // REFER TO THE DOCUMENTATION PDF FOR MORE DETAILED EXPLANATION OF THE STATES
+
   /*
    * The time ranges being considered for the indicators.
-   * Format: An array of objects, each containing a time range for a
-   *   corresponding indicator. Years[0], the first entry, gives the
-   *   year range for indicator 1.
-   * Parameters for each array entry:
-   *   start = start year for year range,
-   *   end = end year for year range,
-   *   id = the corresponding indicator the time range is for (id = 0 → first indicator)
-   * Example: [{value1:2016, value2:2018, id:0}]
    */
   const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
 
   /*
    * Indicator names mapped to their unique URIs.
-   * Format: An object. The key is the name of the indicator and the value is the URL.
-   * Example: {“TheftOverCrime2014”: “http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrime2014”}
    */
   const [indicatorURLs, setIndicatorURLs] = useState({});
 
   /*
    * The names of the indicators that are currently selected from each dropdown.
-   * Format: Key-value pairs, where the key is the index of the dropdown (0-->first dropdown) and the value is the NAME of the indicator selected.
-   * Example: {0:"TheftOverCrime2016", 1:"TheftOverCrimeRate2016"}
    */
   const [selectedIndicators, setSelectedIndicators] = useState({ 0: "" });
 
   /*
    * The data for each selected indicator.
-   * Format: An object with all selected indicators as its child objects. 
-   *   Each child object (selected indicator) is a URI that maps to the selected area’s URI. 
-   *   Finally, the selected Area’s URI maps to the each year and its desired data/value.
-   * Example: 
-      {
-        "http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": {
-          "http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood82": {
-            "2016": 51,
-            "2017": 35,
-            "2018": 42
-          }
-        }
-      }
    */
   const [indicatorData, setIndicatorData] = useState({});
 
   /*
    * The polygons used to draw the administrative area instances on the map.
-   * Format: key-value pairs, where the key is the URI of the desired indicator and the value is an object containing all the polygons of the
-   *         selected administrative area type, including those not selected as well as the indicator data of the selected areas
-   * Parameters:
-   *   - index: the index of the indicator (which box in the form it's a part of)
-   * Example: {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2018":{index:0, polygons:[THE POLYGONS, IN AN ARRAY.]}
    */
   const [mapPolygons, setMapPolygons] = useState({});
 
+  /*
+   * Whether the visualizations should be shown or not.
+   * Format: A boolean value, true if the visualizations should show or false if they should not.
+   */
   const [showingVisualization, setShowingVisualization] = useState(false);
 
   /*
@@ -155,84 +131,49 @@ function Dashboard({
    */
   const [beginGeneration, setBeginGeneration] = useState(false);
 
+  /*
+   * The URIs of the currently selected administrative area instances.
+   */
   const [currentSelectedMultiIndicators, setCurrentSelectedMultiIndicators] =
     useState([]);
 
   /*
    * The relevant table column names for each indicator.
    * The first column is always "Admin Area Name", followed by the year range that the user has selected for the current indicator
-   * Format: Key-value pairs, where the key is the URI of the indicator and the value is an array of strings representing the years selected for the data
-   * Example: {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016":["Admin Area Name", "2016", "2017", "2018"]}
    */
   const [tableColumns, setTableColumns] = useState({});
 
   /*
    * The indicators data, formatted for display on the table.
-   * Format: Key-value pairs, where the key is the URI of the indicator and the value is an array of arrays, each representing a row on the
-   *         table; the first element of the innermost sub-array is the name of the administrative area instance, followed by a list of NUMERICAL (not string) values
-   *         for the year range, as determined in tableColumns for that indicator.
-   * Example: {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016":[["Waterfront Communities-The Island (77)", 20, 30, 40], ["Atlantis", 0, 0, 0]]}
    */
   const [tableData, setTableData] = useState({});
 
   /*
    * The indicators data, formatted for display on the graphs.
-   * Example: 
-      {"http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016": [
-          {
-            "name": "2016",
-            "York South-Weston (5)": 192,
-            "Parkdale-High Park (4)": 145,
-            "Etobicoke Centre (2)": 226
-          }, {
-            "name": "2017",
-            "York South-Weston (5)": 318,
-            "Parkdale-High Park (4)": 227,
-            "Etobicoke Centre (2)": 265
-          }, {
-            "name": "2018",
-            "York South-Weston (5)": 324,
-            "Parkdale-High Park (4)": 177,
-            "Etobicoke Centre (2)": 308
-          }
-        ]
-      }
    */
   const [chartData, setChartData] = useState({});
 
   /*
    * Indicates if an error has occured while trying to generate a visualization.
    * Used for showing an error message if this happens.
-   * Format: A boolean value, true if an error has occured or false otherwise
-   * Parameters: N/A
-   * Example: lol
    */
   const [showVisError, setShowVisError] = useState(false);
 
   /*
    * The graph type selected for the FIRST graph of each indicator visualization.
    * Each visualization has two customizable graphs, with various types available: bar, line, etc.
-   * Format: key-value pairs, where the key is the indicator URI and the value is the graph type (bar, line, etc.)
-   * Parameters: N/A
-   * Example: {'http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016': 'bar'}
    */
   const [graphTypes, setGraphTypes] = useState({});
 
   /*
    * The graph type selected for the SECOND graph of each indicator visualization.
    * Each visualization has two customizable graphs, with various types available: bar, line, etc.
-   * Format: key-value pairs, where the key is the indicator URI and the value is the graph type (bar, line, etc.)
-   * Parameters: N/A
-   * Example: {'http://ontology.eil.utoronto.ca/CKGN/Crime#TheftOverCrimeRate2016': 'bar'}
    */
   const [comparisonGraphTypes, setComparisonGraphTypes] = useState({});
 
   /*
    * Indicates if the program is loading the indicator visualization.
    * Used primarily for showing loading indicators while this is going on.
-   * Format: A boolean value, true if loading or false otherwise
-   * Parameters: N/A
-   * Example: lol
    */
   const [visLoading, setVisLoading] = useState(false);
 

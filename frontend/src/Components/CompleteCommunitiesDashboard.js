@@ -65,9 +65,26 @@ const CompleteCommunitiesDashboard = ({
   adminAreaInstancesState,
   dispatchAdminAreaInstances,
 }) => {
+  // REFER TO THE DOCUMENTATION PDF FOR MORE DETAILED EXPLANATION OF THE STATES
+
+  /*
+   * Holds the Radar data scores for different Amenities.
+   */
   const [amenityData, setAmenityData] = useState({});
+
+  /*
+   * Stores amenity location polygon or lat/lon points as well as amenity type and colour for each a admin area instance.
+   */
   const [amenityPolygons, setAmenityPolygons] = useState({});
+
+  /*
+   * Contains the polygons (outlines) for all the admin area instances.
+   */
   const [locationIDPolygons, setlocationIDPolygons] = useState({});
+
+  /*
+   * Hides components while fetching information
+   */
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -93,6 +110,9 @@ const CompleteCommunitiesDashboard = ({
     console.log("Current City", cityURLs);
     console.log("Print Admin Area instance states", adminAreaInstancesState);
 
+    /*
+     * Fetches the amenity scores for the radar graph.
+     */
     const fetchAmenityDataResults = async () => {
       // update this if we want to query score for \
       var adminType = "";
@@ -129,6 +149,9 @@ const CompleteCommunitiesDashboard = ({
       }
     };
 
+    /*
+     * Fetches the admin instance outlines (polygons) as well as the amenity locations
+     */
     const locationIDfetchAndFormatAmenties = async () => {
       // Initialize an empty object to store all the Amenties
       setLoading(true);
