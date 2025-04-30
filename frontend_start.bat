@@ -14,6 +14,6 @@ call npm install || (
 echo "Dependencies installed successfully."
 
 :: Set PORT and start the frontend server
-start "Frontend Server" cmd /k "set PORT=3001 &&  call npm run start"
+start "Frontend Server" cmd /k "set PORT=3001 &&  call npm run dev-start"
 
 echo Frontend server started on port 3001.

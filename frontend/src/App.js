@@ -15,6 +15,8 @@ import {
 import { CssVarsProvider as JoyCssVarsProvider } from '@mui/joy/styles';
 
 function App() {
+  console.log("API Base URL in App:", process.env.REACT_APP_API_URL);
+
   // Creates the theme for the web app
   const theme = materialExtendTheme({
     palette: {
