@@ -12,7 +12,7 @@
 # Repository information
 REPO_URL="https://github.com/csse-uoft/city-digital-twin.git"   # Git repo URL
 REPO_DIR="city-digital-twin"                                    # Local folder name
-BRANCH="develop"                                                # Git branch to checkout
+BRANCH="main"                                                # Git branch to checkout
 
 # Environment Variables
 REACT_APP_API_URL="http://206.12.97.46:23000"                   # Frontend API endpoint

@@ -27,7 +27,7 @@ Ensure you have the following installed on your machine:
 |------------|-------------------------------------|-------|
 | `REPO_URL` | GitHub repository URL              | `https://github.com/csse-uoft/city-digital-twin.git` |
 | `REPO_DIR` | Local directory for the repository | `city-digital-twin` |
-| `BRANCH`   | Git branch to checkout             | `develop` |
+| `BRANCH`   | Git branch to checkout             | `main` |
 
 ---
 
