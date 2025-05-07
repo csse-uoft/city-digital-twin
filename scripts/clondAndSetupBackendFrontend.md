@@ -35,7 +35,7 @@ Ensure you have the following installed on your machine:
 
 | Variable              | Description                             | Value |
 |----------------------|-----------------------------------------|-------|
-| `REACT_APP_API_URL`  | Frontend API endpoint                  | `http://206.12.97.46:23000` |
+| `REACT_APP_API_URL`  | Backend API endpoint                  | `http://206.12.97.46:23000` (IP Address of your backend)|
 | `ENDPOINT_URL`       | Backend SPARQL database endpoint       | `http://ec2-3-97-59-180.ca-central-1.compute.amazonaws.com:7200/repositories/CACensus` |
 
 These environment variables will be automatically written into `.env` files in both the `frontend/` and `backend/` directories if they do not already exist. 
