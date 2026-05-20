@@ -1,6 +1,7 @@
 import Dashboard from "./Dashboard";
 import Home from "./Home";
 import FAQ from "./FAQ";
+import Amenities from './Amenities/Amenities'
 
 import MobileHeader from "./MainComponents/MobileHeader";
 import NewSidebar from "./MainComponents/NewSidebar";
@@ -29,7 +30,7 @@ function Main() {
     fetchCities(setCityURLs);
   }, []);
 
-  const [ activePage, setActivePage ] = useState("search");
+  const [ activePage, setActivePage ] = useState("amenities");
 
   const [ dashboardData, setDashboardData ] = useState({
     currentCity: {
@@ -76,6 +77,8 @@ function Main() {
                 adminAreaInstancesState={adminAreaInstancesState}
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances}
                 />;
+      case "amenities":
+        return <Amenities />
       case "faq":   // Not completed yet
         return <FAQ />;
       case "complete community":
