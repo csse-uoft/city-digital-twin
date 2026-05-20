@@ -2,6 +2,7 @@ import { useState, useEffect, useReducer } from 'react'
 import { Box, Container, Grid, Paper, Stack, Typography } from "@mui/material";
 import { Popup, Polygon, Tooltip, TileLayer, MapContainer, Marker } from "react-leaflet";
 import { Input, Button, Select, Autocomplete, Option } from '@mui/joy';
+import Legend from './Legend';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import L from "leaflet";
@@ -32,6 +33,19 @@ const MapVisualComponent = () => {
                     >
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     </MapContainer>
+
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            bottom: '20px',
+                            right: '20px',
+                            zIndex: 999,
+                            width: '300px',
+                            maxWidth: '90%',
+                        }}
+                    >
+                        <Legend />
+                    </Box>
                 </Box>
 
             </Stack>
