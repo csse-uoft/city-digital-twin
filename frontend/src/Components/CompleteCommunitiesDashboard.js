@@ -170,6 +170,7 @@ const CompleteCommunitiesDashboard = ({
 
           const amenityData = rawData[0];
           const locationIDLocationData = rawData[1];
+          console.log('location id location data: ', locationIDLocationData)
           setlocationIDPolygons(locationIDLocationData);
           // Format the fetched Amenties using formatAmenties
           const formattedAmenities = formatAmenities(amenityData);
@@ -186,6 +187,7 @@ const CompleteCommunitiesDashboard = ({
 
       // Once all Amenties are fetched and formatted, update the state
       setLoading(false); // Data is ready, stop loading
+      console.log('new amenity polygons: ', newAmenityPolygons)
       setAmenityPolygons(newAmenityPolygons);
     };
 
@@ -267,6 +269,7 @@ const CompleteCommunitiesDashboard = ({
                       "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                     const fullKey = baseURI + locationIDKey;
                     const locationID = amenityPolygons[locationIDKey];
+                    console.log('complete communities locationId: ', locationID)
                     let overlayCoords =
                       locationIDPolygons[fullKey]?.coordinates;
                     return (

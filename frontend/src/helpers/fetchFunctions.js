@@ -297,6 +297,9 @@ export const fetchAmenityLocations = async (
         coordinates: NeighborhoodLocationURLs[key].coordinates,
       };
     }
+    console.log('fetchAmenityLocations response')
+    console.log('updatedLocationURLs: ', updatedLocationURLs)
+    console.log('NeighborhoodLocatoinURLs: ', NeighborhoodLocationURLs)
     return [updatedLocationURLs, NeighborhoodLocationURLs];
   } catch (error) {
     console.error("POST Error:", error);

@@ -29,6 +29,19 @@ export const getSelectedAdminInstancesURLs = (adminAreaInstancesState) => {
   return selectedAreasURLs;
 }
 
+export const getSelectedAdminInstancesURLsAndNames = (adminAreaInstancesState) => {
+  const selectedAreasURLs = [];
+  for (const key in adminAreaInstancesState) {
+    if (adminAreaInstancesState[key].selected === true) {
+      selectedAreasURLs.push({
+        url: adminAreaInstancesState[key].URL,
+        name: key
+      });
+    }
+  }
+  return selectedAreasURLs;
+}
+
 export const getSelectedAdminInstancesNames = (adminAreaInstancesState) => {
   const selectedAreasNames = [];
   for (const key in adminAreaInstancesState) {

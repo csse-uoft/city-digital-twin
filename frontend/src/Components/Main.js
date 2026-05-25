@@ -78,7 +78,14 @@ function Main() {
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances}
                 />;
       case "amenities":
-        return <Amenities />
+        return <Amenities
+                cityURLs={cityURLs}
+                setCityURLs={setCityURLs}
+                adminAreaTypesState={adminAreaTypesState}
+                dispatchAdminAreaTypes={dispatchAdminAreaTypes}
+                adminAreaInstancesState={adminAreaInstancesState}
+                dispatchAdminAreaInstances={dispatchAdminAreaInstances} 
+                />
       case "faq":   // Not completed yet
         return <FAQ />;
       case "complete community":

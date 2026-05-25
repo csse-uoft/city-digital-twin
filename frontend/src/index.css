@@ -1,3 +1,7 @@
+:root {
+  --border-color: #ccc;
+  --uoft-blue: #0b2f4e;
+}
 body {
   flex: 1;
   display: flex;
@@ -17,3 +21,4 @@ code {
 .map { 
   height: 100vh;
 }
+
