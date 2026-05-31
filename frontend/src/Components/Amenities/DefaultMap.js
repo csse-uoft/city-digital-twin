@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
 import { Popup, Polygon, Tooltip, TileLayer, MapContainer, Marker } from "react-leaflet";
+import { Input, Button, Select, Autocomplete, Option } from '@mui/joy';
 
 const DefaultMap = ({
     instancePolygons,
@@ -11,16 +12,30 @@ const DefaultMap = ({
     // overlayCoords, instance name, area type, and city name
     const defaultStyle = { color: '#449bd1', fill: false, weight:1  };
     const hoverStyle = { color: 'blue', fillOpacity:0.3, fillColor:'blue', weight:3, fill:true };
+    const [selectedInstanceName, setSelectedInstanceName] = useState('')
     
     const handlePolygonClick = (areaInstanceName) => {
         // we just need to send the polygons information back to the parent
         console.log(`User clicked on ${areaInstanceName}`)
-        selectInstance(areaInstanceName)
+        setSelectedInstanceName(areaInstanceName)
+        // selectInstance(areaInstanceName)
     };
     return(
         <Box sx={{width:'100%'}}>
             <Stack>
-                <Box sx={{width:"100%", height:"100dvh"}}>
+                <Box sx={{width:'100%',height:'50px',py:1,px:1,boxSizing:'border-box',borderBottom:"1px solid var(--border-color)",display:'flex',justifyContent:'flex-end',alignItems:'center'}}>
+                    {selectedInstanceName === '' ? <Typography 
+                                            variant="h5" 
+                                            style={{
+                                                fontSize:'14px',
+                                                fontWeight:'semi-bold',
+                                                color: 'var(--text-dark)'
+                                            }}
+                                            >No Area Selected
+                                            </Typography> 
+                                            : <Button size="sm" onClick={()=>selectInstance(selectedInstanceName)}>Select {selectedInstanceName}</Button>}
+                </Box>
+                <Box sx={{width:"100%", height:"calc(100dvh - 50px)"}}>
                     <MapContainer
                     center={[43.7, -79.42]}
                     zoom={12}
