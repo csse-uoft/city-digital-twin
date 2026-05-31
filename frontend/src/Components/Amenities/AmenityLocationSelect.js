@@ -79,6 +79,10 @@ const AmenityLocationSelect = ({
                       type: "SET_SELECTED",
                       payload: newValue,
                     });
+                    console.log('fetchLocations newValue: ', newValue)
+                    console.log('fetchLocations cityURLS: ', cityURLs)
+                    console.log('fetchLocations adminAreaTypesState: ', adminAreaTypesState)
+                    console.log('fetchLocations dispatchAdminAreaInstances: ', dispatchAdminAreaInstances)
                     fetchLocations(
                       newValue,
                       cityURLs,
@@ -99,6 +103,7 @@ const AmenityLocationSelect = ({
                   options={Object.keys(adminAreaInstancesState)}
                   desc="Select the individual demarcation areas you want to analyze."
                   onChange={(event, newValue) => {
+                    console.log('multi select new value: ',newValue)
                     dispatchAdminAreaInstances({
                       type: "SET_SELECTED",
                       payload: newValue,

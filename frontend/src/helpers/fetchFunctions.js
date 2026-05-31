@@ -150,6 +150,7 @@ export const fetchLocations = async (
           coordinates: updatedLocationURLs[key].coordinates,
         };
       }
+      console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",

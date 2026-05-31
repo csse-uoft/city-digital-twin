@@ -1,12 +1,13 @@
 import { useState, useEffect, useReducer } from "react";
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
-import { Input, Button, Select, Autocomplete, Option } from '@mui/joy';
+import { Input, Button, Select, Autocomplete, Option, CircularProgress } from '@mui/joy';
 import SaveIcon from '@mui/icons-material/Save';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 import AmenityLocationSelect from './AmenityLocationSelect'
 
 import MapVisualComponent from './MapVisualComponent'
+import DefaultMap from './DefaultMap'
 import { NewDropdown } from "../SearchPageComponents/NewDropdown";
 
 import noDataImg from '../../assets/images/Illustration.png'
@@ -21,10 +22,11 @@ import {
   testBackendConnection,
   fetchAmenityData,
 } from "../../helpers/fetchFunctions";
+import ChartPanel from "./Charts/ChartPanel";
 
 
 function CustomTabPanel(props) {
-  const { children, value, index, overlayCoords, locationIDKey, amenities, ...other } = props;
+  const { children, value, index, overlayCoords, locationIDKey, instanceName, amenities, ...other } = props;
 
   return (
     <div
@@ -37,6 +39,7 @@ function CustomTabPanel(props) {
       {value === index && <MapVisualComponent
                                         overlayCoords={overlayCoords}
                                         locationIDKey={locationIDKey}
+                                        instanceName={instanceName}
                                         amenities={amenities}  />}
     </div>
   );
@@ -81,6 +84,7 @@ const Amenities = ({
     const [saveLoading, setSaveLoading] = useState(false)
     const [exportLoading, setExportLoading] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [defaultMapLoading, setDefaultMapLoading] = useState(true)
 
     /*
     * Holds the Radar data scores for different Amenities.
@@ -91,6 +95,8 @@ const Amenities = ({
     * Stores amenity location polygon or lat/lon points as well as amenity type and colour for each a admin area instance.
     */
     const [amenityPolygons, setAmenityPolygons] = useState({});
+
+    const [enrichedAmenityPolygons, setEnrichedAmenityPolygons] = useState([])
 
     /*
     * Contains the polygons (outlines) for all the admin area instances.
@@ -144,12 +150,22 @@ const Amenities = ({
         setTabValue(newValue);
     };
 
+    const selectInstance = (instanceName) => {
+        console.log('user selected area instance name: ', instanceName)
+        // console.log('user selected area instance id: ',instanceID)
+        //if we update the areaInstancesState that should work
+        dispatchAdminAreaInstances({
+            type: "SET_SELECTED",
+            payload: [instanceName],
+        });
+    }
+
 
     const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
     const selectedAdminInstancesURLs = getSelectedAdminInstancesURLsAndNames(
         adminAreaInstancesState
     );
-    console.log('admin area instance state: ', adminAreaInstancesState)
+    // console.log('admin area instance state: ', adminAreaInstancesState)
 
     
 
@@ -184,9 +200,9 @@ const Amenities = ({
       }, [adminAreaTypesState]);
 
     useEffect(() => {
-        console.log("Current Admin Type", currentAdminType);
-        console.log("Current City", cityURLs);
-        console.log("Print Admin Area instance states", adminAreaInstancesState);
+        // console.log("Current Admin Type", currentAdminType);
+        // console.log("Current City", cityURLs);
+        // console.log("Print Admin Area instance states", adminAreaInstancesState);
     
         /*
          * Fetches the amenity scores for the radar graph.
@@ -236,7 +252,7 @@ const Amenities = ({
           let newAmenityPolygons = {};
     
           for (const instance of selectedAdminInstancesURLs) {
-            console.log('admin instances urls: ', instance)
+            // console.log('admin instances urls: ', instance)
             // Extract the location_id part from the URL
             const locationID = instance.url.split("#")[1];
             const instanceName = instance.name
@@ -249,12 +265,12 @@ const Amenities = ({
               );
     
               const amenityData = rawData[0];
-              console.log('amenity data: ', amenityData)
+            //   console.log('amenity data: ', amenityData)
               const locationIDLocationData = rawData[1];
               setlocationIDPolygons(locationIDLocationData);
               // Format the fetched Amenties using formatAmenties
               const formattedAmenities = formatAmenities(amenityData);
-              console.log('formattedAmenities: ', formattedAmenities)
+            //   console.log('formattedAmenities: ', formattedAmenities)
               formattedAmenities.instanceName = instanceName
     
               // Add the formatted Amenties to the newAmenityPolygons object
@@ -270,7 +286,7 @@ const Amenities = ({
     
           // Once all Amenties are fetched and formatted, update the state
           setLoading(false); // Data is ready, stop loading
-          console.log('new amenity polygons: ', newAmenityPolygons)
+        //   console.log('new amenity polygons: ', newAmenityPolygons)
           setAmenityPolygons(newAmenityPolygons);
         };
     
@@ -286,13 +302,29 @@ const Amenities = ({
         dispatchAdminAreaInstances,
       ]);
 
+    useEffect(() => {
+        if (Object.keys(adminAreaInstancesState).length === 0) return
+        //we need to prepare what we need and call a fetch function to get a list of neighborhood area instances of toronto
+        console.log('ADMIN AREA INSTANCES STATE: ',adminAreaInstancesState)
+        //we need to enrich this user friendly identifiers, mainly the instance name
+        const enrichedList = Object.keys(adminAreaInstancesState).map((key) => {
+            const instanceName = key
+            let obj = adminAreaInstancesState[key]
+            obj = {...obj, instanceName: instanceName}
+
+            return obj
+        })
+        console.log('enriched list: ', enrichedList)
+        setEnrichedAmenityPolygons(enrichedList)
+    }, [adminAreaInstancesState])
+
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
             sx={{ display: "flex", height: "100dvh", width:"100%" }}>
                 {showSidePanel === true && (
-                    <Box sx={{ width: {xs:"100%", md:"420px"}, flexShrink: 0, borderRight: {md: '1px solid var(--border-color)'}, px: 2, position:"relative", boxSizing:"border-box" }}>
-                        <Box sx={{height: {xs: 'calc(100% - 50px)', md: 'calc(100% - 55px' }, overflowY: 'auto'}}>
+                    <Box sx={{ width: {xs:"100%", md:"420px"}, flexShrink: 0, borderRight: {md: '1px solid var(--border-color)'}, position:"relative", boxSizing:"border-box" }}>
+                        <Box sx={{height: {xs: 'calc(100% - 50px)', md: 'calc(100% - 55px)' }, overflowY: 'auto'}}>
                         <Stack spacing={2}>
 
                             <AmenityLocationSelect
@@ -320,6 +352,10 @@ const Amenities = ({
                                         No Data
                                     </Typography>
                                 </Box>}
+
+                            {
+                                selectedAdminInstancesURLs.length > 0 && <ChartPanel amenityData={amenityData} />
+                            }
 
                             {population != null && density != null && <Box sx={{width:"100%", flexDirection:"row", justifyContent: "flex-start, gap: 2"}}>
                                     <Box sx={{flexDirection: "column", alignItems:"flex-start", gap: 2}}>
@@ -408,11 +444,11 @@ const Amenities = ({
                             py:1
                         }}
                         >
-                            <Button variant="outlined" color="neutral" loading={exportLoading} startDecorator={<FileDownloadOutlinedIcon />}>
+                            <Button size="sm" variant="outlined" color="neutral" loading={exportLoading} startDecorator={<FileDownloadOutlinedIcon />}>
                                 Export
                             </Button>
 
-                            <Button loading={saveLoading} startDecorator={<SaveIcon />}>
+                            <Button size="sm" loading={saveLoading} startDecorator={<SaveIcon />}>
                                 Save
                             </Button>
                         </Box>
@@ -421,7 +457,7 @@ const Amenities = ({
                 
                 {showMap === true && (
                     <Box sx={{display: {xs: "none", md:"block"}, width:"100%", height:"100%"}}>
-                        {selectedAdminInstancesURLs.length > 0 ? (
+                        {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length > 0 ? (
                             <Box>
                             <Box sx={{ borderBottom: 1, borderColor: 'var(--border-color)' }}>
                                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" variant="scrollable"
@@ -446,17 +482,23 @@ const Amenities = ({
                             "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                             const fullKey = baseURI + locationIDKey;
                             const locationID = amenityPolygons[locationIDKey];
-                            console.log('AMENITIES: ', locationID)
-                            console.log('test location: ', locationIDPolygons[fullKey])
+                            const instanceName = amenityPolygons[locationIDKey].instanceName
+                            // console.log('AMENITIES: ', locationID)
+                            // console.log('test location: ', locationIDPolygons[fullKey])
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                             if (overlayCoords != null) {
                                 return(
-                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} />
+                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} instanceName={instanceName} />
                                 )
                             }
                         })}
                         </Box>
-                    ) : (<Typography>Please Select an area</Typography>)
+                    ) : (<Box sx={{display:"flex",alignItems:"center", justifyContent:'center', width:'100%',height:'100%'}}> <CircularProgress /> </Box>) : (
+                        <DefaultMap 
+                        instancePolygons={enrichedAmenityPolygons}
+                        selectInstance={selectInstance}
+                        />
+                    )
                         }
                        
                     </Box>

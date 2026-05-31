@@ -15,6 +15,7 @@ import "leaflet/dist/leaflet.css";
 const MapVisualComponent = ({
     locationIDPolygons,
     amenities,
+    instanceName,
     overlayCoords,
     locationIDKey
 }) => {
@@ -36,11 +37,11 @@ const MapVisualComponent = ({
         <Box sx={{width:"100%"}}>
             <Stack>
                 <Box sx={{width:"100%", px:1, display:"flex", py:1, boxSizing:"border-box", height: "50px",borderBottom:"1px solid", backgroundColor:"white", alignItems:"center", justifyContent:"flex-start", gap:2}}>
-                    <Button variant="outlined" color="neutral" startDecorator={<FilterAltOutlinedIcon />} onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
+                    <Button size="sm" variant="outlined" color="neutral" startDecorator={<FilterAltOutlinedIcon />} onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
                         Filter
                     </Button>
 
-                    <Button variant="outlined" color="neutral" startDecorator={<CircleOutlinedIcon />}>
+                    <Button size="sm" variant="outlined" color="neutral" startDecorator={<CircleOutlinedIcon />}>
                         Catchment Area
                     </Button>
                 </Box>
@@ -61,12 +62,12 @@ const MapVisualComponent = ({
                                 color: '#414141',
                                 fillColor:'black'
                               }}>
-                                <Popup>{`Overlay for ${locationIDKey}`}</Popup>
+                                <Popup>{`Overlay for ${instanceName}`}</Popup>
                               </Polygon>
 
                               <Marker icon={customAmenityMarker('Health')} position={[43,-79]}></Marker>
                               <Marker icon={customAmenityMarker('Spiritual')} position={[44,-78]}></Marker>
-                              {Object.entries(amenities).map(
+                              {Object.entries(amenities)?.map(
                               ([amenityName, amenityObj]) => {
                                 if (amenityObj.displayType === "Point") {
                                   return (
@@ -83,6 +84,9 @@ const MapVisualComponent = ({
                                   );
                                 }
                             })}
+                            {/* <Marker
+                            icon={customAmenityMarker('Health')}
+                            position={[43,-79]}></Marker> */}
                         
 
 

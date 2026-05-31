@@ -1,6 +1,8 @@
 :root {
   --border-color: #ccc;
   --uoft-blue: #0b2f4e;
+  --text-dark: #2b2b2b;
+  --text-medium: #4d4d4d;
 }
 body {
   flex: 1;

@@ -19,8 +19,8 @@ const amenityCategories = {
 
 export const customAmenityMarker = (amenityType) => {
 
-    const iconColor = amenityCategories[amenityType].color
-    const iconShape = amenityCategories[amenityType].icon
+    const iconColor = amenityCategories[amenityType]?.color ?? '#303030'
+    const iconShape = amenityCategories[amenityType]?.icon ?? 'X'
 
     const iconHtml = renderToString(<div style={{
             width: '18px',
