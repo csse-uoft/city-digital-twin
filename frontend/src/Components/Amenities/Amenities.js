@@ -151,7 +151,7 @@ const Amenities = ({
     };
 
     const selectInstance = (instanceName) => {
-        console.log('user selected area instance name: ', instanceName)
+        // console.log('user selected area instance name: ', instanceName)
         // console.log('user selected area instance id: ',instanceID)
         //if we update the areaInstancesState that should work
         dispatchAdminAreaInstances({
@@ -196,7 +196,7 @@ const Amenities = ({
 
 
     useEffect(() => {
-        console.log("Types State updated:", adminAreaTypesState);
+        // console.log("Types State updated:", adminAreaTypesState);
       }, [adminAreaTypesState]);
 
     useEffect(() => {
@@ -219,8 +219,9 @@ const Amenities = ({
             const adminNames = getSelectedAdminInstancesNames(
               adminAreaInstancesState
             );
+            console.log('ADMIN NAMES: ',adminNames)
             const data = await fetchAmenityData(adminType);
-    
+            console.log('DATA: ',data)
             adminNames.forEach((name) => {
               const amenitiesForArea = data.data.filter((obj) => obj.name === name);
     
@@ -236,7 +237,7 @@ const Amenities = ({
                 });
               }
             });
-    
+            console.log('amenityDataResults: ',amenityDataResults)
             setAmenityData(amenityDataResults);
           } catch (error) {
             console.error("Error fetching amenity data:", error);
@@ -305,7 +306,7 @@ const Amenities = ({
     useEffect(() => {
         if (Object.keys(adminAreaInstancesState).length === 0) return
         //we need to prepare what we need and call a fetch function to get a list of neighborhood area instances of toronto
-        console.log('ADMIN AREA INSTANCES STATE: ',adminAreaInstancesState)
+        // console.log('ADMIN AREA INSTANCES STATE: ',adminAreaInstancesState)
         //we need to enrich this user friendly identifiers, mainly the instance name
         const enrichedList = Object.keys(adminAreaInstancesState).map((key) => {
             const instanceName = key
@@ -314,7 +315,7 @@ const Amenities = ({
 
             return obj
         })
-        console.log('enriched list: ', enrichedList)
+        // console.log('enriched list: ', enrichedList)
         setEnrichedAmenityPolygons(enrichedList)
     }, [adminAreaInstancesState])
 
@@ -354,7 +355,7 @@ const Amenities = ({
                                 </Box>}
 
                             {
-                                selectedAdminInstancesURLs.length > 0 && <ChartPanel amenityData={amenityData} />
+                                selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityData).length > 0 ? (<ChartPanel amenityData={amenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
                             }
 
                             {population != null && density != null && <Box sx={{width:"100%", flexDirection:"row", justifyContent: "flex-start, gap: 2"}}>

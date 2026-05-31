@@ -268,6 +268,7 @@ const CompleteCommunitiesDashboard = ({
                     const baseURI =
                       "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                     const fullKey = baseURI + locationIDKey;
+                    console.log('complete communities locationIDKey: ', locationIDKey)
                     const locationID = amenityPolygons[locationIDKey];
                     console.log('complete communities locationId: ', locationID)
                     let overlayCoords =

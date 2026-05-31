@@ -15,6 +15,7 @@ const ChartPanel = ({amenityData
     const [openCustomizationModal, setOpenCustomizationModal] = useState(false)
     const [openExpansionModal, setOpenExpansionModal] = useState(false)
 
+    console.log('chart panel amenity data: ', amenityData)
     
 
     return (

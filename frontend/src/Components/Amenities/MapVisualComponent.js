@@ -52,7 +52,7 @@ const MapVisualComponent = ({
                         zoom={12}
                         style={{ height: "100%", width: "100%" }}
                     >
-                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
 
                         {/*Instance boundary*/}
                         
