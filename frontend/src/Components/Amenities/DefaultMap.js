@@ -21,7 +21,7 @@ const DefaultMap = ({
         // selectInstance(areaInstanceName)
     };
     return(
-        <Box sx={{width:'100%'}}>
+        <Box sx={{width:'100%', marginTop: {xs: "85px", md: "0px"}}}>
             <Stack>
                 <Box sx={{width:'100%',height:'50px',py:1,px:1,boxSizing:'border-box',borderBottom:"1px solid var(--border-color)",display:'flex',justifyContent:'flex-end',alignItems:'center'}}>
                     {selectedInstanceName === '' ? <Typography 
@@ -35,7 +35,7 @@ const DefaultMap = ({
                                             </Typography> 
                                             : <Button size="sm" onClick={()=>selectInstance(selectedInstanceName)}>Select {selectedInstanceName}</Button>}
                 </Box>
-                <Box sx={{width:"100%", height:"calc(100dvh - 50px)"}}>
+                <Box sx={{width:"100%", height:{xs:"calc(100dvh - 50px - 85px)", md:"calc(100dvh - 50px)"}}}>
                     <MapContainer
                     center={[43.7, -79.42]}
                     zoom={12}

@@ -6,6 +6,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
 import ChartCustomizationModal from "./ChartCustomizationModal";
+import ChartExpansionModal from "./ChartExpansionModal"
 
 const ChartPanel = ({amenityData
 
@@ -44,6 +45,11 @@ const ChartPanel = ({amenityData
                 {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
 
                 <ChartCustomizationModal open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} />
+
+                <ChartExpansionModal open={openExpansionModal} onClose={()=>setOpenExpansionModal(false)} openCustomization={()=>{
+                    setOpenExpansionModal(false)
+                    setOpenCustomizationModal(true)
+                }}/>
 
             </Stack>
         </Box>

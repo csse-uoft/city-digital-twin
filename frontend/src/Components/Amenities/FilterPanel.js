@@ -13,25 +13,27 @@ const amenityCategories = {
         'Recreational':{ color: '#22C55E', types: ['Arcade','Cinema/theatre'] }
     };
 
-const FilterPanel = ({isOpen}) => {
+const FilterPanel = ({isOpen,updateFilters,filterState}) => {
 
     
 
     const [selectedAmenity, setSelectedAmenity] = useState('Health')
-    const [amenityCheckBoxes, setAmenityCheckBoxes] = useState([])
+    // const [amenityCheckBoxes, setAmenityCheckBoxes] = useState([])
 
     const children = (
         <Stack spacing={0}>
             {
                 amenityCategories[selectedAmenity]?.types?.map((type,index) => (
                     <Box sx={{width:'100%',py:1,px:1,boxSizing:'border-box'}}>
-                    <Checkbox checked={[...amenityCheckBoxes][index]} onChange={(event) => {
+                    <Checkbox checked={filterState[type]?.show} onChange={(event) => {
                         const checked = event.target.checked
-                        setAmenityCheckBoxes(prev => {
-                            const checkList = [...prev]
-                            checkList[index] = checked
-                            return checkList
-                        })
+                        console.log('checked event: ',event)
+                        // setAmenityCheckBoxes(prev => {
+                        //     const checkList = [...prev]
+                        //     checkList[index] = checked
+                        //     return checkList
+                        // })
+                        updateFilters(selectedAmenity,type)
                     }} label={type} />
                     </Box>
 
@@ -41,35 +43,32 @@ const FilterPanel = ({isOpen}) => {
     );
 
     const handleChange = (event) => {
+        console.log('event: ',event)
         if (event.target.checked) {
-            const newCheckList = amenityCheckBoxes.map(() => (true))
-            setAmenityCheckBoxes(newCheckList)
-        } else {
-            const newCheckList = amenityCheckBoxes.map(() => (false))
-            setAmenityCheckBoxes(newCheckList)
-        }
+            updateFilters(selectedAmenity,'all')
+        } 
     }
 
-    const selectAllChecked = () => {
-        for (let i=0; i < amenityCheckBoxes.length; i++) {
-            if (amenityCheckBoxes[i] === false) {
+    const selectAllChecked = (category) => {
+        for (const key of Object.keys(filterState)) {
+            if (filterState[key]?.type === category && filterState[key]?.show === false) {
                 return false
             }
         }
         return true
     }
 
-    const selectAllIntermediate = () => {
-        const checked = amenityCheckBoxes.filter(k => k === true)
-        return checked.length > 0 && checked.length < amenityCheckBoxes.length
-    }
+    // const selectAllIntermediate = () => {
+    //     const checked = amenityCheckBoxes.filter(k => k === true)
+    //     return checked.length > 0 && checked.length < amenityCheckBoxes.length
+    // }
 
     useEffect(() => {
         if (!selectedAmenity) return
-        console.log('current amenity: ',selectedAmenity)
-        const checkList = amenityCategories[selectedAmenity]?.types?.map(() => (true))
-        console.log('set amenity checklist: ',checkList)
-        setAmenityCheckBoxes(checkList)
+        // console.log('current amenity: ',selectedAmenity)
+        // const checkList = amenityCategories[selectedAmenity]?.types?.map(() => (true))
+        // console.log('set amenity checklist: ',checkList)
+        // setAmenityCheckBoxes(checkList)
     },[selectedAmenity])
 
     if (!isOpen) {
@@ -81,7 +80,7 @@ const FilterPanel = ({isOpen}) => {
                 borderRadius: '12px',
                 overflow: 'hidden',
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                height: {xs: '100dvh', md: '400px'},
+                height: {xs: '100%', md: '400px'},
                 width: {xs: '100%', md: '500px'},
                 display:'flex'
             }}>
@@ -106,7 +105,7 @@ const FilterPanel = ({isOpen}) => {
                                 px:1, 
                                 py:1, 
                                 cursor:'pointer',
-                                backgroundColor: selectedAmenity === amenityCategories[category].name ? 'white' : ''
+                                backgroundColor: selectedAmenity === category ? 'white' : ''
                             }}
                             onClick={()=>setSelectedAmenity(category)}>
                                 <Box sx={{borderRadius:'50%',backgroundColor: amenityCategories[category].color, width:'25px',height:'25px'}}>
@@ -114,7 +113,7 @@ const FilterPanel = ({isOpen}) => {
                                 </Box>
                                 <Typography
                                 variant="h5"
-                                sx={{fontSize:12, color: selectedAmenity === amenityCategories[category].name ? '#479ef5' : '#181818'}}>
+                                sx={{fontSize:12, color: selectedAmenity === category ? '#479ef5' : '#181818'}}>
                                     {category}
                                 </Typography>
 
@@ -132,8 +131,8 @@ const FilterPanel = ({isOpen}) => {
 
                         <Checkbox
                             label="Select All"
-                            checked={selectAllChecked()}
-                            indeterminate={selectAllIntermediate()}
+                            checked={selectAllChecked(selectedAmenity)}
+                            // indeterminate={selectAllIntermediate()}
                             onChange={handleChange}
                         />
                     </Box>

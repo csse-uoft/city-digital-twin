@@ -188,12 +188,14 @@ export const fetchAmenityLocations = async (
   adminAreaTypesState
 ) => {
   try {
+    console.log('Calling fetchAmenityLocations: ', locationID)
     const response = await axios.post(
       `${API_BASE_URL}/api/amenity-location-all`,
       {
         location_id: locationID,
       }
     );
+    console.log('/api/amenity-location-all response: ',response)
 
     const updatedLocationURLs = [];
 
@@ -235,6 +237,7 @@ export const fetchAmenityLocations = async (
         displayType: displayT,
       });
     });
+
     // 2. Retrieve admin area info based on selected area type
     const cityName = "http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto";
 
@@ -253,6 +256,7 @@ export const fetchAmenityLocations = async (
       cityName: cityName,
       adminType: areaTypeURL,
     });
+    console.log('api response1: ', response1)
 
     const areaInstaceList = response1.data["adminAreaInstanceNames"];
 

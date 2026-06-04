@@ -77,7 +77,6 @@ const Amenities = ({
     dispatchAdminAreaInstances,
 }) => {
     const [showSidePanel, setShowSidePanel] = useState(true)
-    const [showMap, setShowMap] = useState(true)
 
     //loading signals
     const [cityLoading, setCityLoading] = useState(false);
@@ -323,8 +322,7 @@ const Amenities = ({
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
             sx={{ display: "flex", height: "100dvh", width:"100%" }}>
-                {showSidePanel === true && (
-                    <Box sx={{ width: {xs:"100%", md:"420px"}, flexShrink: 0, borderRight: {md: '1px solid var(--border-color)'}, position:"relative", boxSizing:"border-box" }}>
+                    <Box sx={{ display: {xs: showSidePanel ? "block" : "none", md: "block"}, width: {xs:"100%", md:"420px"}, flexShrink: 0, borderRight: {md: '1px solid var(--border-color)'}, position:"relative", boxSizing:"border-box" }}>
                         <Box sx={{height: {xs: 'calc(100% - 50px)', md: 'calc(100% - 55px)' }, overflowY: 'auto'}}>
                         <Stack spacing={2}>
 
@@ -354,8 +352,8 @@ const Amenities = ({
                                     </Typography>
                                 </Box>}
 
-                            {
-                                selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityData).length > 0 ? (<ChartPanel amenityData={amenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
+                            { //Object.keys(amenityData).length > 0
+                                selectedAdminInstancesURLs.length > 0 ? 2>1 ? (<ChartPanel amenityData={amenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
                             }
 
                             {population != null && density != null && <Box sx={{width:"100%", flexDirection:"row", justifyContent: "flex-start, gap: 2"}}>
@@ -445,6 +443,9 @@ const Amenities = ({
                             py:1
                         }}
                         >
+
+                            <Button onClick={()=>setShowSidePanel(false)} sx={{display: {md: "none", xs: "block"}}} size="sm" variant="outlined">Show Map</Button>
+                            
                             <Button size="sm" variant="outlined" color="neutral" loading={exportLoading} startDecorator={<FileDownloadOutlinedIcon />}>
                                 Export
                             </Button>
@@ -454,10 +455,11 @@ const Amenities = ({
                             </Button>
                         </Box>
                     </Box>
-                )}
+                {/* )} */}
                 
-                {showMap === true && (
-                    <Box sx={{display: {xs: "none", md:"block"}, width:"100%", height:"100%"}}>
+                {/* {showMap === true && ( */}
+                    <Box sx={{display: {xs: showSidePanel ? "none" : "block", md:"block"}, width:"100%", height:"100%"}}>
+                        <Button variant="outlined" size="sm" onClick={()=>setShowSidePanel(true)} sx={{display: {md:"none", xs:"block"}, position:"fixed", bottom:"10px", left:"10px", zIndex:10000}}>Show Panel</Button>
                         {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length > 0 ? (
                             <Box>
                             <Box sx={{ borderBottom: 1, borderColor: 'var(--border-color)' }}>
@@ -504,7 +506,7 @@ const Amenities = ({
                        
                     </Box>
                     
-                )}
+                {/* )} */}
             </Box>
 
         </Box>

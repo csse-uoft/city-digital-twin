@@ -22,6 +22,104 @@ const MapVisualComponent = ({
 
     const [filterPanelOpen, setFilterPanelOpen] = useState(false)
 
+    const [filterPanelState, setFilterPanelState] = useState({
+        'Hospitals': {
+            type:'Health',
+            show:true
+        },
+        'Clinics': {
+            type:'Health',
+            show: true
+        },
+        'Pharmacies': {
+            type:'Health',
+            show:true
+        },
+        'Mental health services': {
+            type:'Health',
+            show:true
+        },
+        'Dental clinics': {
+            type:'Health',
+            show:true
+        },
+        'Physiotherapy/rehab': {
+            type:'Health',
+            show:true
+        },
+        'Fitness centres/gyms': {
+            type:'Health',
+            show:true
+        },
+        'Mall': {
+            type:'Retail & Services',
+            show:true
+        },
+        'Restaurant': {
+            type:'Retail & Services',
+            show:true
+        },
+        'School': {
+            type:'Education & Childcare',
+            show:true
+        },
+        'Daycare': {
+            type:'Education & Childcare',
+            show:true
+        },
+        'Mosque': {
+            type:'Spiritual',
+            show:true
+        },
+        'Church': {
+            type:'Spiritual',
+            show:true
+        },
+        'Sinnagog': {
+            type:'Spiritual',
+            show:true
+        },
+        'Museum': {
+            type:'Cultural',
+            show:true
+        },
+        'Court House': {
+            type:'Communal',
+            show:true
+        },
+        'Arcade': {
+            type:'Recreational',
+            show:true
+        },
+        'Cinema/theatre': {
+            type:'Recreational',
+            show:true
+        },
+    })
+
+    const updateFilters = (type, filter) => {
+        // Create a shallow copy of the state
+        const newState = { ...filterPanelState };
+
+        if (filter === 'all') {
+            // Toggle all subtypes belonging to this category
+            Object.keys(newState).forEach(key => {
+                if (newState[key].type === type) {
+                    newState[key] = { ...newState[key], show: true };
+                }
+            });
+        } else {
+            // Guard against missing key before accessing .show
+            if (newState[filter] === undefined) {
+                console.warn(`Filter key "${filter}" not found in filterPanelState`);
+                return;
+            }
+            newState[filter] = { ...newState[filter], show: !newState[filter].show };
+        }
+
+        setFilterPanelState(newState);
+    }
+
     // const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
     // const fullKey = baseURI + locationIDKey;
     // const locationID = amenityPolygons[locationIDKey];
@@ -34,7 +132,7 @@ const MapVisualComponent = ({
     ];
 
     return(
-        <Box sx={{width:"100%"}}>
+        <Box sx={{width:"100%", marginTop: {xs: "40px", md:"0px"}}}>
             <Stack>
                 <Box sx={{width:"100%", px:1, display:"flex", py:1, boxSizing:"border-box", height: "50px",borderBottom:"1px solid", backgroundColor:"white", alignItems:"center", justifyContent:"flex-start", gap:2}}>
                     <Button size="sm" variant="outlined" color="neutral" startDecorator={<FilterAltOutlinedIcon />} onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
@@ -46,7 +144,7 @@ const MapVisualComponent = ({
                     </Button>
                 </Box>
 
-                <Box sx={{ width: "100%", height: "calc(100dvh - 99px)", position:'relative' }}>
+                <Box sx={{ width: "100%", height: {xs:"calc(100dvh - 99px - 40px)", md:"calc(100dvh - 99px)"}, position:'relative' }}>
                     <MapContainer
                         center={[43.7, -79.42]}
                         zoom={12}
@@ -116,7 +214,7 @@ const MapVisualComponent = ({
                         maxWidth:'100%',
                         width:'400px'
                     }}>
-                        <FilterPanel isOpen={filterPanelOpen} />
+                        <FilterPanel isOpen={filterPanelOpen} updateFilters={updateFilters} filterState={filterPanelState} />
                     </Box>
                 </Box>
 

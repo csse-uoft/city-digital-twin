@@ -883,6 +883,7 @@ router.post("/amenity-location-all", async (req, res) => {
 
   // Extract location_id from the request body
   const location_id = req.body.location_id;
+  console.log('locationId: ', location_id)
 
   // SPARQL query to retrieve amenities intersecting with the specified location
   const query = `
@@ -922,14 +923,13 @@ router.post("/amenity-location-all", async (req, res) => {
   try {
     // Execute the first query for amenity classes
     const stream = await client.query.select(query);
-
     // Collect results from the stream
     let rawData = [];
     stream.on("data", (row) => {
       rawData.push(row);
     });
-
     stream.on("end", () => {
+      console.log('rawData: ', rawData)
       const formattedData = rawData.map((binding) => {
         var amenity_tp = "";
         if (binding.amenity) {
@@ -949,7 +949,7 @@ router.post("/amenity-location-all", async (req, res) => {
           color: binding.color ? binding.color.value : null,
         };
       });
-
+      console.log('formatted data: ', formattedData)
       // Send the formatted data as JSON
       res.json({ success: true, data: formattedData });
     });
