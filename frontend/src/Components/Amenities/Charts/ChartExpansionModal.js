@@ -4,11 +4,15 @@ import { Input, Button, IconButton, Select, Autocomplete, Option } from '@mui/jo
 import CloseIcon from '@mui/icons-material/Close';
 import TuneIcon from '@mui/icons-material/Tune'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadDoneOutlined'
+
+//charts
+import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
 const ChartExpansionModal = ({
     onClose,
     open,
-    selectedChat,
-    openCustomization
+    chartSelected,
+    openCustomization,
+    amenityData
 }) => {
     return(
         <Dialog open={open} onClose={onClose} PaperProps={{
@@ -52,15 +56,10 @@ const ChartExpansionModal = ({
             boxSizing:"border-box",
             px:1,
             display:'flex',
-            flexDirection: {xs: 'column', md:'row'}
+            alignItems:"center",
+            justifyContent:"center"
         }} >
-            <Box sx={{width: {xs: '100%', md: '250px'}, height: {xs: 'auto', md:'100%'}, flexShrink:0, borderRight: {xs:'none', md:"1px solid var(--border-color)"}}}>
-
-            </Box>
-
-            <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1}}>
-
-            </Box>
+            {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
 
         </Box>
 

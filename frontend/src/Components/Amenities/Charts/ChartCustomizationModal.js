@@ -4,12 +4,31 @@ import { Input, Button, IconButton, Select, Autocomplete, Option } from '@mui/jo
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadDoneOutlined'
+//charts
+import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
 const ChartCustomizationModal = ({
     onClose, 
     open,
     updatedSelectedChart,
-    selectedChart
+    chartSelected,
+    amenityData
     }) => {
+
+    const [tempSelection, setTempSelection] = useState(chartSelected ?? 'Radar')
+
+    const resetToDefault = () => {
+        setTempSelection(chartSelected)
+    }
+
+    const onChartSelectChange = (event, newValue) => {
+        console.log('changing chart selection: ',newValue)
+        setTempSelection(newValue)
+
+    }
+
+    useEffect(() => {
+
+    },[tempSelection])
 
     return(
         <Dialog open={open} onClose={onClose} PaperProps={{
@@ -57,11 +76,27 @@ const ChartCustomizationModal = ({
             flexDirection: {xs: 'column', md:'row'}
         }} >
             <Box sx={{width: {xs: '100%', md: '250px'}, height: {xs: 'auto', md:'100%'}, flexShrink:0, borderRight: {xs:'none', md:"1px solid var(--border-color)"}}}>
-
+                <Stack>
+                    <Box sx={{width:'100%',display:"flex",flexDirection:"column",alignItems:"flex-start", gap:1,py:1,px:1, boxSizing:'border-box'}}>
+                        <Typography variant="h3" style={{fontSize:14, fontWeight:"bold"}}>Chart Type</Typography>
+                        <Select 
+                            defaultValue="Radar" 
+                            sx={{width:'100%'}} 
+                            onChange={onChartSelectChange}
+                            slotProps={{
+                                listbox: {
+                                sx: { zIndex: 9999 }
+                                }
+                            }}>
+                            <Option value="Radar">Radar</Option>
+                            <Option value="Bar">Bar</Option>
+                        </Select>
+                    </Box>
+                </Stack>
             </Box>
 
-            <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1}}>
-
+            <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
+                {tempSelection === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
             </Box>
 
         </Box>
@@ -80,7 +115,7 @@ const ChartCustomizationModal = ({
             bottom:0,
             left:0
             }}>
-            <Button size="sm" variant="outlined" color="neutral">
+            <Button size="sm" variant="outlined" color="neutral" onClick={()=>resetToDefault()}>
                 Reset to Default
             </Button>
 

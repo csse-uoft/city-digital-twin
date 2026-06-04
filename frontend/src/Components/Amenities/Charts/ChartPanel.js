@@ -21,7 +21,7 @@ const ChartPanel = ({amenityData
 
     return (
         <Box sx={{width: '100%', height: 'auto', px:2, boxSizing:'border-box'}}>
-            <Stack spacing={2}>
+            <Stack spacing={2} sx={{alignItems:"center", justifyContent:"center"}}>
                 <Box sx={{width:"100%",flexDirection:"column",alignItems:"flex-start"}}>
                     <Typography variant="h4" style={{fontWeight:'bold', fontSize: '15px', color:'var(--text-dark)'}}>Walkability Coverage</Typography>
                     <Typography variant="h5" style={{fontSize: '12px', color: "var(--text-medium)"}}>The proportion (as a percentage) of houses that are within walking distance of each amenity type.</Typography>
@@ -44,9 +44,9 @@ const ChartPanel = ({amenityData
 
                 {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
 
-                <ChartCustomizationModal open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} />
+                <ChartCustomizationModal open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} chartSelected={chartSelected} amenityData={amenityData} />
 
-                <ChartExpansionModal open={openExpansionModal} onClose={()=>setOpenExpansionModal(false)} openCustomization={()=>{
+                <ChartExpansionModal open={openExpansionModal} onClose={()=>setOpenExpansionModal(false)} chartSelected={chartSelected} amenityData={amenityData} openCustomization={()=>{
                     setOpenExpansionModal(false)
                     setOpenCustomizationModal(true)
                 }}/>

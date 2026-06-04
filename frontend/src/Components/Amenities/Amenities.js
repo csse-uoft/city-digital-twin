@@ -24,6 +24,18 @@ import {
 } from "../../helpers/fetchFunctions";
 import ChartPanel from "./Charts/ChartPanel";
 
+const mockAmenityData = { 
+	'South Riverdale (70)': {
+				'Health':0.7,  // type - walkability score
+				'Spiritual':0.2, 
+				'Education & childcare':0.8, 
+				'Retail & services':0.8, 
+				'Communal':0,
+                'Cultural':0.3,
+                'Recreational': 0.1
+				}
+}
+
 
 function CustomTabPanel(props) {
   const { children, value, index, overlayCoords, locationIDKey, instanceName, amenities, ...other } = props;
@@ -84,6 +96,7 @@ const Amenities = ({
     const [exportLoading, setExportLoading] = useState(false)
     const [loading, setLoading] = useState(true)
     const [defaultMapLoading, setDefaultMapLoading] = useState(true)
+
 
     /*
     * Holds the Radar data scores for different Amenities.
@@ -146,6 +159,7 @@ const Amenities = ({
     const [tabValue, setTabValue] = useState(0);
 
     const handleTabChange = (event, newValue) => {
+        console.log('new tab value: ', newValue)
         setTabValue(newValue);
     };
 
@@ -322,7 +336,7 @@ const Amenities = ({
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
             sx={{ display: "flex", height: "100dvh", width:"100%" }}>
-                    <Box sx={{ display: {xs: showSidePanel ? "block" : "none", md: "block"}, width: {xs:"100%", md:"420px"}, flexShrink: 0, borderRight: {md: '1px solid var(--border-color)'}, position:"relative", boxSizing:"border-box" }}>
+                    <Box sx={{ display: {xs: showSidePanel ? "block" : "none", md: "block"}, width: {xs:"100%", md:"450px"}, flexShrink: 0, borderRight: {md: '1px solid var(--border-color)'}, position:"relative", boxSizing:"border-box" }}>
                         <Box sx={{height: {xs: 'calc(100% - 50px)', md: 'calc(100% - 55px)' }, overflowY: 'auto'}}>
                         <Stack spacing={2}>
 
@@ -353,7 +367,7 @@ const Amenities = ({
                                 </Box>}
 
                             { //Object.keys(amenityData).length > 0
-                                selectedAdminInstancesURLs.length > 0 ? 2>1 ? (<ChartPanel amenityData={amenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
+                                selectedAdminInstancesURLs.length > 0 ? 2>1 ? (<ChartPanel amenityData={mockAmenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
                             }
 
                             {population != null && density != null && <Box sx={{width:"100%", flexDirection:"row", justifyContent: "flex-start, gap: 2"}}>

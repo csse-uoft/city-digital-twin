@@ -10,10 +10,10 @@ import {
 } from "recharts";
 
 const transformDataForRadar = (amenityData) => {
-  const amenityTypes = new Set();
+  const amenityTypes = new Set(); //a list of all the types of amenities (health, education, spritual, etc)
 
   // Get all possible amenity types across neighborhoods
-  Object.values(amenityData).forEach((amenities) => {
+  Object.values(amenityData).forEach((amenities) => { //array of values for all fields. Each value is it's own object that categorizes the amenities for a neighborhood by types
     Object.keys(amenities).forEach((type) => amenityTypes.add(type));
   });
 
@@ -21,7 +21,7 @@ const transformDataForRadar = (amenityData) => {
   const radarData = [...amenityTypes].map((type) => {
     const entry = { amenity: type };
     Object.entries(amenityData).forEach(([neighborhood, amenities]) => {
-      entry[neighborhood] = parseFloat(amenities[type]) || 0;
+      entry[neighborhood] = parseFloat(amenities[type]) || 0; // this number is a walkability score
     });
     return entry;
   });
@@ -37,11 +37,11 @@ const AmenityRadarChart = ({ amenityData }) => {
   const neighborhoodNames = Object.keys(amenityData);
 
   return (
-    <ResponsiveContainer width="100%" height={500}>
-      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+    <ResponsiveContainer width="90%" height={500}>
+      <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
         <PolarGrid />
         <PolarAngleAxis dataKey="amenity" />
-        <PolarRadiusAxis angle={30} domain={[0, 1]} />
+        <PolarRadiusAxis angle={30} domain={[0, 1]} tick={{fontSize:2}}/>
         <Tooltip />
         <Legend />
         {neighborhoodNames.map((name, i) => (
