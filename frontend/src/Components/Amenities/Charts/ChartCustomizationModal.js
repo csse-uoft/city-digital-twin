@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react'
-import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs, Dialog, DialogTitle } from "@mui/material";
+import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs, Dialog, DialogTitle, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { Input, Button, IconButton, Select, Autocomplete, Option } from '@mui/joy';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadDoneOutlined'
 //charts
 import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
+import AmenityBarChart from '../../DataVisComponents/AmenityBarChart'
 const ChartCustomizationModal = ({
     onClose, 
     open,
-    updatedSelectedChart,
+    updateSelectedChart,
     chartSelected,
     amenityData
     }) => {
 
     const [tempSelection, setTempSelection] = useState(chartSelected ?? 'Radar')
-
+    const [view, setView] = useState('category');
     const resetToDefault = () => {
         setTempSelection(chartSelected)
     }
@@ -24,6 +25,15 @@ const ChartCustomizationModal = ({
         console.log('changing chart selection: ',newValue)
         setTempSelection(newValue)
 
+    }
+
+    const saveChanges = () => {
+        console.log('saving chart changes')
+        updateSelectedChart(tempSelection)
+    }
+
+    const exportChart = () => {
+        console.log('Exporting chart...')
     }
 
     useEffect(() => {
@@ -80,7 +90,7 @@ const ChartCustomizationModal = ({
                     <Box sx={{width:'100%',display:"flex",flexDirection:"column",alignItems:"flex-start", gap:1,py:1,px:1, boxSizing:'border-box'}}>
                         <Typography variant="h3" style={{fontSize:14, fontWeight:"bold"}}>Chart Type</Typography>
                         <Select 
-                            defaultValue="Radar" 
+                            defaultValue={chartSelected} 
                             sx={{width:'100%'}} 
                             onChange={onChartSelectChange}
                             slotProps={{
@@ -92,11 +102,73 @@ const ChartCustomizationModal = ({
                             <Option value="Bar">Bar</Option>
                         </Select>
                     </Box>
+
+                    <Box sx={{width:'100%',display:"flex",flexDirection:"column",alignItems:"flex-start", gap:1,py:1,px:1, boxSizing:'border-box'}}>
+                        <Typography variant="h3" style={{fontSize:14, fontWeight:"bold"}}>View</Typography>
+                        <ToggleButtonGroup
+                            value={view}
+                            exclusive                    // only one can be selected at a time
+                            onChange={(e, newValue) => { if (newValue) setView(newValue) }}
+                            size="small"
+                            sx={{
+                                backgroundColor: '#f0f0f0',
+                                borderRadius: '8px',
+                                width:'100%',
+                                padding: '3px',
+                                border: 'none',
+                                '& .MuiToggleButtonGroup-grouped': {
+                                    border: 'none',
+                                    borderRadius: '6px !important',  // !important overrides MUI's grouped border-radius reset
+                                },
+                                boxSizing:'border-box'
+                            }}
+                        >
+                            <ToggleButton 
+                                value="category"
+                                disableRipple
+                                sx={{
+                                    textTransform: 'none',
+                                    fontSize: '13px',
+                                    px: 2,
+                                    py: 0.5,
+                                    width:'100%',
+                                    color: '#888',
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'white',
+                                        color: '#333',
+                                        fontWeight: '600',
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+                                        '&:hover': { backgroundColor: 'white' }
+                                    },
+                                    '&:hover': { backgroundColor: 'transparent' }
+                                }}
+                                >By Category</ToggleButton>
+                            <ToggleButton 
+                                value="subtype"
+                                disableRipple
+                                sx={{
+                                    textTransform: 'none',
+                                    fontSize: '13px',
+                                    px: 2,
+                                    py: 0.5,
+                                    width:'100%',
+                                    color: '#888',
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'white',
+                                        color: '#333',
+                                        fontWeight: '600',
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+                                        '&:hover': { backgroundColor: 'white' }
+                                    },
+                                    '&:hover': { backgroundColor: 'transparent' }
+                                }}>By Subtype</ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
                 </Stack>
             </Box>
 
             <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
-                {tempSelection === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
+                {tempSelection === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : <AmenityBarChart amenityData={amenityData} />}
             </Box>
 
         </Box>
@@ -120,8 +192,8 @@ const ChartCustomizationModal = ({
             </Button>
 
             <Box sx={{gap:1,  display:"flex", alignItems:"center"}}>
-                <Button size="sm" startDecorator={<FileDownloadOutlinedIcon />} variant="outlined" color="neutral">Export</Button>
-                <Button size="sm" startDecorator={<SaveIcon />} color="primary">Save Changes</Button>
+                <Button onClick={()=>exportChart()} size="sm" startDecorator={<FileDownloadOutlinedIcon />} variant="outlined" color="neutral">Export</Button>
+                <Button onClick={()=>saveChanges()} size="sm" startDecorator={<SaveIcon />} color="primary">Save Changes</Button>
             </Box>
             
         </Box>

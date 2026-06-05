@@ -7,6 +7,7 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadDoneOutlin
 
 //charts
 import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
+import AmenityBarChart from '../../DataVisComponents/AmenityBarChart';
 const ChartExpansionModal = ({
     onClose,
     open,
@@ -59,7 +60,7 @@ const ChartExpansionModal = ({
             alignItems:"center",
             justifyContent:"center"
         }} >
-            {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
+            {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : <AmenityBarChart amenityData={amenityData} />}
 
         </Box>
 

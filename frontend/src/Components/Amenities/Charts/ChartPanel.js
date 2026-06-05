@@ -5,6 +5,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
+import AmenityBarChart from '../../DataVisComponents/AmenityBarChart'
 import ChartCustomizationModal from "./ChartCustomizationModal";
 import ChartExpansionModal from "./ChartExpansionModal"
 
@@ -17,6 +18,8 @@ const ChartPanel = ({amenityData
     const [openExpansionModal, setOpenExpansionModal] = useState(false)
 
     console.log('chart panel amenity data: ', amenityData)
+
+    
     
 
     return (
@@ -42,14 +45,20 @@ const ChartPanel = ({amenityData
                     </IconButton>
                 </Box>
 
-                {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : null}
+                {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : <AmenityBarChart amenityData={amenityData} />}
 
-                <ChartCustomizationModal open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} chartSelected={chartSelected} amenityData={amenityData} />
+                <ChartCustomizationModal updateSelectedChart={(chart) => setChartSelected(chart)} open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} chartSelected={chartSelected} amenityData={amenityData} />
 
                 <ChartExpansionModal open={openExpansionModal} onClose={()=>setOpenExpansionModal(false)} chartSelected={chartSelected} amenityData={amenityData} openCustomization={()=>{
                     setOpenExpansionModal(false)
                     setOpenCustomizationModal(true)
                 }}/>
+
+                <Box sx={{width:'100%',px:1,py:1,display:'flex',flexDirection:'column',alignItems:"flex-start",gap:1}}>
+                    <Typography variant="h3" style={{fontSize:16, fontWeight:'bold', color:'var(--text-dark)'}}>Data Source</Typography>
+                    <Typography style={{fontSize:12, color:'var(--text-medium)'}}>Data retrieved from OpenStreetMaps</Typography>
+                    <Typography style={{fontSize:12, color:'var(--text-medium)'}}>Last Updated: June 2026</Typography>
+                </Box>
 
             </Stack>
         </Box>

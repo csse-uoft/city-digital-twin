@@ -33,7 +33,14 @@ const mockAmenityData = {
 				'Communal':0,
                 'Cultural':0.3,
                 'Recreational': 0.1
-				}
+				},
+    // 'University (79)':      {
+	// 			'Health':0.7, 
+	// 			'Spiritual':0.2, 
+	// 			'Education & Childcare':0.8, 
+	// 			'Retail & services':0.8, 
+	// 			'Communal':0
+	// 		       }
 }
 
 
