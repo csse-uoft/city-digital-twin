@@ -6,10 +6,51 @@ require("dotenv").config();
 
 const endpointUrl = process.env.ENDPOINT_URL;
 
-const client = new SparqlClient({ endpointUrl });
+const endpointUrl2 = process.env.NEW_ENDPOINT_URL
+const client = new SparqlClient({ endpointUrl: endpointUrl });
+
+const client2 = new SparqlClient({ endpointUrl: endpointUrl2 })
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseMapCoords (coordStr) {
+  const match = coordStr.match(/\((.*)\)/)
+  if (match) {
+    console.log('coordinate match: ',match[1])
+    const coords = match[1].split(' ')
+    const lon = parseFloat(coords[0].replace(/[^0-9.-]+/g, ""))
+    const lat = parseFloat(coords[1].replace(/[^0-9.-]+/g, ""))
+    return {
+      lat: lat,
+      lon: lon
+    }
+  } else {
+    return null
+  }
+}
+
+function transformAmenities (amenityData) {
+  console.log('amenity: ',amenityData)
+  let amenities = {}
+
+  amenityData.forEach((amenity) => {
+    const name = amenity.d?.value.split('/').at(-1)
+    console.log('name: ',name)
+    const colour = amenity?.colour?.value
+    const iconUrl = amenity?.icon?.value
+    if (name) {
+      
+      amenities[name] = {
+        colour: colour,
+        icon: iconUrl
+      }
+    }
+    
+  })
+
+  return amenities
 }
 
 // Test if backend recieve the call from frontend
@@ -1026,6 +1067,240 @@ router.post("/amenity-score", async (req, res) => {
   }
 });
 
+// API 10
+router.post("/neighborhood-amenities", async (req,res) => {
+  const neighborhoodURI = req.body.neighborhoodURI
+  const amenityURI = req.body.amenityURI
+  console.log('API 10')
+  console.log('neighborhood URI: ', neighborhoodURI)
+  console.log('amneityURI: ',amenityURI)
+
+  try {
+    const query = `
+      PREFIX owl: <http://www.w3.org/2002/07/owl#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX i72: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+      PREFIX cdt_old: <http://ontology.eil.utoronto.ca/CDT#>
+      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+      PREFIX cacensus: <http://ontology.eil.utoronto.ca/tove/cacensus#>
+      PREFIX cdt_temp: <http://ontology.eil.utoronto.ca/CDT_temp_extension/>
+
+      SELECT ?score 
+
+      WHERE {
+          ?i a cdt_old:PercentWalkingDistance;
+          cacensus:hasLocation <${neighborhoodURI}>;	#?x is the neighbourhood identifier
+          i72:numerator [i72:cardinality_of ?pop].
+
+          ?i i72:hasValue [i72:hasNumericalValue ?score].
+
+          ?pop rdf:type ?popclass.
+          ?popclass rdfs:subClassOf [
+                  rdf:type owl:Restriction;
+              owl:onProperty i72:defined_by;
+              owl:allValuesFrom [ rdf:type owl:Restriction;
+                  owl:onProperty cdt_temp:walkingDistanceFrom;
+                  owl:someValuesFrom <${amenityURI}>	#cdt:ParkService is the amenity type identifier
+                  #TODO extend CDT_temp for other available amenities in this repo
+              ]
+          ]
+      }
+    `
+
+    // Execute the query
+    const stream = await client.query.select(query);
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on("data", (row) => {
+      rawData.push(row);
+    });
+
+    stream.on("end", () => {
+      console.log("neighborhood amenities result: ", rawData)
+
+      // Send the formatted data as JSON
+      res.json({ success: true, data: rawData });
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send("Internal server error");
+  }
+})
+
+// API 11 (new endpoint)
+router.post("/map-coords", async (req,res) => {
+  const cityURI = req.body.cityURI
+  console.log('city uri id for map-coords: ',cityURI)
+  try {
+    const query = `
+    PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+    PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
+    select ?coord where {
+        #where t is the input parameter of a city's URI
+        <${cityURI}> config:hasDashboardConfig ?x.
+        ?x a config:CompleteCommunitiesDashboardConfig.
+        ?x config:mapWktCentre ?coord.
+      }
+    `
+    
+    // Execute the query
+    const stream = await client2.query.select(query);
+    // Collect results from the stream
+    let rawData = [];
+    stream.on("data", (row) => {
+      rawData.push(row);
+    });
+
+    stream.on("end", () => {
+      const coordStr = rawData[0].coord.value
+      const coord = 
+      console.log(coordStr)
+      const coords = parseMapCoords(coordStr)
+      console.log('final map coords: ',coords)
+      // Send the formatted data as JSON
+      res.json({ success: true, data: coords });
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send("Internal server error");
+  }
+})
+
+// API 12 ( new endpoint)
+router.post("/amenity-categories", async (req,res) => {
+  const cityURI = req.body.cityURI
+  try {
+    const query = `
+      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
+      select ?d ?colour ?icon where {
+          #where t is the input parameter of a city's URI
+          <${cityURI}> config:hasDashboardConfig ?x.
+          ?x a config:CompleteCommunitiesDashboardConfig.
+          ?x config:includesCompleteCommunitiesDimension ?d.
+          
+          OPTIONAL {?d config:mapColour ?colour}
+          
+          OPTIONAL {?d config:mapIcon ?icon}
+          
+      }
+    `
+
+    // Execute the query
+    const stream = await client2.query.select(query);
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on("data", (row) => {
+      rawData.push(row);
+    });
+
+    stream.on("end", async () => {
+      console.log("amenity-categories API result: ", rawData)
+      //add the subtypes to the result before returning a response
+      const amenities = transformAmenities(rawData) // {health : {color: '#dfdf', icon: ''}}
+      
+      await Promise.all(
+        Object.keys(amenities).map(async (name) => {
+          const subtypes = await getSubtypesByAmenity(name)
+          console.log(`subtypes for ${name}: `, subtypes)
+          amenities[name].subtypes = subtypes 
+        })
+      )
+      // Send the formatted data as JSON
+      res.json({ success: true, data: amenities });
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send("Internal server error");
+  }
+  
+})
+
+// helper
+async function getSubtypesByAmenity (amenityCategory) {
+  try {
+    const query = `
+      PREFIX owl: <http://www.w3.org/2002/07/owl#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
+      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+      select ?subtype where {
+          #where cdt:HealthAmenity is an example of the parameter input - the class that we want to retrieve all leaf subclasses of (including itself if it has no subclasses)
+          
+          ?subtype rdfs:subClassOf cdt:${amenityCategory}.
+
+          # Exclude the Nothing class
+          FILTER (?subtype != owl:Nothing)
+          
+          # Ensure ?subtype is a leaf (it must NOT have any strictly narrower subclasses)
+          FILTER NOT EXISTS {
+              ?child rdfs:subClassOf ?subtype .
+              FILTER (?child != ?subtype && ?child != owl:Nothing)
+          }
+      }
+    `
+
+    // Execute the query
+    const stream = await client2.query.select(query);
+
+    return new Promise((resolve,reject) => {
+
+    // Collect results from the stream
+      let rawData = [];
+      stream.on("data", (row) => {
+        rawData.push(row);
+      });
+
+      stream.on("end", () => {
+        // console.log("amenity-subtypes API result: ", rawData)
+        const subtypes = rawData.map((item) => {
+            return item?.subtype?.value.split('/').at(-1)
+        })
+        // Send the formatted data as JSON
+        resolve(subtypes)
+      });
+
+      // Handle errors in the query or stream
+      stream.on("error", (err) => {
+        console.error("Query error: ", err);
+        reject(err)
+      });
+
+    })
+  } catch (err) {
+    console.error("Server error: ", err);
+    return null
+  }
+}
+
 // Not used anymore, should remove
 router.post("/park-locations", async (req, res) => {
   const neighborhoodName = req.body.neighborhoodName;
@@ -1131,5 +1406,7 @@ function includesAllInputs(requiredInputs, inputType) {
   }
   return true;
 }
+
+
 
 module.exports = router;

@@ -2,9 +2,11 @@ import { useState, useEffect, useReducer } from "react";
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
 import { Input, Button, Select, Autocomplete, Option, CircularProgress } from '@mui/joy';
 import SaveIcon from '@mui/icons-material/Save';
+import MapIcon from '@mui/icons-material/Map';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 import AmenityLocationSelect from './AmenityLocationSelect'
+import CompareSelect from './CompareSelect'
 
 import MapVisualComponent from './MapVisualComponent'
 import DefaultMap from './DefaultMap'
@@ -43,9 +45,28 @@ const mockAmenityData = {
 	// 		       }
 }
 
+const mockAmenityData2 = {
+    'South Riverdale (70)': {
+				'Health':0.7,  // type - walkability score
+				'Spiritual':0.2, 
+				'Education & childcare':0.8, 
+				'Retail & services':0.8, 
+				'Communal':0,
+                'Cultural':0.3,
+                'Recreational': 0.1
+				},
+    'University (79)':      {
+				'Health':0.7, 
+				'Spiritual':0.2, 
+				'Education & Childcare':0.8, 
+				'Retail & services':0.8, 
+				'Communal':0
+			       }
+}
+
 
 function CustomTabPanel(props) {
-  const { children, value, index, overlayCoords, locationIDKey, instanceName, amenities, ...other } = props;
+  const { children, value, index, overlayCoords, locationIDKey, instanceName, amenities, cityState, ...other } = props;
 
   return (
     <div
@@ -59,6 +80,7 @@ function CustomTabPanel(props) {
                                         overlayCoords={overlayCoords}
                                         locationIDKey={locationIDKey}
                                         instanceName={instanceName}
+                                        cityState={cityState}
                                         amenities={amenities}  />}
     </div>
   );
@@ -91,9 +113,12 @@ const Amenities = ({
     cityURLs,
     setCityURLs,
     adminAreaTypesState,
+    cityState,
+    dispatchCityState,
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
     dispatchAdminAreaInstances,
+    dispatchCompareAdminAreaInstances
 }) => {
     const [showSidePanel, setShowSidePanel] = useState(true)
 
@@ -164,6 +189,8 @@ const Amenities = ({
     const [data, setData] = useState(null)
 
     const [tabValue, setTabValue] = useState(0);
+    const [openComparisonModal, setOpenComparisonModal] = useState(false)
+
 
     const handleTabChange = (event, newValue) => {
         console.log('new tab value: ', newValue)
@@ -186,8 +213,6 @@ const Amenities = ({
         adminAreaInstancesState
     );
     // console.log('admin area instance state: ', adminAreaInstancesState)
-
-    
 
     // const handleCityChange = (event) => {
     //     if (!event?.target?.value) return
@@ -354,9 +379,22 @@ const Amenities = ({
                                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                                 adminAreaInstancesState={adminAreaInstancesState}
                                 dispatchAdminAreaInstances={dispatchAdminAreaInstances}
+                                dispatchCityState={dispatchCityState}
                                 isGeneratingVisualization={visLoading}
                                 />
-                            
+
+                            <CompareSelect
+                                cityURLs={cityURLs}
+                                setCityURLs={setCityURLs}
+                                adminAreaTypesState={adminAreaTypesState}
+                                dispatchAdminAreaTypes={dispatchAdminAreaTypes}
+                                adminAreaInstancesState={adminAreaInstancesState}
+                                dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
+                                isGeneratingVisualization={visLoading} 
+                                amenityData={mockAmenityData2}
+
+                            />
+                           
                             {selectedAdminInstancesURLs.length === 0  && <Box sx={{alignItems:"center", justifyContent:"center", width:"60%", maxWidth:"350px", alignSelf:"center", marginTop:"80px"}}>
                                     <img src={noDataImg} style={{maxWidth:"100%"}} />
                                     <Typography
@@ -372,7 +410,7 @@ const Amenities = ({
                                         No Data
                                     </Typography>
                                 </Box>}
-
+                            
                             { //Object.keys(amenityData).length > 0
                                 selectedAdminInstancesURLs.length > 0 ? 2>1 ? (<ChartPanel amenityData={mockAmenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
                             }
@@ -481,7 +519,7 @@ const Amenities = ({
                 {/* {showMap === true && ( */}
                     <Box sx={{display: {xs: showSidePanel ? "none" : "block", md:"block"}, width:"100%", height:"100%"}}>
                         <Button variant="outlined" size="sm" onClick={()=>setShowSidePanel(true)} sx={{display: {md:"none", xs:"block"}, position:"fixed", bottom:"10px", left:"10px", zIndex:10000}}>Show Panel</Button>
-                        {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length > 0 ? (
+                        {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length && cityState != null > 0 ? (
                             <Box>
                             <Box sx={{ borderBottom: 1, borderColor: 'var(--border-color)' }}>
                                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" variant="scrollable"
@@ -491,6 +529,7 @@ const Amenities = ({
     }}}>
                                     {Object.keys(amenityPolygons).map((locationIDKey,index) => {
                                         const instanceName = amenityPolygons[locationIDKey].instanceName
+                                        //icon={<MapIcon />} iconPosition="start"
                                         return(
                                             <Tab label={instanceName} value={index} color="blue"
                                             sx={{textTransform: 'none', '&.Mui-selected': {          // active tab styles
@@ -512,7 +551,7 @@ const Amenities = ({
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                             if (overlayCoords != null) {
                                 return(
-                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} instanceName={instanceName} />
+                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} instanceName={instanceName} cityState={cityState} />
                                 )
                             }
                         })}
@@ -521,6 +560,7 @@ const Amenities = ({
                         <DefaultMap 
                         instancePolygons={enrichedAmenityPolygons}
                         selectInstance={selectInstance}
+                        cityState={cityState}
                         />
                     )
                         }

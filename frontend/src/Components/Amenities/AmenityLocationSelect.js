@@ -7,6 +7,7 @@ import { NewDropdownMultiSelect } from "../SearchPageComponents/NewDropdownMulti
 import {
   fetchAdministration,
   fetchLocations,
+  fetchCityDetails
 } from "../../helpers/fetchFunctions";
 import {
   getCurrentAdminTypeURL,
@@ -21,6 +22,7 @@ const AmenityLocationSelect = ({
   dispatchAdminAreaTypes,
   adminAreaInstancesState,
   dispatchAdminAreaInstances,
+  dispatchCityState,
   isGeneratingVisualization,
 }) => {
   const [cityLoading, setCityLoading] = useState(false);
@@ -53,8 +55,13 @@ const AmenityLocationSelect = ({
                     await fetchAdministration(
                       newValue,
                       cityURLs,
-                      dispatchAdminAreaTypes
+                      dispatchAdminAreaTypes,
                     );
+                    await fetchCityDetails(
+                      newValue,
+                      cityURLs,
+                      dispatchCityState
+                    )
                     setCityLoading(false);
                   }}
                   isLoading={cityLoading}

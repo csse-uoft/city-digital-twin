@@ -9,6 +9,29 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
  * Sends a GET request to the `/api/health-check` endpoint to verify if the backend is reachable.
  * Logs the result to the console and returns a boolean if successful, or `null` if the request fails.
  */
+
+function transformAmenities (amenityData) {
+  console.log('amenity: ',amenityData)
+  let amenities = {}
+
+  amenityData.forEach((amenity) => {
+    const name = amenity.d?.value.split('/').at(-1)
+    console.log('name: ',name)
+    const colour = amenity?.colour?.value
+    const iconUrl = amenity?.icon?.value
+    if (name) {
+
+      amenities[name] = {
+        colour: colour,
+        icon: iconUrl
+      }
+    }
+    
+  })
+
+  return amenities
+}
+
 export const testBackendConnection = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/health-check`);
@@ -69,6 +92,41 @@ export const fetchAdministration = async (
     }
   }
 };
+
+export const fetchCityDetails = async (
+  city,
+  cityURLs,
+  dispatchCityState
+) => {
+  if (city) {
+    try {
+      //get map coordinates
+      console.log('city: ', cityURLs[city])
+      const mapCoordsResponse = await axios.post(`${API_BASE_URL}/api/map-coords`, {
+        cityURI: cityURLs[city]
+      })
+      const mapCoords = mapCoordsResponse.data.data
+      //get amenity categories
+      const amenityCategoryResponse = await axios.post(`${API_BASE_URL}/api/amenity-categories`, {
+        cityURI: cityURLs[city]
+      })
+      console.log('amenity cat resposne: ', amenityCategoryResponse)
+      const amenityCategories = amenityCategoryResponse.data?.data
+      // get amenity category subtypes
+      dispatchCityState({
+        type:'SET_CITY',
+        payload:{
+        mapCoords: mapCoords,
+        amenityCategories: amenityCategories,
+        amenitySubtypes: null
+      }
+    })
+
+    } catch (err) {
+      console.error('POST Error getting city details: ',err)
+    }
+  }
+}
 
 export const fetchIndicators = async (setIndicatorURLs) => {
   try {

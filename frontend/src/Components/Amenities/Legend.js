@@ -11,18 +11,28 @@ import ColorLensOutlinedIcon from '@mui/icons-material/ColorLensOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SportsBasketballOutlinedIcon from '@mui/icons-material/SportsBasketballOutlined';
 
-const Legend = () => {
+const Legend = ({
+  amenities
+}) => {
   const [isOpen, setIsOpen] = useState(false);
+  console.log('amenities: ', amenities)
+  // const amenityCategories = [
+  //   { id: 1, name: 'Health', color: '#EF4444', icon: '✚' },
+  //   { id: 2, name: 'Retail & Services', color: '#FB923C', icon: <LocalMallOutlinedIcon color='white' /> },
+  //   { id: 3, name: 'Education & Childcare', color: '#3B82F6', icon: <SchoolOutlinedIcon color='white' /> },
+  //   { id: 4, name: 'Spiritual', color: '#A855F7', icon: <ChurchOutlinedIcon color='white' /> },
+  //   { id: 5, name: 'Cultural', color: '#92400E', icon: <ColorLensOutlinedIcon color='white' /> },
+  //   { id: 6, name: 'Communal', color: '#EC4899', icon: <PeopleAltOutlinedIcon color='white' /> },
+  //   { id: 7, name: 'Recreational', color: '#22C55E', icon: <SportsBasketballOutlinedIcon color='white' /> },
+  // ];
 
-  const amenityCategories = [
-    { id: 1, name: 'Health', color: '#EF4444', icon: '✚' },
-    { id: 2, name: 'Retail & Services', color: '#FB923C', icon: <LocalMallOutlinedIcon color='white' /> },
-    { id: 3, name: 'Education & Childcare', color: '#3B82F6', icon: <SchoolOutlinedIcon color='white' /> },
-    { id: 4, name: 'Spiritual', color: '#A855F7', icon: <ChurchOutlinedIcon color='white' /> },
-    { id: 5, name: 'Cultural', color: '#92400E', icon: <ColorLensOutlinedIcon color='white' /> },
-    { id: 6, name: 'Communal', color: '#EC4899', icon: <PeopleAltOutlinedIcon color='white' /> },
-    { id: 7, name: 'Recreational', color: '#22C55E', icon: <SportsBasketballOutlinedIcon color='white' /> },
-  ];
+  const amenityCategories = Object.entries(amenities).map(([name,data]) => {
+    return {
+      name: name,
+      colour: data.colour ?? '#ccc',
+      icon: data.icon ?? '#'
+    }
+  })
 
   const toggleLegend = () => {
     setIsOpen(!isOpen);
@@ -88,22 +98,7 @@ const Legend = () => {
                 }}
               >
                 {/* Icon Circle */}
-                <Box
-                  sx={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    backgroundColor: category.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '20px',
-                    flexShrink: 0,
-                  }}
-                >
-                  {category.icon}
-                </Box>
+                <img style={{}} src={category.icon} />
 
                 {/* Label */}
                 <Typography

@@ -3,27 +3,27 @@ import { Box, Paper, Stack, Typography, Collapse } from '@mui/material';
 import { Checkbox } from '@mui/joy';
 
 
-const amenityCategories = {
-        'Health':{ color: '#EF4444', types: ['Hospitals','Clinics','Pharmacies','Mental health services','Dental clinics','Physiotherapy/rehab','Fitness centres/gyms'] },
-        'Retail & Services':{ color: '#FB923C', types: ['Mall','Restaurant'] },
-        'Education & Childcare':{ color: '#3B82F6', types: ['School','Daycare'] },
-        'Spiritual':{ color: '#A855F7', types: ['Church','Mosque','Sinnagog'] },
-        'Cultural':{ color: '#92400E', types: ['Museum'] },
-        'Communal':{ color: '#EC4899', types: ['Court House'] },
-        'Recreational':{ color: '#22C55E', types: ['Arcade','Cinema/theatre'] }
-    };
+// const amenityCategories = {
+//         'Health':{ color: '#EF4444', types: ['Hospitals','Clinics','Pharmacies','Mental health services','Dental clinics','Physiotherapy/rehab','Fitness centres/gyms'] },
+//         'Retail & Services':{ color: '#FB923C', types: ['Mall','Restaurant'] },
+//         'Education & Childcare':{ color: '#3B82F6', types: ['School','Daycare'] },
+//         'Spiritual':{ color: '#A855F7', types: ['Church','Mosque','Sinnagog'] },
+//         'Cultural':{ color: '#92400E', types: ['Museum'] },
+//         'Communal':{ color: '#EC4899', types: ['Court House'] },
+//         'Recreational':{ color: '#22C55E', types: ['Arcade','Cinema/theatre'] }
+//     };
 
-const FilterPanel = ({isOpen,updateFilters,filterState}) => {
+const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
 
     
 
-    const [selectedAmenity, setSelectedAmenity] = useState('Health')
+    const [selectedAmenity, setSelectedAmenity] = useState('HealthAmenity')
     // const [amenityCheckBoxes, setAmenityCheckBoxes] = useState([])
 
     const children = (
         <Stack spacing={0}>
             {
-                amenityCategories[selectedAmenity]?.types?.map((type,index) => (
+                amenityCategories[selectedAmenity]?.subtypes?.map((type,index) => (
                     <Box sx={{width:'100%',py:1,px:1,boxSizing:'border-box'}}>
                     <Checkbox checked={filterState[type]?.show} onChange={(event) => {
                         const checked = event.target.checked
@@ -34,7 +34,10 @@ const FilterPanel = ({isOpen,updateFilters,filterState}) => {
                         //     return checkList
                         // })
                         updateFilters(selectedAmenity,type)
-                    }} label={type} />
+                    }} label={type}
+                    slotProps={{
+                        label: { style: { fontSize: '13px' } }
+                    }} />
                     </Box>
 
                 ))
@@ -82,17 +85,19 @@ const FilterPanel = ({isOpen,updateFilters,filterState}) => {
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 height: {xs: '100%', md: '400px'},
                 width: {xs: '100%', md: '500px'},
-                display:'flex'
+                display:'flex',
+                border: '1px solid var(--border-color)',
+                backgroundColor:'white'
             }}>
                 <Box
-                sx={{height:'100%',width:'200px', borderRight:'1px solid'}}>
+                sx={{height:'100%',width:'200px', borderRight:'1px solid var(--border-color)', backgroundColor: '#f9fafb'}}>
                     <Box
-                    sx={{borderBottom: '1px solid', py:1, px:1, height:'25px', display:'flex', alignItems:'center'}}>
+                    sx={{borderBottom: '1px solid var(--border-color)', py:1, px:1, height:'25px', display:'flex', alignItems:'center'}}>
                         <Typography
                         style={{fontSize:12, color:'#181818', textAlign:'left', fontWeight:'bold'}}
                         variant="h5">Amenity Types</Typography>
                     </Box>
-                    <Stack spacing={0}>
+                    <Stack spacing={1}>
                         {Object.keys(amenityCategories)?.map((category) => (
                             <Box
                             sx={{
@@ -108,7 +113,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState}) => {
                                 backgroundColor: selectedAmenity === category ? 'white' : ''
                             }}
                             onClick={()=>setSelectedAmenity(category)}>
-                                <Box sx={{borderRadius:'50%',backgroundColor: amenityCategories[category].color, width:'25px',height:'25px'}}>
+                                <Box sx={{borderRadius:'50%',backgroundColor: `#${amenityCategories[category].colour}`, width:'16px',height:'16px'}}>
 
                                 </Box>
                                 <Typography
@@ -124,7 +129,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState}) => {
                 <Box
                 sx={{width:'100%', height:'100%'}}>
                     <Box
-                    sx={{py:1, px:1, height:'25px', display:'flex', alignItems:'center',borderBottom:'1px solid', justifyContent: 'space-between'}}>
+                    sx={{py:1, px:1, height:'25px', display:'flex', alignItems:'center',borderBottom:'1px solid var(--border-color)', justifyContent: 'space-between'}}>
                         <Typography
                         style={{fontSize:12, color:'#181818', textAlign:'left', fontWeight:'bold'}}
                         variant="h5">{selectedAmenity}</Typography>
@@ -134,6 +139,9 @@ const FilterPanel = ({isOpen,updateFilters,filterState}) => {
                             checked={selectAllChecked(selectedAmenity)}
                             // indeterminate={selectAllIntermediate()}
                             onChange={handleChange}
+                            slotProps={{
+                                label: { style: { fontSize: '13px' } }
+                            }}
                         />
                     </Box>
                     {children}

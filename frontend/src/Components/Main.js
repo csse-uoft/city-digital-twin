@@ -10,6 +10,8 @@ import { useState, useEffect, useReducer } from "react";
 import CompleteCommunitiesDashboard from "./CompleteCommunitiesDashboard";
 import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
+import { adminCompareAreaInstanceReducer } from '../reducers/adminCompareAreaInstanceReducer'
+import { cityReducer } from '../reducers/cityReducer'
 import { fetchCities } from "../helpers/fetchFunctions";
 
 // The main display that shows the navbar and the indicator dashboard pages
@@ -25,6 +27,8 @@ function Main() {
   // Checkout reducers.js for the state structure
   const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
   const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
+  const [compareAdminAreainstancesState, dispatchCompareAdminAreaInstances] = useReducer(adminCompareAreaInstanceReducer, {})
+  const [cityState, dispatchCityState] = useReducer(cityReducer, {})
 
   useEffect(() => {
     fetchCities(setCityURLs);
@@ -81,10 +85,13 @@ function Main() {
         return <Amenities
                 cityURLs={cityURLs}
                 setCityURLs={setCityURLs}
+                cityState={cityState}
+                dispatchCityState={dispatchCityState}
                 adminAreaTypesState={adminAreaTypesState}
                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                 adminAreaInstancesState={adminAreaInstancesState}
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances} 
+                dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
                 />
       case "faq":   // Not completed yet
         return <FAQ />;

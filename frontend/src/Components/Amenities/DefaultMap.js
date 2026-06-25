@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
 import { Popup, Polygon, Tooltip, TileLayer, MapContainer, Marker } from "react-leaflet";
 import { Input, Button, Select, Autocomplete, Option } from '@mui/joy';
+import MapController from './MapController'
 
 const DefaultMap = ({
     instancePolygons,
-    selectInstance
+    selectInstance,
+    cityState
 }) => {
     // console.log('default map instance polygons: ', instancePolygons)
     //Each iterable instance needs the following
@@ -13,7 +15,7 @@ const DefaultMap = ({
     const defaultStyle = { color: '#449bd1', fill: false, weight:1  };
     const hoverStyle = { color: 'blue', fillOpacity:0.3, fillColor:'blue', weight:3, fill:true };
     const [selectedInstanceName, setSelectedInstanceName] = useState('')
-    
+    console.log('cityState: ', cityState)
     const handlePolygonClick = (areaInstanceName) => {
         // we just need to send the polygons information back to the parent
         console.log(`User clicked on ${areaInstanceName}`)
@@ -41,7 +43,7 @@ const DefaultMap = ({
                     zoom={12}
                     style={{ height:"100%", width:"100%"}}>
                         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-                    
+                        <MapController coords={cityState?.mapCoords} />
 
                     {instancePolygons?.map((instance) => (
                         <Polygon

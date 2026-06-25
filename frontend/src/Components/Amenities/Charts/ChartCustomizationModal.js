@@ -50,7 +50,7 @@ const ChartCustomizationModal = ({
         maxHeight: { xs: '100dvh', md: '70dvh' },  // Dialog default maxHeight clips it
         backgroundColor: 'white',
         margin: { xs: 0, md: 'auto' },
-        zIndex: 10005,
+        zIndex: 100010,
         position: 'relative'
     }}}
     sx={{

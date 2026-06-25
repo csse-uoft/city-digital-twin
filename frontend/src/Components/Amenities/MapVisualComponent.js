@@ -8,94 +8,37 @@ import Legend from './Legend';
 import FilterPanel from './FilterPanel'
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
+
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+
+function initializeFilterState (amenities) {
+    let state = {}
+    Object.entries(amenities).map(([name,data]) => {
+        data.subtypes.map((subtype) => {
+            state[subtype] = {
+                type: name,
+                show:true
+            }
+        })
+    })
+    console.log('amenity filter state: ',state)
+    return state
+}   
 
 const MapVisualComponent = ({
     locationIDPolygons,
     amenities,
     instanceName,
     overlayCoords,
-    locationIDKey
+    locationIDKey,
+    cityState
 }) => {
 
     const [filterPanelOpen, setFilterPanelOpen] = useState(false)
-
-    const [filterPanelState, setFilterPanelState] = useState({
-        'Hospitals': {
-            type:'Health',
-            show:true
-        },
-        'Clinics': {
-            type:'Health',
-            show: true
-        },
-        'Pharmacies': {
-            type:'Health',
-            show:true
-        },
-        'Mental health services': {
-            type:'Health',
-            show:true
-        },
-        'Dental clinics': {
-            type:'Health',
-            show:true
-        },
-        'Physiotherapy/rehab': {
-            type:'Health',
-            show:true
-        },
-        'Fitness centres/gyms': {
-            type:'Health',
-            show:true
-        },
-        'Mall': {
-            type:'Retail & Services',
-            show:true
-        },
-        'Restaurant': {
-            type:'Retail & Services',
-            show:true
-        },
-        'School': {
-            type:'Education & Childcare',
-            show:true
-        },
-        'Daycare': {
-            type:'Education & Childcare',
-            show:true
-        },
-        'Mosque': {
-            type:'Spiritual',
-            show:true
-        },
-        'Church': {
-            type:'Spiritual',
-            show:true
-        },
-        'Sinnagog': {
-            type:'Spiritual',
-            show:true
-        },
-        'Museum': {
-            type:'Cultural',
-            show:true
-        },
-        'Court House': {
-            type:'Communal',
-            show:true
-        },
-        'Arcade': {
-            type:'Recreational',
-            show:true
-        },
-        'Cinema/theatre': {
-            type:'Recreational',
-            show:true
-        },
-    })
+    console.log('map visual comp city state: ', cityState)
+    const [filterPanelState, setFilterPanelState] = useState(initializeFilterState(cityState.amenityCategories))
 
     const updateFilters = (type, filter) => {
         // Create a shallow copy of the state
@@ -146,7 +89,7 @@ const MapVisualComponent = ({
 
                 <Box sx={{ width: "100%", height: {xs:"calc(100dvh - 99px - 40px)", md:"calc(100dvh - 99px)"}, position:'relative' }}>
                     <MapContainer
-                        center={[43.7, -79.42]}
+                        center={[cityState.mapCoords.lat, cityState.mapCoords.lon]}
                         zoom={12}
                         style={{ height: "100%", width: "100%" }}
                     >
@@ -203,7 +146,7 @@ const MapVisualComponent = ({
                             maxWidth: '90%',
                         }}
                     >
-                        <Legend />
+                        <Legend amenities={cityState.amenityCategories} />
                     </Box>
 
                     <Box
@@ -214,7 +157,7 @@ const MapVisualComponent = ({
                         maxWidth:'100%',
                         width:'400px'
                     }}>
-                        <FilterPanel isOpen={filterPanelOpen} updateFilters={updateFilters} filterState={filterPanelState} />
+                        <FilterPanel isOpen={filterPanelOpen} updateFilters={updateFilters} filterState={filterPanelState} amenityCategories={cityState.amenityCategories} />
                     </Box>
                 </Box>
 
