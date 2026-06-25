@@ -36,7 +36,7 @@ function transformAmenities (amenityData) {
   let amenities = {}
 
   amenityData.forEach((amenity) => {
-    const name = amenity.d?.value.split('/').at(-1)
+    const name = amenity.d?.value.split('/').at(-1).replace('Amenity','')
     console.log('name: ',name)
     const colour = amenity?.colour?.value
     const iconUrl = amenity?.icon?.value
@@ -1255,7 +1255,7 @@ async function getSubtypesByAmenity (amenityCategory) {
       select ?subtype where {
           #where cdt:HealthAmenity is an example of the parameter input - the class that we want to retrieve all leaf subclasses of (including itself if it has no subclasses)
           
-          ?subtype rdfs:subClassOf cdt:${amenityCategory}.
+          ?subtype rdfs:subClassOf cdt:${amenityCategory}Amenity.
 
           # Exclude the Nothing class
           FILTER (?subtype != owl:Nothing)
@@ -1282,7 +1282,7 @@ async function getSubtypesByAmenity (amenityCategory) {
       stream.on("end", () => {
         // console.log("amenity-subtypes API result: ", rawData)
         const subtypes = rawData.map((item) => {
-            return item?.subtype?.value.split('/').at(-1)
+            return item?.subtype?.value.split('/').at(-1).replace('Amenity','')
         })
         // Send the formatted data as JSON
         resolve(subtypes)

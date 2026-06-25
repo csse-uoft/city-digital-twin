@@ -17,7 +17,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
 
     
 
-    const [selectedAmenity, setSelectedAmenity] = useState('HealthAmenity')
+    const [selectedAmenity, setSelectedAmenity] = useState('Health')
     // const [amenityCheckBoxes, setAmenityCheckBoxes] = useState([])
 
     const children = (
@@ -94,7 +94,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                     <Box
                     sx={{borderBottom: '1px solid var(--border-color)', py:1, px:1, height:'25px', display:'flex', alignItems:'center'}}>
                         <Typography
-                        style={{fontSize:12, color:'#181818', textAlign:'left', fontWeight:'bold'}}
+                        style={{fontSize:14, color:'#181818', textAlign:'left', fontWeight:'medium'}}
                         variant="h5">Amenity Types</Typography>
                     </Box>
                     <Stack spacing={1}>
@@ -131,7 +131,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                     <Box
                     sx={{py:1, px:1, height:'25px', display:'flex', alignItems:'center',borderBottom:'1px solid var(--border-color)', justifyContent: 'space-between'}}>
                         <Typography
-                        style={{fontSize:12, color:'#181818', textAlign:'left', fontWeight:'bold'}}
+                        style={{fontSize:14, color:'#181818', textAlign:'left', fontWeight:'medium'}}
                         variant="h5">{selectedAmenity}</Typography>
 
                         <Checkbox

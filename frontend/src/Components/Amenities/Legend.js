@@ -98,7 +98,7 @@ const Legend = ({
                 }}
               >
                 {/* Icon Circle */}
-                <img style={{}} src={category.icon} />
+                <img style={{}} src={category.icon ?? ''} />
 
                 {/* Label */}
                 <Typography
