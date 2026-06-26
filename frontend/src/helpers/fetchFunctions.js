@@ -1,8 +1,9 @@
 import Wkt from "wicket";
 import axios from "axios";
+import { setCachedAmenityCategories, getCachedAmenityCategories } from './cacheServices'
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
-
+const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
 /**
  * Test the connection to the backend server.
  *
@@ -30,6 +31,10 @@ function transformAmenities (amenityData) {
   })
 
   return amenities
+}
+
+function isFresh (timestamp) {
+  return Date.now() - timestamp < CACHE_TTL;
 }
 
 export const testBackendConnection = async () => {
@@ -100,27 +105,45 @@ export const fetchCityDetails = async (
 ) => {
   if (city) {
     try {
-      //get map coordinates
-      console.log('city: ', cityURLs[city])
-      const mapCoordsResponse = await axios.post(`${API_BASE_URL}/api/map-coords`, {
-        cityURI: cityURLs[city]
-      })
-      const mapCoords = mapCoordsResponse.data.data
-      //get amenity categories
-      const amenityCategoryResponse = await axios.post(`${API_BASE_URL}/api/amenity-categories`, {
-        cityURI: cityURLs[city]
-      })
-      console.log('amenity cat resposne: ', amenityCategoryResponse)
-      const amenityCategories = amenityCategoryResponse.data?.data
-      // get amenity category subtypes
-      dispatchCityState({
-        type:'SET_CITY',
-        payload:{
-        mapCoords: mapCoords,
-        amenityCategories: amenityCategories,
-        amenitySubtypes: null
+      //check whether it is already cached
+      const cachedResults = await getCachedAmenityCategories(cityURLs[city])
+      if (cachedResults && isFresh(cachedResults.timestamp)) {
+        dispatchCityState({
+          type:'SET_CITY',
+          payload: {
+            mapCoords: cachedResults.coordinates,
+            amenityCategories: cachedResults.data,
+            amenitySubtypes: null
+          }
+        })
+      } else {
+          //get map coordinates
+          console.log('making server request to get cityDetails')
+          console.log('city: ', cityURLs[city])
+          const mapCoordsResponse = await axios.post(`${API_BASE_URL}/api/map-coords`, {
+            cityURI: cityURLs[city]
+          })
+          const mapCoords = mapCoordsResponse.data.data
+          //get amenity categories
+          const amenityCategoryResponse = await axios.post(`${API_BASE_URL}/api/amenity-categories`, {
+            cityURI: cityURLs[city]
+          })
+          console.log('amenity cat resposne: ', amenityCategoryResponse)
+          const amenityCategories = amenityCategoryResponse.data?.data
+
+          //cache
+          await setCachedAmenityCategories(cityURLs[city], amenityCategories, mapCoords)
+
+          // disptach to redux state
+          dispatchCityState({
+            type:'SET_CITY',
+            payload:{
+            mapCoords: mapCoords,
+            amenityCategories: amenityCategories,
+            amenitySubtypes: null
+          }
+        })
       }
-    })
 
     } catch (err) {
       console.error('POST Error getting city details: ',err)
