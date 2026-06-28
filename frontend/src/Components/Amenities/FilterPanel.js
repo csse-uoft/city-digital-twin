@@ -36,7 +36,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                         updateFilters(selectedAmenity,type)
                     }} label={type}
                     slotProps={{
-                        label: { style: { fontSize: '13px' } }
+                        label: { style: { fontSize: '12px' } }
                     }} />
                     </Box>
 
@@ -90,7 +90,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                 backgroundColor:'white'
             }}>
                 <Box
-                sx={{height:'100%',width:'200px', borderRight:'1px solid var(--border-color)', backgroundColor: '#f9fafb'}}>
+                sx={{height:'100%',width: {xs:'270px', md:'400px'}, borderRight:'1px solid var(--border-color)', backgroundColor: '#f9fafb'}}>
                     <Box
                     sx={{borderBottom: '1px solid var(--border-color)', py:1, px:1, height:'25px', display:'flex', alignItems:'center'}}>
                         <Typography
@@ -110,7 +110,8 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                                 px:1, 
                                 py:1, 
                                 cursor:'pointer',
-                                backgroundColor: selectedAmenity === category ? 'white' : ''
+                                backgroundColor: selectedAmenity === category ? 'white' : '',
+                                borderLeft: selectedAmenity === category ? `2px solid #${amenityCategories[category].colour}` : ''
                             }}
                             onClick={()=>setSelectedAmenity(category)}>
                                 <Box sx={{borderRadius:'50%',backgroundColor: `#${amenityCategories[category].colour}`, width:'16px',height:'16px'}}>
@@ -119,7 +120,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                                 <Typography
                                 variant="h5"
                                 sx={{fontSize:12, color: selectedAmenity === category ? '#479ef5' : '#181818'}}>
-                                    {category}
+                                    {amenityCategories[category].label}
                                 </Typography>
 
                             </Box>
@@ -131,8 +132,8 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                     <Box
                     sx={{py:1, px:1, height:'25px', display:'flex', alignItems:'center',borderBottom:'1px solid var(--border-color)', justifyContent: 'space-between'}}>
                         <Typography
-                        style={{fontSize:14, color:'#181818', textAlign:'left', fontWeight:'medium'}}
-                        variant="h5">{selectedAmenity}</Typography>
+                        sx={{fontSize: {xs: '12px', md:'14px'}, color:'#181818', textAlign:'left', fontWeight:'medium'}}
+                        variant="h5">{amenityCategories[selectedAmenity].label}</Typography>
 
                         <Checkbox
                             label="Select All"
@@ -140,7 +141,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                             // indeterminate={selectAllIntermediate()}
                             onChange={handleChange}
                             slotProps={{
-                                label: { style: { fontSize: '13px' } }
+                                label: { style: { fontSize:'12px' } }
                             }}
                         />
                     </Box>

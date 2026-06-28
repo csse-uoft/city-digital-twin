@@ -66,7 +66,7 @@ const mockAmenityData2 = {
 
 
 function CustomTabPanel(props) {
-  const { children, value, index, overlayCoords, locationIDKey, instanceName, amenities, cityState, ...other } = props;
+  const { children, value, index, overlayCoords, locationIDKey, instanceName, instanceURL, amenities, cityState, ...other } = props;
 
   return (
     <div
@@ -80,6 +80,7 @@ function CustomTabPanel(props) {
                                         overlayCoords={overlayCoords}
                                         locationIDKey={locationIDKey}
                                         instanceName={instanceName}
+                                        instanceURL={instanceURL}
                                         cityState={cityState}
                                         amenities={amenities}  />}
     </div>
@@ -193,7 +194,7 @@ const Amenities = ({
 
 
     const handleTabChange = (event, newValue) => {
-        console.log('new tab value: ', newValue)
+        // console.log('new tab value: ', newValue)
         setTabValue(newValue);
     };
 
@@ -264,9 +265,9 @@ const Amenities = ({
             const adminNames = getSelectedAdminInstancesNames(
               adminAreaInstancesState
             );
-            console.log('ADMIN NAMES: ',adminNames)
+            // console.log('ADMIN NAMES: ',adminNames)
             const data = await fetchAmenityData(adminType);
-            console.log('DATA: ',data)
+            // console.log('DATA: ',data)
             adminNames.forEach((name) => {
               const amenitiesForArea = data.data.filter((obj) => obj.name === name);
     
@@ -298,7 +299,7 @@ const Amenities = ({
           let newAmenityPolygons = {};
     
           for (const instance of selectedAdminInstancesURLs) {
-            // console.log('admin instances urls: ', instance)
+            console.log('OOOOOO: ', instance)
             // Extract the location_id part from the URL
             const locationID = instance.url.split("#")[1];
             const instanceName = instance.name
@@ -318,6 +319,7 @@ const Amenities = ({
               const formattedAmenities = formatAmenities(amenityData);
             //   console.log('formattedAmenities: ', formattedAmenities)
               formattedAmenities.instanceName = instanceName
+              formattedAmenities.instanceURL = instance.url
     
               // Add the formatted Amenties to the newAmenityPolygons object
               newAmenityPolygons[locationID] = formattedAmenities;
@@ -546,12 +548,14 @@ const Amenities = ({
                             const fullKey = baseURI + locationIDKey;
                             const locationID = amenityPolygons[locationIDKey];
                             const instanceName = amenityPolygons[locationIDKey].instanceName
+                            const instanceURL = amenityPolygons[locationIDKey].instanceURL
+                            console.log('AREA INSTANCE: ', amenityPolygons[locationIDKey])
                             // console.log('AMENITIES: ', locationID)
                             // console.log('test location: ', locationIDPolygons[fullKey])
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                             if (overlayCoords != null) {
                                 return(
-                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} instanceName={instanceName} cityState={cityState} />
+                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} instanceName={instanceName} instanceURL={instanceURL} cityState={cityState} />
                                 )
                             }
                         })}

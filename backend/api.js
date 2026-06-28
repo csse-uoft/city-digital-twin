@@ -15,10 +15,14 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function parseMapCoords (coordStr) {
+function sanitizeSparqlQuery(query) {
+  return query.replace(/[\u00A0\u2000-\u200B\u2002-\u200F\u2028\u2029\u202F\u205F\u3000]/g, ' ');
+}
+
+function parsePointCoords (coordStr) {
   const match = coordStr.match(/\((.*)\)/)
   if (match) {
-    console.log('coordinate match: ',match[1])
+    // console.log('coordinate match: ',match[1])
     const coords = match[1].split(' ')
     const lon = parseFloat(coords[0].replace(/[^0-9.-]+/g, ""))
     const lat = parseFloat(coords[1].replace(/[^0-9.-]+/g, ""))
@@ -31,12 +35,76 @@ function parseMapCoords (coordStr) {
   }
 }
 
-function transformAmenities (amenityData) {
-  console.log('amenity: ',amenityData)
+function parsePolygonCoords (coordStr) {
+  const match = coordStr.match(/\((.*)\)/)
+  if (match) {
+    const coordList = match[1].split(',')
+    const arr = coordList.map((data) => {
+      const coords = data.trim().split(' ')
+      const lon = parseFloat(coords[0].replace(/[^0-9.-]+/g, ""))
+      const lat = parseFloat(coords[1].replace(/[^0-9.-]+/g, ""))
+      return [lat,lon]
+    })
+    return arr
+  } else {
+    return null
+  }
+}
+
+function parseMapCoords (coordStr) {
+  //check if it is a point or a polygon
+  // console.log('parse map coordStr: ',coordStr)
+  if (coordStr) {
+    const type = coordStr.split(' ').at(0)
+    console.log('type: ',type)
+    if (type === 'POINT') {
+      return {
+        coords: parsePointCoords(coordStr),
+        type: 'point'
+      }
+    } 
+    else if (type === 'POLYGON') {
+      return {
+        coords: parsePolygonCoords(coordStr),
+        type: 'polygon'
+      }
+    } else {
+      return null
+    }
+  } else {
+    return null
+  }
+  
+}
+function parseAmenityCategory(uri) {
+  return uri ? uri.split('/').at(-1).replace('Amenity','') : ''
+}
+
+function transformAreaAmenities (amenityData) {
+  console.log('area amenities: ', amenityData)
+  const amenities = amenityData.map((item) => {
+    const data = parseMapCoords(item?.pwkt?.value)
+    const category = parseAmenityCategory(item?.class?.value)
+    const name = item?.name?.value ?? 'Temp'
+
+    return {
+      category: category,
+      type: data?.type,
+      mapCoords: data?.coords,
+      name: name
+    }
+  })
+  
+  return amenities
+}
+
+function transformAmenityCategories (amenityData) {
+  console.log('amenity categories: ',amenityData)
   let amenities = {}
 
   amenityData.forEach((amenity) => {
-    const name = amenity.d?.value.split('/').at(-1).replace('Amenity','')
+    const label = amenity?.d_label?.value
+    const name = amenity.d.value.split('/').at(-1).replace('Amenity','')
     console.log('name: ',name)
     const colour = amenity?.colour?.value
     const iconUrl = amenity?.icon?.value
@@ -44,7 +112,8 @@ function transformAmenities (amenityData) {
       
       amenities[name] = {
         colour: colour,
-        icon: iconUrl
+        icon: iconUrl,
+        label:label
       }
     }
     
@@ -1167,7 +1236,6 @@ router.post("/map-coords", async (req,res) => {
 
     stream.on("end", () => {
       const coordStr = rawData[0].coord.value
-      const coord = 
       console.log(coordStr)
       const coords = parseMapCoords(coordStr)
       console.log('final map coords: ',coords)
@@ -1193,12 +1261,13 @@ router.post("/amenity-categories", async (req,res) => {
     const query = `
       PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
       PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
-      select ?d ?colour ?icon where {
+      select ?d ?d_label ?colour ?icon where {
           #where t is the input parameter of a city's URI
           <${cityURI}> config:hasDashboardConfig ?x.
           ?x a config:CompleteCommunitiesDashboardConfig.
           ?x config:includesCompleteCommunitiesDimension ?d.
-          
+           ?d rdfs:label ?d_label.
+
           OPTIONAL {?d config:mapColour ?colour}
           
           OPTIONAL {?d config:mapIcon ?icon}
@@ -1218,7 +1287,7 @@ router.post("/amenity-categories", async (req,res) => {
     stream.on("end", async () => {
       console.log("amenity-categories API result: ", rawData)
       //add the subtypes to the result before returning a response
-      const amenities = transformAmenities(rawData) // {health : {color: '#dfdf', icon: ''}}
+      const amenities = transformAmenityCategories(rawData) // {health : {color: '#dfdf', icon: ''}}
       
       await Promise.all(
         Object.keys(amenities).map(async (name) => {
@@ -1237,10 +1306,135 @@ router.post("/amenity-categories", async (req,res) => {
       res.status(500).send("Error executing query");
     });
   } catch (err) {
-    console.error("Server error: ", err);
+    console.error("Server error : ", err);
     res.status(500).send("Internal server error");
   }
   
+})
+
+router.post('/get-area-amenities', async (req,res) => {
+  const area_id = req.body.areaId
+  try {
+    const query = `
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+      PREFIX owl: <http://www.w3.org/2002/07/owl#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
+      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+      PREFIX org: <http://www.w3.org/ns/org#>
+      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+      PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
+      PREFIX bdg:  <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/Building/>
+      SELECT ?pwkt ?class ?name
+
+      WHERE {{
+          <${area_id}> loc:hasLocation ?nloc.
+          # Fetch amenities in neighbourhood
+              ?x a cdt:CompleteCommunityAmenity.
+              ?x a ?class.
+              ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.
+                  
+              ?p cdt:providesService ?x;  #to do: should be querying for ?x providedFromSite ?s instead (but this isn't captured in the mappings currently)
+                org:hasSite [ loc:hasLocation ?ploc ].
+              ?ploc geo:asWKT ?pwkt.
+                  # amenity name
+              OPTIONAL {?p genprop:hasName ?name}
+      }
+      UNION
+      {
+          # 1. Grab the bounding area coordinates
+          <${area_id}> loc:hasLocation ?nloc.
+          # Fetch services in neighbourhood
+              ?x a cdt:Service.
+              ?x a ?class.
+              ?class rdfs:subClassOf cdt:Service.
+
+              ?x hp:providedFromSite
+                [ loc:hasLocation ?ploc ].
+              ?ploc geo:asWKT ?pwkt.
+      }
+      }
+    `
+
+    const query2 = `
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+      PREFIX owl: <http://www.w3.org/2002/07/owl#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+      PREFIX org: <http://www.w3.org/ns/org#>
+      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+      PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
+
+      SELECT ?pwkt ?class ?name
+      WHERE {{
+          # Get the area's WKT boundary geometry
+          <${area_id}> loc:hasLocation ?nloc.
+          ?nloc geo:asWKT ?areawkt.           # ← fetch the actual geometry
+
+          {{
+              # Branch 1 — CompleteCommunityAmenity
+              ?x a cdt:CompleteCommunityAmenity.
+              ?x a ?class.
+              ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.
+              ?p cdt:providesService ?x;
+                org:hasSite [ loc:hasLocation ?ploc ].
+              ?ploc geo:asWKT ?pwkt.
+              OPTIONAL {{?p genprop:hasName ?name}}
+
+              # ← spatial containment filter
+              FILTER(geof:sfWithin(?pwkt, ?areawkt))
+          }}
+          UNION
+          {{
+              # Branch 2 — Service
+              <${area_id}> loc:hasLocation ?nloc2.
+              ?nloc2 geo:asWKT ?areawkt2.
+
+              ?x a cdt:Service.
+              ?x a ?class.
+              ?class rdfs:subClassOf cdt:Service.
+              ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
+              ?ploc geo:asWKT ?pwkt.
+
+              # ← spatial containment filter
+              FILTER(geof:sfWithin(?pwkt, ?areawkt2))
+          }}
+      }}
+    `
+
+    // Execute the query
+    const stream = await client2.query.select(sanitizeSparqlQuery(query2));
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on("data", (row) => {
+      rawData.push(row);
+    });
+
+    stream.on("end", async () => {
+      console.log("get-area-amenities API result: ", rawData.slice(0,40))
+      const amenities = transformAreaAmenities(rawData)
+      
+      // Send the formatted data as JSON
+      res.json({ success: true, data: amenities });
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send("Internal server error");
+  }
 })
 
 // helper

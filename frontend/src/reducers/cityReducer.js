@@ -13,6 +13,7 @@ export const cityReducer = (state, action) => {
         newState.mapCoords = action.payload.mapCoords
         newState.amenityCategories = action.payload.amenityCategories
         newState.amenitySubtypes = action.payload.amenitySubtypes
+        newState.cityURI = action.payload.cityURI
 
         return newState;
       default:

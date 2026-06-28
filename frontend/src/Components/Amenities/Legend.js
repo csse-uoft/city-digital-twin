@@ -28,7 +28,7 @@ const Legend = ({
 
   const amenityCategories = Object.entries(amenities).map(([name,data]) => {
     return {
-      name: name,
+      name: data.label,
       colour: data.colour ?? '#ccc',
       icon: data.icon ?? '#'
     }

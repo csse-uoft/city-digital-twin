@@ -3,7 +3,7 @@ import { Dexie } from "dexie"
 
 export const db = new Dexie("URDCDashboardCache")
 db.version(1).stores({
-  amenityData: "areaInstanceId, cityName, data, timestamp", // Primary key and indexed props
+  amenityData: "areaInstanceId, cityURI, data, timestamp", // Primary key and indexed props
   amenityCategories: "cityURI, data, coordinates, timestamp"
 })
 

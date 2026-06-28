@@ -3,6 +3,7 @@ import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/
 import { Popup, Polygon, Tooltip, TileLayer, MapContainer, Marker } from "react-leaflet";
 import { Input, Button, Select, Autocomplete, Option } from '@mui/joy';
 import { customAmenityMarker } from '../../helpers/utils'
+import { fetchAreaAmenities } from '../../helpers/fetchFunctions'
 
 import Legend from './Legend';
 import FilterPanel from './FilterPanel'
@@ -16,7 +17,7 @@ import "leaflet/dist/leaflet.css";
 function initializeFilterState (amenities) {
     let state = {}
     Object.entries(amenities).map(([name,data]) => {
-        data.subtypes.map((subtype) => {
+        data?.subtypes?.map((subtype) => {
             state[subtype] = {
                 type: name,
                 show:true
@@ -29,8 +30,8 @@ function initializeFilterState (amenities) {
 
 const MapVisualComponent = ({
     locationIDPolygons,
-    amenities,
     instanceName,
+    instanceURL,
     overlayCoords,
     locationIDKey,
     cityState
@@ -38,7 +39,28 @@ const MapVisualComponent = ({
 
     const [filterPanelOpen, setFilterPanelOpen] = useState(false)
     console.log('map visual comp city state: ', cityState)
+    console.log('OVERLAY COORDS: ',overlayCoords)
     const [filterPanelState, setFilterPanelState] = useState(initializeFilterState(cityState.amenityCategories))
+    const [amenities, setAmenities] = useState([])
+    const [loadingAmenities, setLoadingAmenities] = useState(false)
+
+    useEffect(() => {
+        const getAreaAmenities = async () => {
+            try {
+                setLoadingAmenities(true)
+                const amenities = await fetchAreaAmenities(instanceURL,cityState.cityURI)
+                console.log('MVC amenities: ', amenities)
+                setAmenities(amenities)
+            } catch (err) {
+                console.error('ERR loading area amenities: ',err)
+            } finally {
+                setLoadingAmenities(false)
+            }
+            
+        }
+
+        getAreaAmenities()
+    },[])
 
     const updateFilters = (type, filter) => {
         // Create a shallow copy of the state
@@ -77,7 +99,7 @@ const MapVisualComponent = ({
     return(
         <Box sx={{width:"100%", marginTop: {xs: "40px", md:"0px"}}}>
             <Stack>
-                <Box sx={{width:"100%", px:1, display:"flex", py:1, boxSizing:"border-box", height: "50px",borderBottom:"1px solid", backgroundColor:"white", alignItems:"center", justifyContent:"flex-start", gap:2}}>
+                <Box sx={{width:"100%", px:1, display:"flex", py:1, boxSizing:"border-box", height: "50px",borderBottom:"1px solid var(--border-color)", backgroundColor:"white", alignItems:"center", justifyContent:"flex-start", gap:2}}>
                     <Button size="sm" variant="outlined" color="neutral" startDecorator={<FilterAltOutlinedIcon />} onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
                         Filter
                     </Button>
@@ -85,12 +107,16 @@ const MapVisualComponent = ({
                     <Button size="sm" variant="outlined" color="neutral" startDecorator={<CircleOutlinedIcon />}>
                         Catchment Area
                     </Button>
+
+                    {loadingAmenities && <Typography variant="h4" style={{fontSize:14, color: 'var(--text-medium)'}}>Loading Amenities...</Typography>}
                 </Box>
 
                 <Box sx={{ width: "100%", height: {xs:"calc(100dvh - 99px - 40px)", md:"calc(100dvh - 99px)"}, position:'relative' }}>
                     <MapContainer
                         center={[cityState.mapCoords.lat, cityState.mapCoords.lon]}
-                        zoom={12}
+                        zoom={16}
+                        minZoom={12}
+                        maxZoom={18}
                         style={{ height: "100%", width: "100%" }}
                     >
                         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
@@ -100,30 +126,46 @@ const MapVisualComponent = ({
                               <Polygon positions={[worldBounds,overlayCoords]}
                               pathOptions={{
                                 fillOpacity: 0.3,
-                                color: '#414141',
+                                color: '#5a5a5a',
                                 fillColor:'black'
                               }}>
                                 <Popup>{`Overlay for ${instanceName}`}</Popup>
                               </Polygon>
 
-                              <Marker icon={customAmenityMarker('Health')} position={[43,-79]}></Marker>
-                              <Marker icon={customAmenityMarker('Spiritual')} position={[44,-78]}></Marker>
-                              {Object.entries(amenities)?.map(
-                              ([amenityName, amenityObj]) => {
-                                if (amenityObj.displayType === "Point") {
-                                  return (
-                                    <Marker
-                                        icon={customAmenityMarker(amenityName)}
-                                        key={amenityName}
-                                        position={[
-                                            amenityObj.coordinates[0],
-                                            amenityObj.coordinates[1],
-                                        ]}
-                                    >
-                                      <Popup>{amenityName}</Popup>
-                                    </Marker>
-                                  );
+                              
+                              {amenities?.map(
+                              (amenity,index) => {
+                                //check the type
+                                const type = amenity.type
+                                if (type === 'point') {
+                                    const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? 'http://ontology.eil.utoronto.ca/cdt_resources/images/icons/health.png'
+                                    console.log('iconURL: ',iconURL)
+
+                                    return (
+                                        <Marker
+                                            icon={customAmenityMarker(iconURL)}
+                                            key={index}
+                                            position={[
+                                                amenity.mapCoords.lat,
+                                                amenity.mapCoords.lon,
+                                            ]}
+                                        >
+                                        <Popup>{amenity.name}</Popup>
+                                        </Marker>
+                                    );
+                                } else if (type === 'polygon') {
+                                    return (
+                                        <Polygon positions={amenity.mapCoords}
+                                        pathOptions={{
+                                            fillOpacity: 0.3,
+                                            color: '#0c5203',
+                                            fillColor:'green'
+                                        }}>
+
+                                        </Polygon>
+                                    )
                                 }
+                                
                             })}
                             {/* <Marker
                             icon={customAmenityMarker('Health')}

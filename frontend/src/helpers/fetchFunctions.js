@@ -1,6 +1,11 @@
 import Wkt from "wicket";
 import axios from "axios";
-import { setCachedAmenityCategories, getCachedAmenityCategories } from './cacheServices'
+import { 
+  setCachedAmenityCategories, 
+  getCachedAmenityCategories,
+  setCachedAreaAmenities,
+  getCachedAreaAmenities
+ } from './cacheServices'
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
@@ -104,43 +109,47 @@ export const fetchCityDetails = async (
   dispatchCityState
 ) => {
   if (city) {
+    const cityURI = cityURLs[city]
     try {
       //check whether it is already cached
-      const cachedResults = await getCachedAmenityCategories(cityURLs[city])
+      const cachedResults = await getCachedAmenityCategories(cityURI)
       if (cachedResults && isFresh(cachedResults.timestamp)) {
         dispatchCityState({
           type:'SET_CITY',
           payload: {
             mapCoords: cachedResults.coordinates,
             amenityCategories: cachedResults.data,
-            amenitySubtypes: null
+            amenitySubtypes: null,
+            cityURI: cachedResults.cityURI
           }
         })
       } else {
           //get map coordinates
           console.log('making server request to get cityDetails')
-          console.log('city: ', cityURLs[city])
+          console.log('city: ', cityURI)
           const mapCoordsResponse = await axios.post(`${API_BASE_URL}/api/map-coords`, {
-            cityURI: cityURLs[city]
+            cityURI: cityURI
           })
+          console.log('city detail map coords response: ', mapCoordsResponse)
           const mapCoords = mapCoordsResponse.data.data
           //get amenity categories
           const amenityCategoryResponse = await axios.post(`${API_BASE_URL}/api/amenity-categories`, {
-            cityURI: cityURLs[city]
+            cityURI: cityURI
           })
           console.log('amenity cat resposne: ', amenityCategoryResponse)
           const amenityCategories = amenityCategoryResponse.data?.data
 
           //cache
-          await setCachedAmenityCategories(cityURLs[city], amenityCategories, mapCoords)
+          await setCachedAmenityCategories(cityURI, amenityCategories, mapCoords)
 
           // disptach to redux state
           dispatchCityState({
             type:'SET_CITY',
             payload:{
-            mapCoords: mapCoords,
+            mapCoords: mapCoords.coords,
             amenityCategories: amenityCategories,
-            amenitySubtypes: null
+            amenitySubtypes: null,
+            cityURI: cityURI
           }
         })
       }
@@ -149,6 +158,40 @@ export const fetchCityDetails = async (
       console.error('POST Error getting city details: ',err)
     }
   }
+}
+
+export const fetchAreaAmenities = async (
+  areaIdentifier,
+  cityURI
+) => {
+  console.log('area identifier to fetch amenities: ', areaIdentifier)
+  if (areaIdentifier) {
+    try {
+      //check whether the amenities are already cached
+      const cachedAmenities = await getCachedAreaAmenities(areaIdentifier)
+      if (cachedAmenities && isFresh(cachedAmenities.timestamp)) {
+        console.log('found cached amenities')
+        //dispatch results
+        return cachedAmenities.data
+      } else {
+        console.log('fetching area amenities')
+        //make a request to the server
+        const response = await axios.post(`${API_BASE_URL}/api/get-area-amenities`, {
+          areaId: areaIdentifier
+        })
+        console.log('fetching area amenities response: ',response)
+
+        //cache them
+        await setCachedAreaAmenities(areaIdentifier,response.data.data,cityURI)
+
+        //dispatch results
+        return response.data.data
+      }
+    } catch (err) {
+      console.error('POST Error getting area amenities: ',err)
+    }
+  }
+  
 }
 
 export const fetchIndicators = async (setIndicatorURLs) => {
@@ -231,7 +274,7 @@ export const fetchLocations = async (
           coordinates: updatedLocationURLs[key].coordinates,
         };
       }
-      console.log('fetchLocations result: ', areaNameToCoordsAndURL)
+      // console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
