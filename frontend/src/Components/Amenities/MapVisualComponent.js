@@ -1,7 +1,7 @@
 import { useState, useEffect, useReducer } from 'react'
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
 import { Popup, Polygon, Tooltip, TileLayer, MapContainer, Marker } from "react-leaflet";
-import { Input, Button, Select, Autocomplete, Option } from '@mui/joy';
+import { Input, Button, Select, Autocomplete, Option, CircularProgress } from '@mui/joy';
 import { customAmenityMarker } from '../../helpers/utils'
 import { fetchAreaAmenities } from '../../helpers/fetchFunctions'
 
@@ -13,20 +13,56 @@ import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+//icons
+import busIcon from '../../assets/icons/udrc-bus-icon.png'
 
-function initializeFilterState (amenities) {
-    let state = {}
-    Object.entries(amenities).map(([name,data]) => {
-        data?.subtypes?.map((subtype) => {
-            state[subtype] = {
-                type: name,
-                show:true
-            }
-        })
-    })
-    console.log('amenity filter state: ',state)
-    return state
-}   
+
+// function initializeFilterState (amenities) {
+//     let state = {}
+//     Object.entries(amenities).map(([name,data]) => {
+//         state[name] ??= {showAll: true}
+//         data?.subtypes?.map((subtype) => {
+//             state[name][subtype] = {
+//                 show:true
+//             }
+//         })
+//     })
+//     console.log('amenity filter state: ',state)
+//     return state
+// }   
+
+function plotAmenity (amenity,index,cityState) {
+    // console.log('plotting amenity: ',amenity)
+    const type = amenity.type
+    if (type === 'point') {
+        const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? busIcon
+        // console.log('iconURL: ',iconURL)
+
+        return (
+            <Marker
+                icon={customAmenityMarker(iconURL)}
+                key={index}
+                position={[
+                    amenity.mapCoords.lat,
+                    amenity.mapCoords.lon,
+                ]}
+            >
+            <Popup>{amenity.name}</Popup>
+            </Marker>
+        );
+    } else if (type === 'polygon') {
+        return (
+            <Polygon positions={amenity.mapCoords}
+            pathOptions={{
+                fillOpacity: 0.3,
+                color: '#0c5203',
+                fillColor:'green'
+            }}>
+
+            </Polygon>
+        )
+    }
+}
 
 const MapVisualComponent = ({
     locationIDPolygons,
@@ -34,13 +70,16 @@ const MapVisualComponent = ({
     instanceURL,
     overlayCoords,
     locationIDKey,
-    cityState
+    cityState,
+    filterPanelState,
+    dispatchFilterPanelState
 }) => {
 
+    console.log('MCV Filter State: ',filterPanelState)
     const [filterPanelOpen, setFilterPanelOpen] = useState(false)
-    console.log('map visual comp city state: ', cityState)
-    console.log('OVERLAY COORDS: ',overlayCoords)
-    const [filterPanelState, setFilterPanelState] = useState(initializeFilterState(cityState.amenityCategories))
+    // console.log('map visual comp city state: ', cityState)
+    // console.log('OVERLAY COORDS: ',overlayCoords)
+    // const [filterPanelState, setFilterPanelState] = useState(initializeFilterState(cityState.amenityCategories))
     const [amenities, setAmenities] = useState([])
     const [loadingAmenities, setLoadingAmenities] = useState(false)
 
@@ -62,27 +101,64 @@ const MapVisualComponent = ({
         getAreaAmenities()
     },[])
 
-    const updateFilters = (type, filter) => {
-        // Create a shallow copy of the state
-        const newState = { ...filterPanelState };
+    if (!filterPanelState) {
+        // still initializing — show a loading state instead of crashing
+        return (
+            <Box sx={{ display:'flex', alignItems:'center', justifyContent:'center', width:'100%', height:'100%' }}>
+                <CircularProgress />
+            </Box>
+        )
+    }
+
+    const updateFilters = (category, filter) => {
+        // console.log('updating filters')
+        // console.log('old filterState: ',filterPanelState)
+        const prevState = filterPanelState
+        const categoryState = prevState[category];
 
         if (filter === 'all') {
-            // Toggle all subtypes belonging to this category
-            Object.keys(newState).forEach(key => {
-                if (newState[key].type === type) {
-                    newState[key] = { ...newState[key], show: true };
+            const newSubtypes = Object.fromEntries(
+                Object.keys(categoryState)
+                    .filter((key) => key !== 'showAll')
+                    .map((key) => [key, { show: true }])
+            );
+            const newState = {
+                ...prevState,
+                [category]: { showAll: true, ...newSubtypes }
+            };
+            dispatchFilterPanelState({
+                type:'SET_FILTER',
+                payload: {
+                    id: locationIDKey,
+                    state: newState
                 }
-            });
-        } else {
-            // Guard against missing key before accessing .show
-            if (newState[filter] === undefined) {
-                console.warn(`Filter key "${filter}" not found in filterPanelState`);
-                return;
-            }
-            newState[filter] = { ...newState[filter], show: !newState[filter].show };
+            })
+            return
         }
 
-        setFilterPanelState(newState);
+        if (categoryState[filter] === undefined) {
+            console.warn(`Filter key "${filter}" not found in filterPanelState`);
+            // return prevState;
+            return
+        }
+
+
+        const newState = {
+            ...prevState,
+            [category]: {
+                ...categoryState,
+                showAll: false, // ✅ leaving "show all" mode
+                [filter]: { show: !categoryState[filter].show }
+            }
+        };
+        dispatchFilterPanelState({
+            type:'SET_FILTER',
+            payload: {
+                id: locationIDKey,
+                state: newState
+            }
+        })
+        return
     }
 
     // const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
@@ -113,7 +189,7 @@ const MapVisualComponent = ({
 
                 <Box sx={{ width: "100%", height: {xs:"calc(100dvh - 99px - 40px)", md:"calc(100dvh - 99px)"}, position:'relative' }}>
                     <MapContainer
-                        center={[cityState.mapCoords.lat, cityState.mapCoords.lon]}
+                        center={[cityState?.mapCoords?.lat ?? 43.65323, cityState?.mapCoords?.lon ?? -79.38318]}
                         zoom={16}
                         minZoom={12}
                         maxZoom={18}
@@ -133,12 +209,12 @@ const MapVisualComponent = ({
                               </Polygon>
 
                               
-                              {amenities?.map(
+                              {/* {amenities?.map(
                               (amenity,index) => {
                                 //check the type
                                 const type = amenity.type
                                 if (type === 'point') {
-                                    const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? 'http://ontology.eil.utoronto.ca/cdt_resources/images/icons/health.png'
+                                    const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? busIcon
                                     console.log('iconURL: ',iconURL)
 
                                     return (
@@ -166,12 +242,32 @@ const MapVisualComponent = ({
                                     )
                                 }
                                 
-                            })}
-                            {/* <Marker
-                            icon={customAmenityMarker('Health')}
-                            position={[43,-79]}></Marker> */}
-                        
+                            })} */}
 
+                            {Object.keys(amenities)?.flatMap((category) => {
+                                const categoryFilter = filterPanelState[category];
+                                if (!categoryFilter) return [];
+
+                                const subtypes = Object.keys(amenities[category]);
+
+                                if (categoryFilter.showAll) {
+                                    // show every subtype
+                                    return subtypes.flatMap((subtype) =>
+                                        (amenities[category][subtype] ?? []).map((amenity, index) =>
+                                            plotAmenity(amenity, `${category}-${subtype}-${index}`, cityState)
+                                        )
+                                    );
+                                } else {
+                                    // only show subtypes that are individually toggled on
+                                    return subtypes
+                                        .filter((subtype) => filterPanelState[category][subtype]?.show)
+                                        .flatMap((subtype) =>
+                                            (amenities[category][subtype] ?? []).map((amenity, index) =>
+                                                plotAmenity(amenity, `${category}-${subtype}-${index}`, cityState)
+                                            )
+                                        );
+                                }
+                            })}
 
                     
 
@@ -190,7 +286,8 @@ const MapVisualComponent = ({
                     >
                         <Legend amenities={cityState.amenityCategories} />
                     </Box>
-
+                    
+                    
                     <Box
                     sx={{position:"absolute",
                         top:'6px',

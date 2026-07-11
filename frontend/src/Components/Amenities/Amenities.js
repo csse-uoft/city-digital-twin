@@ -65,8 +65,23 @@ const mockAmenityData2 = {
 }
 
 
+function initializeFilterState (amenities) {
+    let state = {}
+    Object.entries(amenities).map(([name,data]) => {
+        state[name] ??= {showAll: true}
+        data?.subtypes?.map((subtype) => {
+            state[name][subtype] = {
+                show:true
+            }
+        })
+    })
+    console.log('amenity filter state: ',state)
+    return state
+}  
+
+
 function CustomTabPanel(props) {
-  const { children, value, index, overlayCoords, locationIDKey, instanceName, instanceURL, amenities, cityState, ...other } = props;
+  const { children, value, index, overlayCoords, locationIDKey, instanceName, instanceURL, amenities, cityState, filterPanelState, dispatchFilterPanelState, ...other } = props;
 
   return (
     <div
@@ -82,7 +97,10 @@ function CustomTabPanel(props) {
                                         instanceName={instanceName}
                                         instanceURL={instanceURL}
                                         cityState={cityState}
-                                        amenities={amenities}  />}
+                                        amenities={amenities}
+                                        filterPanelState={filterPanelState[locationIDKey]}
+                                        dispatchFilterPanelState={dispatchFilterPanelState}
+                                          />}
     </div>
   );
 }
@@ -116,6 +134,8 @@ const Amenities = ({
     adminAreaTypesState,
     cityState,
     dispatchCityState,
+    filterPanelState,
+    dispatchFilterPanelState,
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
     dispatchAdminAreaInstances,
@@ -366,6 +386,32 @@ const Amenities = ({
         setEnrichedAmenityPolygons(enrichedList)
     }, [adminAreaInstancesState])
 
+    useEffect(() => {
+        Object.keys(amenityPolygons).forEach((locationIDKey) => {
+            const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+            const fullKey = baseURI + locationIDKey;
+            const overlayCoords = locationIDPolygons[fullKey]?.coordinates;
+
+            if (overlayCoords != null && !filterPanelState[locationIDKey]) {
+                const initFilterState = initializeFilterState(cityState.amenityCategories);
+                dispatchFilterPanelState({
+                    type: 'SET_FILTER',
+                    payload: {
+                        id: locationIDKey,
+                        state: initFilterState
+                    }
+                });
+            }
+        });
+    }, [amenityPolygons, locationIDPolygons, cityState, selectedAdminInstancesURLs]);
+
+    useEffect(() => {
+        const tabCount = Object.keys(amenityPolygons).length;
+        if (tabValue >= tabCount) {
+            setTabValue(Math.max(tabCount - 1, 0));
+        }
+    }, [amenityPolygons]);
+
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
@@ -549,13 +595,34 @@ const Amenities = ({
                             const locationID = amenityPolygons[locationIDKey];
                             const instanceName = amenityPolygons[locationIDKey].instanceName
                             const instanceURL = amenityPolygons[locationIDKey].instanceURL
-                            console.log('AREA INSTANCE: ', amenityPolygons[locationIDKey])
+                            // console.log('AREA INSTANCE: ', amenityPolygons[locationIDKey])
                             // console.log('AMENITIES: ', locationID)
                             // console.log('test location: ', locationIDPolygons[fullKey])
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                             if (overlayCoords != null) {
+                                //dispatch the filter state here
+                                // const initFilterState = initializeFilterState(cityState.amenityCategories)
+                                // dispatchFilterPanelState({
+                                //     type:'SET_FILTER',
+                                //     payload: {
+                                //         id: locationIDKey,
+                                //         state: initFilterState
+                                //     }
+                                // })
+                                //create the panel
                                 return(
-                                     <CustomTabPanel value={tabValue} index={index} overlayCoords={overlayCoords} locationIDKey={locationIDKey} amenities={locationID} instanceName={instanceName} instanceURL={instanceURL} cityState={cityState} />
+                                     <CustomTabPanel 
+                                        value={tabValue} 
+                                        index={index} 
+                                        overlayCoords={overlayCoords} 
+                                        locationIDKey={locationIDKey} 
+                                        amenities={locationID} 
+                                        instanceName={instanceName} 
+                                        instanceURL={instanceURL} 
+                                        cityState={cityState} 
+                                        filterPanelState={filterPanelState} 
+                                        dispatchFilterPanelState={dispatchFilterPanelState} 
+                                        />
                                 )
                             }
                         })}

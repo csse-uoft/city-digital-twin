@@ -56,7 +56,7 @@ function parseMapCoords (coordStr) {
   // console.log('parse map coordStr: ',coordStr)
   if (coordStr) {
     const type = coordStr.split(' ').at(0)
-    console.log('type: ',type)
+    // console.log('type: ',type)
     if (type === 'POINT') {
       return {
         coords: parsePointCoords(coordStr),
@@ -80,22 +80,41 @@ function parseAmenityCategory(uri) {
   return uri ? uri.split('/').at(-1).replace('Amenity','') : ''
 }
 
-function transformAreaAmenities (amenityData) {
-  console.log('area amenities: ', amenityData)
+function transformAreaAmenities (amenityData,subTypeMap) {
+  // console.log('area amenities: ', amenityData)
   const amenities = amenityData.map((item) => {
-    const data = parseMapCoords(item?.pwkt?.value)
-    const category = parseAmenityCategory(item?.class?.value)
-    const name = item?.name?.value ?? 'Temp'
+    const type = parseAmenityCategory(item?.class?.value)
+    if (Object.hasOwnProperty.call(subTypeMap, type)) {
+      const data = parseMapCoords(item?.pwkt?.value)
+      const category = parseAmenityCategory(item?.class?.value)
+      const subCategory = parseAmenityCategory(item?.class?.value)
+      const name = item?.name?.value ?? 'Public Transit'
 
-    return {
-      category: category,
-      type: data?.type,
-      mapCoords: data?.coords,
-      name: name
+      return {
+        category: subTypeMap[type],
+        subCategory: subCategory,
+        type: data?.type,
+        mapCoords: data?.coords,
+        name: name
+      }
+    } else {
+      return null
     }
+    
   })
   
-  return amenities
+  return amenities.filter(k => k != null)
+}
+
+function formatAmenities (amenityData,subTypeMap) {
+  let data = {}
+  amenityData.forEach((item) => {
+    data[item.category] ??= {}
+    data[item.category][item.subCategory] = [...(data[item.category][item.subCategory] ?? []), item]
+  })
+
+  console.log('formatted amenity data for filter panel: ', data)
+  return data
 }
 
 function transformAmenityCategories (amenityData) {
@@ -106,8 +125,8 @@ function transformAmenityCategories (amenityData) {
     const label = amenity?.d_label?.value
     const name = amenity.d.value.split('/').at(-1).replace('Amenity','')
     console.log('name: ',name)
-    const colour = amenity?.colour?.value
-    const iconUrl = amenity?.icon?.value
+    const colour = amenity?.colour?.value ?? null
+    const iconUrl = amenity?.icon?.value ?? null
     if (name) {
       
       amenities[name] = {
@@ -1291,9 +1310,16 @@ router.post("/amenity-categories", async (req,res) => {
       
       await Promise.all(
         Object.keys(amenities).map(async (name) => {
-          const subtypes = await getSubtypesByAmenity(name)
-          console.log(`subtypes for ${name}: `, subtypes)
-          amenities[name].subtypes = subtypes 
+          if (name === 'ParkService') {
+            amenities[name].subtypes = ['ParkService']
+          } else if (name === 'PublicTransitService') {
+            amenities[name].subtypes = ['PublicTransitService']
+          } else {
+            const subtypes = await getSubtypesByAmenity(name)
+            console.log(`subtypes for ${name}: `, subtypes)
+            amenities[name].subtypes = subtypes 
+          }
+          
         })
       )
       // Send the formatted data as JSON
@@ -1314,6 +1340,8 @@ router.post("/amenity-categories", async (req,res) => {
 
 router.post('/get-area-amenities', async (req,res) => {
   const area_id = req.body.areaId
+  const categoryFilters = req.body.subTypeMap //Map, which we can check in constant time to filter
+  console.log('subtype category filters: ', categoryFilters)
   try {
     const query = `
       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
@@ -1419,11 +1447,15 @@ router.post('/get-area-amenities', async (req,res) => {
     });
 
     stream.on("end", async () => {
-      console.log("get-area-amenities API result: ", rawData.slice(0,40))
-      const amenities = transformAreaAmenities(rawData)
+      console.log("get-area-amenities API  result: ", rawData.slice(0,80))
+      //first pre filter the raw data, by categories matching the subtype categories of the city
+
+      const amenities = transformAreaAmenities(rawData,categoryFilters)
+      console.log('filtered amenities: ', amenities)
+      const formattedAmenities = formatAmenities(amenities,categoryFilters)
       
       // Send the formatted data as JSON
-      res.json({ success: true, data: amenities });
+      res.json({ success: true, data: formattedAmenities });
     });
 
     // Handle errors in the query or stream

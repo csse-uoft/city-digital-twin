@@ -3,9 +3,9 @@ import db from '../db'
 // set
 export const setCachedAmenityCategories = async (cityURI,amenities,coords) => {
     console.log('CACHING amenity categories')
-    console.log('cityURI: ', cityURI)
-    console.log('mapCoords: ', coords)
-    console.log('data: ', amenities)
+    // console.log('cityURI: ', cityURI)
+    // console.log('mapCoords: ', coords)
+    // console.log('data: ', amenities)
     try {
         if (cityURI) {
             await db.amenityCategories.put({
@@ -36,9 +36,9 @@ export const getCachedAmenityCategories = async (cityURI) => {
 //AMENITY DATA
 export const setCachedAreaAmenities = async (areaIdentifier,amenities,cityURI) => {
     console.log('CACHING area amenities')
-    console.log('cityURI: ',cityURI)
-    console.log('area identifier: ',areaIdentifier)
-    console.log('data: ',amenities)
+    // console.log('cityURI: ',cityURI)
+    // console.log('area identifier: ',areaIdentifier)
+    // console.log('data: ',amenities)
 
     try {
         await db.amenityData.put({
@@ -57,7 +57,7 @@ export const getCachedAreaAmenities = async (areaIdentifier) => {
         const record = await db.amenityData.get(areaIdentifier)
         console.log('retrieved area amenities: ',record)
         return record
-    } catch {
+    } catch (err) {
         console.error('ERR getting cached area amenity data: ',err)
         return null
     }

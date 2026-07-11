@@ -4,13 +4,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 //icons
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import LocalMallOutlinedIcon from '@mui/icons-material/LocalMallOutlined';
-import ChurchOutlinedIcon from '@mui/icons-material/ChurchOutlined';
-import ColorLensOutlinedIcon from '@mui/icons-material/ColorLensOutlined';
-import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
-import SportsBasketballOutlinedIcon from '@mui/icons-material/SportsBasketballOutlined';
-
+import DirectionsBusIcon from '@mui/icons-material/DirectionsBus'; //Public Transit
+import busIcon from '../../assets/icons/udrc-bus-icon.png'
+import parkIcon from '../../assets/icons/udrc-park-icon.png'
 const Legend = ({
   amenities
 }) => {
@@ -30,7 +26,7 @@ const Legend = ({
     return {
       name: data.label,
       colour: data.colour ?? '#ccc',
-      icon: data.icon ?? '#'
+      icon: data?.icon
     }
   })
 
@@ -98,7 +94,7 @@ const Legend = ({
                 }}
               >
                 {/* Icon Circle */}
-                <img style={{}} src={category.icon ?? ''} />
+                {category.icon ? <img style={{}} src={category.icon ?? ''} /> : <img style={{height:'38px',width:'38px'}} src={category.name === 'Park' ? parkIcon : busIcon} /> }
 
                 {/* Label */}
                 <Typography

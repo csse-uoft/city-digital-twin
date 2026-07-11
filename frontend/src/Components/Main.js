@@ -12,6 +12,7 @@ import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
 import { adminCompareAreaInstanceReducer } from '../reducers/adminCompareAreaInstanceReducer'
 import { cityReducer } from '../reducers/cityReducer'
+import { filterPanelReducer } from '../reducers/filterPanelReducer'
 import { fetchCities } from "../helpers/fetchFunctions";
 
 // The main display that shows the navbar and the indicator dashboard pages
@@ -29,6 +30,7 @@ function Main() {
   const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
   const [compareAdminAreainstancesState, dispatchCompareAdminAreaInstances] = useReducer(adminCompareAreaInstanceReducer, {})
   const [cityState, dispatchCityState] = useReducer(cityReducer, {})
+  const [filterPanelState, dispatchFilterPanelState] = useReducer(filterPanelReducer, {})
 
   useEffect(() => {
     fetchCities(setCityURLs);
@@ -87,6 +89,8 @@ function Main() {
                 setCityURLs={setCityURLs}
                 cityState={cityState}
                 dispatchCityState={dispatchCityState}
+                filterPanelState={filterPanelState}
+                dispatchFilterPanelState={dispatchFilterPanelState}
                 adminAreaTypesState={adminAreaTypesState}
                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                 adminAreaInstancesState={adminAreaInstancesState}

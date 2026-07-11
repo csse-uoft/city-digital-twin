@@ -16,6 +16,18 @@ const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
  * Logs the result to the console and returns a boolean if successful, or `null` if the request fails.
  */
 
+function getSubtypeMap (amenityData) {
+  console.log('creating amenity subtype map')
+  const m = {}
+  Object.keys(amenityData).forEach((key) => {
+    amenityData[key].subtypes.forEach((subtype) => {
+      m[subtype] = key
+    })
+  })
+  console.log('amenity subtype map: ', m)
+  return m
+}
+
 function transformAmenities (amenityData) {
   console.log('amenity: ',amenityData)
   let amenities = {}
@@ -130,13 +142,13 @@ export const fetchCityDetails = async (
           const mapCoordsResponse = await axios.post(`${API_BASE_URL}/api/map-coords`, {
             cityURI: cityURI
           })
-          console.log('city detail map coords response: ', mapCoordsResponse)
+          // console.log('city detail map coords response: ', mapCoordsResponse)
           const mapCoords = mapCoordsResponse.data.data
           //get amenity categories
           const amenityCategoryResponse = await axios.post(`${API_BASE_URL}/api/amenity-categories`, {
             cityURI: cityURI
           })
-          console.log('amenity cat resposne: ', amenityCategoryResponse)
+          // console.log('amenity cat resposne: ', amenityCategoryResponse)
           const amenityCategories = amenityCategoryResponse.data?.data
 
           //cache
@@ -164,7 +176,7 @@ export const fetchAreaAmenities = async (
   areaIdentifier,
   cityURI
 ) => {
-  console.log('area identifier to fetch amenities: ', areaIdentifier)
+  // console.log('area identifier to fetch amenities: ', areaIdentifier)
   if (areaIdentifier) {
     try {
       //check whether the amenities are already cached
@@ -175,11 +187,15 @@ export const fetchAreaAmenities = async (
         return cachedAmenities.data
       } else {
         console.log('fetching area amenities')
+        //make the subtype map 
+        const cityDetails = await getCachedAmenityCategories(cityURI)
+        const subtypeMap = getSubtypeMap(cityDetails.data)
         //make a request to the server
         const response = await axios.post(`${API_BASE_URL}/api/get-area-amenities`, {
-          areaId: areaIdentifier
+          areaId: areaIdentifier,
+          subTypeMap: subtypeMap
         })
-        console.log('fetching area amenities response: ',response)
+        // console.log('fetching area amenities response: ',response)
 
         //cache them
         await setCachedAreaAmenities(areaIdentifier,response.data.data,cityURI)
