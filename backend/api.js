@@ -1,13 +1,13 @@
 var express = require("express");
 var router = express.Router();
-
+const { polygon, centerOfMass } = require("@turf/turf");
 var SparqlClient = require("sparql-http-client");
 require("dotenv").config();
 
 const endpointUrl = process.env.ENDPOINT_URL;
 
 const endpointUrl2 = process.env.NEW_ENDPOINT_URL
-const client = new SparqlClient({ endpointUrl: endpointUrl });
+// const client = new SparqlClient({ endpointUrl: endpointUrl });
 
 const client2 = new SparqlClient({ endpointUrl: endpointUrl2 })
 
@@ -17,6 +17,10 @@ function sleep(ms) {
 
 function sanitizeSparqlQuery(query) {
   return query.replace(/[\u00A0\u2000-\u200B\u2002-\u200F\u2028\u2029\u202F\u205F\u3000]/g, ' ');
+}
+
+function geoJsonPolygon(coords) {
+  return turf.polygon(coords)
 }
 
 function parsePointCoords (coordStr) {
@@ -51,7 +55,7 @@ function parsePolygonCoords (coordStr) {
   }
 }
 
-function parseMapCoords (coordStr) {
+function parseMapCoords (coordStr,category) {
   //check if it is a point or a polygon
   // console.log('parse map coordStr: ',coordStr)
   if (coordStr) {
@@ -63,10 +67,21 @@ function parseMapCoords (coordStr) {
         type: 'point'
       }
     } 
-    else if (type === 'POLYGON') {
+    else if (type === 'POLYGON' && category === 'ParkService') {
       return {
         coords: parsePolygonCoords(coordStr),
         type: 'polygon'
+      }
+    } else if (type === 'POLYGON' && category != 'ParkService') { //convert polygon to central point
+      const coords = parsePolygonCoords(coordStr)
+      console.log('COORDS FOR TURF: ',coords)
+      const p = centerOfMass(polygon([coords]))
+      return {
+        coords: {
+          lat: p.geometry.coordinates[0],
+          lon: p.geometry.coordinates[1]
+        },
+        type: 'point'
       }
     } else {
       return null
@@ -80,12 +95,14 @@ function parseAmenityCategory(uri) {
   return uri ? uri.split('/').at(-1).replace('Amenity','') : ''
 }
 
+
 function transformAreaAmenities (amenityData,subTypeMap) {
   // console.log('area amenities: ', amenityData)
   const amenities = amenityData.map((item) => {
     const type = parseAmenityCategory(item?.class?.value)
     if (Object.hasOwnProperty.call(subTypeMap, type)) {
-      const data = parseMapCoords(item?.pwkt?.value)
+      //depending on the type, may need to convert to polygon
+      const data = parseMapCoords(item?.pwkt?.value,type)
       const category = parseAmenityCategory(item?.class?.value)
       const subCategory = parseAmenityCategory(item?.class?.value)
       const name = item?.name?.value ?? 'Public Transit'
@@ -141,6 +158,53 @@ function transformAmenityCategories (amenityData) {
   return amenities
 }
 
+function transformWalkabilityData (data) {
+  let obj = {}
+  data.forEach((item) => {
+    const label = parseAmenityCategory(item?.class?.value ?? '')
+    obj[label] = {
+      totalBuildingCount: parseInt(item?.totalBuildingCount?.value),
+      buildingsWithin400mCount: parseInt(item?.buildingsWithin400mCount?.value)
+    }
+  })
+
+  return obj
+}
+
+
+
+function formatWalkability (data,amenityCategories) {
+
+  const transformedWalkabilityData = transformWalkabilityData(data)
+  console.log('transformed walkability data: ', transformedWalkabilityData)
+  console.log('format walkability amenity categories: ',amenityCategories)
+  scores = {}
+
+  Object.keys(amenityCategories).forEach((category,index) => {
+    //check whether the walkability data contains this category
+    if (Object.hasOwn(transformedWalkabilityData, category)) {
+      // add this category to the new structure
+      const highLevelCategoryWalkability = transformedWalkabilityData[category]?.buildingsWithin400mCount / transformedWalkabilityData[category]?.totalBuildingCount
+      scores[category] = { walkability: highLevelCategoryWalkability, subtypes: [], color: amenityCategories[category]?.colour ?? 'ccc'}
+    }
+
+    //now check it's subtypes
+    const subtypes = amenityCategories[category].subtypes
+    subtypes?.forEach((subtype) => {
+      //check whether the walkability data contains this subtype
+      if (Object.hasOwn(transformedWalkabilityData, subtype)) {
+        const subtypeWalkability = transformedWalkabilityData[subtype]?.buildingsWithin400mCount / transformedWalkabilityData[subtype]?.totalBuildingCount
+        scores[category].subtypes?.push({subtype: subtype, walkability: subtypeWalkability})
+      }
+    })
+  })
+
+  console.dir(scores, {depth: null})
+
+  return scores
+
+}
+
 // Test if backend recieve the call from frontend
 router.get("/health-check", async (req, res) => {
   res.json({ success: true, message: "success" });
@@ -163,7 +227,7 @@ router.get("/cities", async (req, res) => {
       }
     `;
 
-    const stream = await client.query.select(query);
+    const stream = await client2.query.select(query);
 
     let result = [];
     let totalResults = 0;
@@ -217,7 +281,7 @@ router.get("/indicators", async (req, res) => {
       }
     `;
 
-    const stream = await client.query.select(query);
+    const stream = await client2.query.select(query);
 
     let result = [];
     let totalResults = 0;
@@ -262,6 +326,7 @@ router.post("/admin-types", async (req, res) => {
     res.json({ message: "Bad request: cityName is not an URI" });
   } else {
     const [prefix, suffix] = splitURI(req.body.cityName);
+    console.log(`ADMIN TYPES API prefix: ${prefix}, suffex: ${suffix}`)
 
     const query = `
       PREFIX CITY: <${prefix}>
@@ -270,14 +335,14 @@ router.post("/admin-types", async (req, res) => {
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
       SELECT DISTINCT ?AdminAreaType WHERE {
-          CITY:${suffix} ?p ?AdminArea.
+          
           ?AdminArea rdf:type ?AdminAreaType.
           ?AdminAreaType rdfs:subClassOf iso50872:CityAdministrativeArea.
       }
     `;
-
+    //CITY:${suffix} ?p ?AdminArea.
     // Check if city is in database; if not, quit
-    const doesCityExist = await client.query.ask(`
+    const doesCityExist = await client2.query.ask(`
       PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -291,7 +356,7 @@ router.post("/admin-types", async (req, res) => {
       res.status(400);
       res.json({ message: "Bad request: Provided city does not exist" });
     } else {
-      const stream = await client.query.select(query);
+      const stream = await client2.query.select(query);
 
       var result = [];
 
@@ -300,6 +365,7 @@ router.post("/admin-types", async (req, res) => {
         Object.entries(row).forEach(([key, value]) => {
           result.push(value.value);
         });
+        console.log('admin types result: ',result)
       });
 
       stream.on("end", () => {
@@ -332,20 +398,32 @@ router.post("/admin-instances", async (req, res) => {
     const [prefix, citySuffix] = splitURI(req.body.cityName);
     const [, adminTypeSuffix] = splitURI(req.body.adminType);
 
-    const query = `
-      PREFIX CITY: <${prefix}>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    // const query = `
+    //   PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+    //   PREFIX CITY: <${prefix}>
+    //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-      SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-        CITY:${citySuffix} ?p ?adminAreaInstance.
-        ?adminAreaInstance rdfs:comment ?areaName.
-        ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-      }
-    `;
+    //   SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+    //   CITY:${citySuffix} ?p ?adminAreaInstance.
+    //   ?adminAreaInstance genprop:hasName ?areaName.
+    //   ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
+    //   }
+    // `;
+    const query = `
+    PREFIX CITY: <${prefix}>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+    SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+    CITY:${citySuffix} ?p ?adminAreaInstance.
+    ?adminAreaInstance rdfs:comment ?areaName.
+    ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
+    }`
+    //CITY:${citySuffix} ?p ?adminAreaInstance.
 
     // Check if city is in database; if not, quit
-    const doesCityExist = await client.query.ask(`
+    const doesCityExist = await client2.query.ask(`
       PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -356,18 +434,28 @@ router.post("/admin-instances", async (req, res) => {
     `);
 
     // Check if provided admin area type exists; if not, exit
-    const doesAdminAreaTypeExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}>
+    const doesAdminAreaTypeExist = await client2.query.ask(`
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
       ASK {
-          CITY:${citySuffix} ?p ?AdminArea.
-          ?AdminArea rdf:type CITY:${adminTypeSuffix}.
-          CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+          
       }
     `);
+
+    // const doesAdminAreaTypeExist = await client2.query.ask(`
+    //   PREFIX CITY: <${prefix}>
+    //   PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+    //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      
+    //   ASK {
+    //       CITY:${citySuffix} ?p ?AdminArea.
+    //       ?AdminArea rdf:type CITY:${adminTypeSuffix}.
+    //       CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+    //   }
+    // `);
 
     if (!doesCityExist || !doesAdminAreaTypeExist) {
       if (!doesCityExist) {
@@ -381,7 +469,7 @@ router.post("/admin-instances", async (req, res) => {
         });
       }
     } else {
-      const stream = await client.query.select(query);
+      const stream = await client2.query.select(query);
 
       var result = [];
       var totalResults = 0;
@@ -467,7 +555,7 @@ router.post("/visualization-data", async (req, res) => {
     var finalResult = {};
 
     // Check if provided city exists; if not, exit
-    const doesCityExist = await client.query.ask(`
+    const doesCityExist = await client2.query.ask(`
       PREFIX CITY: <${cityPrefix}#>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -484,7 +572,7 @@ router.post("/visualization-data", async (req, res) => {
     }
 
     // Check if provided admin area type exists; if not, exit
-    const doesAdminAreaTypeExist = await client.query.ask(`
+    const doesAdminAreaTypeExist = await client2.query.ask(`
       PREFIX CITY: <${cityPrefix}#>
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -508,7 +596,7 @@ router.post("/visualization-data", async (req, res) => {
     var adminAreaTypeNames = [];
 
     // Get list of admin area type names
-    const adminAreaTypeNameStream = await client.query.select(`
+    const adminAreaTypeNameStream = await client2.query.select(`
       PREFIX CITY: <${cityPrefix}#>
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -544,7 +632,7 @@ router.post("/visualization-data", async (req, res) => {
           while (countIsIndicatorAdminTypeSame < 3) {
             try {
               await sleep(200); // Sleep for 0.2 seconds
-              isIndicatorAdminTypeSame = await client.query.ask(`
+              isIndicatorAdminTypeSame = await client2.query.ask(`
                 PREFIX INDICATOR: <${indicatorPrefix}#>
                 PREFIX CITY: <${cityPrefix}#>
                 PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
@@ -572,7 +660,7 @@ router.post("/visualization-data", async (req, res) => {
               while (count < 3) {
                 try {
                   await sleep(200); // Sleep for 0.2 seconds
-                  isAdminTypeMatching = await client.query.ask(`
+                  isAdminTypeMatching = await client2.query.ask(`
                     PREFIX INDICATOR: <${indicatorPrefix}#>
                     PREFIX CITY: <${cityPrefix}#>
                     PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
@@ -614,7 +702,7 @@ router.post("/visualization-data", async (req, res) => {
                 // If data is only available at a LARGER admin area, return an error (no way to split it down)
                 var overlappingAreaList = [];
 
-                const overlappingAdminAreas = await client.query.select(`
+                const overlappingAdminAreas = await client2.query.select(`
                   PREFIX CITY: <${cityPrefix}#>
                   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                   PREFIX iso5087m: <http://ontology.eil.utoronto.ca/5087/1/Mereology/>
@@ -676,7 +764,7 @@ router.post("/visualization-data", async (req, res) => {
                         batchQuery = batchQuery.replace(/(\r\n|\n|\r)/gm, "");
 
                         try {
-                          const batchResult = await client.query.select(
+                          const batchResult = await client2.query.select(
                             batchQuery
                           );
                           let batchTotal = 0;
@@ -748,7 +836,7 @@ router.post("/visualization-data", async (req, res) => {
           } else {
             var result = 0;
 
-            indicatorDataStream = await client.query.select(`
+            indicatorDataStream = await client2.query.select(`
               PREFIX CITY: <${cityPrefix}#>
               PREFIX INDICATOR: <${indicatorPrefix}#>
               PREFIX iso21972: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
@@ -826,7 +914,7 @@ router.post("/5", async (req, res) => {
     const [predicatePrefix, predicateSuffix] = splitURI(req.body.predicate);
     const [subjectPrefix, subjectSuffix] = splitURI(req.body.subject);
 
-    const stream = await client.query.select(`
+    const stream = await client2.query.select(`
       PREFIX FINDFROM: <${subjectPrefix}>
       PREFIX PROPERTY: <${predicatePrefix}>
 
@@ -878,26 +966,30 @@ router.post("/6", async (req, res) => {
   } else {
     const [prefix, citySuffix] = splitURI(req.body.cityName);
     const [, adminTypeSuffix] = splitURI(req.body.adminType);
-
+    console.log('API 6')
+    console.log(`prefix: ${prefix}, citySuffix: ${citySuffix}, adminTypeSuffix: ${adminTypeSuffix}`)
     const query = `
-      PREFIX CITY: <${prefix}>
+      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+#PREFIX CITY: <${prefix}>
       PREFIX iso50872City: <http://ontology.eil.utoronto.ca/5087/2/City/>
+      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
       PREFIX iso50871Loc: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
       SELECT DISTINCT ?adminAreaInstance ?areaLocation WHERE {
-        CITY:${citySuffix} ?p ?adminAreaInstance.
+ #       CITY:${citySuffix} ?p ?adminAreaInstance.
         ?adminAreaInstance rdfs:comment ?areaName.
-        ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-        ?adminAreaInstance iso50871Loc:hasLocation ?loc.
+        ?adminAreaInstance rdf:type tor:${adminTypeSuffix}.
+        ?adminAreaInstance loc:hasLocation ?loc.
         ?loc geo:asWKT ?areaLocation.
       }
     `;
-
+    //
+    //CITY:${citySuffix} ?p ?adminAreaInstance.
     // Check if city is in database; if not, quit
-    const doesCityExist = await client.query.ask(`
+    const doesCityExist = await client2.query.ask(`
       PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -908,18 +1000,30 @@ router.post("/6", async (req, res) => {
     `);
 
     // Check if provided admin area type exists; if not, exit
-    const doesAdminAreaTypeExist = await client.query.ask(`
-      PREFIX CITY: <${prefix}>
+    const doesAdminAreaTypeExist = await client2.query.ask(`
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
       ASK {
-          CITY:${citySuffix} ?p ?AdminArea.
-          ?AdminArea rdf:type CITY:${adminTypeSuffix}.
-          CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+          
       }
     `);
+
+    // const doesAdminAreaTypeExist = await client2.query.ask(`
+    //   PREFIX CITY: <${prefix}>
+    //   PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+    //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      
+    //   ASK {
+    //       CITY:${citySuffix} ?p ?AdminArea.
+    //       ?AdminArea rdf:type CITY:${adminTypeSuffix}.
+    //       CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+    //   }
+    // `);
+
+    
 
     if (!doesCityExist || !doesAdminAreaTypeExist) {
       if (!doesCityExist) {
@@ -933,7 +1037,7 @@ router.post("/6", async (req, res) => {
         });
       }
     } else {
-      const stream = await client.query.select(query);
+      const stream = await client2.query.select(query);
 
       var result = [];
       var totalResults = 0;
@@ -948,6 +1052,8 @@ router.post("/6", async (req, res) => {
       });
 
       stream.on("end", () => {
+        console.log('area instance names: ',result)
+        console.log('total results: ', totalResults)
         res.json({
           message: "success",
           adminAreaInstanceNames: result,
@@ -980,7 +1086,7 @@ router.get("/all-amenity-URLs", async (req, res) => {
 
   try {
     // Execute the first query for amenity classes
-    const stream = await client.query.select(amenityClassesQuery);
+    const stream = await client2.query.select(amenityClassesQuery);
 
     // Collect results from the stream
     let rawData = [];
@@ -1051,7 +1157,7 @@ router.post("/amenity-location-all", async (req, res) => {
   `;
   try {
     // Execute the first query for amenity classes
-    const stream = await client.query.select(query);
+    const stream = await client2.query.select(query);
     // Collect results from the stream
     let rawData = [];
     stream.on("data", (row) => {
@@ -1127,7 +1233,7 @@ router.post("/amenity-score", async (req, res) => {
     `;
 
     // Execute the query
-    const stream = await client.query.select(query);
+    const stream = await client2.query.select(query);
 
     // Collect results from the stream
     const results = [];
@@ -1203,7 +1309,7 @@ router.post("/neighborhood-amenities", async (req,res) => {
     `
 
     // Execute the query
-    const stream = await client.query.select(query);
+    const stream = await client2.query.select(query);
 
     // Collect results from the stream
     let rawData = [];
@@ -1317,7 +1423,7 @@ router.post("/amenity-categories", async (req,res) => {
           } else {
             const subtypes = await getSubtypesByAmenity(name)
             console.log(`subtypes for ${name}: `, subtypes)
-            amenities[name].subtypes = subtypes 
+            amenities[name].subtypes = subtypes.filter(k => k != name) 
           }
           
         })
@@ -1338,12 +1444,14 @@ router.post("/amenity-categories", async (req,res) => {
   
 })
 
+// API 13
 router.post('/get-area-amenities', async (req,res) => {
   const area_id = req.body.areaId
   const categoryFilters = req.body.subTypeMap //Map, which we can check in constant time to filter
   console.log('subtype category filters: ', categoryFilters)
   try {
     const query = `
+      PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -1356,35 +1464,29 @@ router.post('/get-area-amenities', async (req,res) => {
       PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
       PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
       PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
-      PREFIX bdg:  <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/Building/>
-      SELECT ?pwkt ?class ?name
+      PREFIX bdg: <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/Building/>
 
-      WHERE {{
+      SELECT distinct ?pwkt ?class ?name
+
+      WHERE {
+        #for classes defined in the dashboard config
+        ?t config:hasDashboardConfig ?config.
+          ?config a config:CompleteCommunitiesDashboardConfig.
+          ?config config:includesCompleteCommunitiesDimension ?d.
+        
           <${area_id}> loc:hasLocation ?nloc.
           # Fetch amenities in neighbourhood
-              ?x a cdt:CompleteCommunityAmenity.
-              ?x a ?class.
-              ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.
-                  
-              ?p cdt:providesService ?x;  #to do: should be querying for ?x providedFromSite ?s instead (but this isn't captured in the mappings currently)
-                org:hasSite [ loc:hasLocation ?ploc ].
+              ?x a ?d.
+      ?x a ?class.
+          ?class rdfs:subClassOf ?d.
+              ?x hp:providedFromSite ?xsite.
+              ?xsite cdt:locatedInAdministrativeArea <${area_id}>;#using new property computed in a batch update
+                  loc:hasLocation ?ploc.
               ?ploc geo:asWKT ?pwkt.
-                  # amenity name
-              OPTIONAL {?p genprop:hasName ?name}
-      }
-      UNION
-      {
-          # 1. Grab the bounding area coordinates
-          <${area_id}> loc:hasLocation ?nloc.
-          # Fetch services in neighbourhood
-              ?x a cdt:Service.
-              ?x a ?class.
-              ?class rdfs:subClassOf cdt:Service.
-
-              ?x hp:providedFromSite
-                [ loc:hasLocation ?ploc ].
-              ?ploc geo:asWKT ?pwkt.
-      }
+      # amenity name
+              OPTIONAL { ?p cdt:providesService ?x;
+                  genprop:hasName ?name}#amenity name
+    OPTIONAL {?xsite genprop:hasName ?name}#service site name
       }
     `
 
@@ -1438,7 +1540,7 @@ router.post('/get-area-amenities', async (req,res) => {
     `
 
     // Execute the query
-    const stream = await client2.query.select(sanitizeSparqlQuery(query2));
+    const stream = await client2.query.select(sanitizeSparqlQuery(query));
 
     // Collect results from the stream
     let rawData = [];
@@ -1469,6 +1571,118 @@ router.post('/get-area-amenities', async (req,res) => {
   }
 })
 
+// API 14
+router.post('/walkability-scores', async (req,res) => {
+  try {
+    const areaURI = req.body.areaURI
+    const areaId = areaURI.split("#").at(-1)
+    const amenityCategories = req.body.amenityCategories
+
+    const query = `
+    PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+    PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+    PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
+    PREFIX bdg: <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/Building/>
+
+    SELECT 
+      ?class 
+      ?totalBuildingCount
+      (COUNT(DISTINCT ?b) AS ?buildingsWithin400mCount)
+    WHERE {
+      # 1. Compute total buildings ONCE in a fast, isolated subquery
+      {
+        SELECT (COUNT(DISTINCT ?bTotal) AS ?totalBuildingCount) WHERE {
+          tor:${areaId} a tor:Neighborhood .
+          ?bTotal a bdg:Building ;
+                  bdg:use ?use ;
+                  cdt:locatedInAdministrativeArea tor:${areaId} .
+        }
+      }
+
+          {
+        tor:${areaId} a tor:Neighborhood.
+        ?b a bdg:Building;
+          bdg:use ?use;    #add clause to capture bdg:use residential only
+          cdt:locatedInAdministrativeArea tor:${areaId};
+          loc:hasLocation ?bloc.
+        ?bloc geo:asWKT ?bwkt.
+        # Fetch candidate amenities
+        ?x a cdt:CompleteCommunityAmenity.
+        ?x a ?class.
+        ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.    
+        # within 400m of some amenity of type x
+        FILTER EXISTS {
+
+            ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
+            ?ploc geo:asWKT ?pwkt.
+
+            FILTER(geof:distance(?bwkt, ?pwkt, uom:metre) <= 400)
+        }
+    }
+        UNION
+        {
+            #select DISTINCT ?b where{
+        
+        tor:${areaId} a tor:Neighborhood.
+        ?b a bdg:Building;
+          bdg:use ?use;    #add clause to capture bdg:use residential only
+          cdt:locatedInAdministrativeArea tor:${areaId};
+          loc:hasLocation ?bloc.
+        ?bloc geo:asWKT ?bwkt.
+        # Fetch candidate amenities
+        ?x a cdt:Service.
+        ?x a ?class.
+        ?class rdfs:subClassOf cdt:Service.    
+        # within 400m of some amenity of type x
+        FILTER EXISTS {
+
+            ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
+            ?ploc geo:asWKT ?pwkt.
+
+            FILTER(geof:distance(?bwkt, ?pwkt, uom:metre) <= 400)
+        }
+        }
+    }
+    GROUP BY ?class ?totalBuildingCount`
+
+    // Execute the query
+    console.log('executing walkability query')
+    const stream = await client2.query.select(sanitizeSparqlQuery(query));
+
+    // Collect results from the stream
+    let rawData = [];
+    stream.on("data", (row) => {
+      rawData.push(row);
+    });
+
+    stream.on("end", async () => {
+      console.log("walkability-scores API  result: ", rawData)
+      //first pre filter the raw data, by categories matching the subtype categories of the city
+
+      const formattedWalkability = formatWalkability(rawData,amenityCategories)
+      
+      // Send the formatted data as JSON
+      res.json({ success: true, data: formattedWalkability });
+    });
+
+    // Handle errors in the query or stream
+    stream.on("error", (err) => {
+      console.error("Query error: ", err);
+      res.status(500).send("Error executing query");
+    });
+
+  } catch (err) {
+    console.error("Server error on walkability score: ", err);
+    res.status(500).send("Internal server error");
+  }
+
+})
+
 // helper
 async function getSubtypesByAmenity (amenityCategory) {
   try {
@@ -1494,8 +1708,30 @@ async function getSubtypesByAmenity (amenityCategory) {
       }
     `
 
+    const query2 = `
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+    PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
+    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+    select ?subtype where {
+        #where cdt:HealthAmenity is an example of the parameter input - the class that we want to retrieve all leaf subclasses of (including itself if it has no subclasses)
+        
+        ?subtype rdfs:subClassOf cdt:${amenityCategory}Amenity.
+
+        # Exclude the Nothing class
+        FILTER (?subtype != owl:Nothing)
+        
+        # Ensure ?subtype is a leaf (it must NOT have any strictly narrower subclasses)
+        #FILTER NOT EXISTS {
+        #    ?child rdfs:subClassOf ?subtype .
+        #    FILTER (?child != ?subtype && ?child != owl:Nothing)
+        #}
+    }
+    `
+
     // Execute the query
-    const stream = await client2.query.select(query);
+    const stream = await client2.query.select(query2);
 
     return new Promise((resolve,reject) => {
 
@@ -1559,7 +1795,7 @@ router.post("/park-locations", async (req, res) => {
     `;
 
     // Execute the query
-    const stream = await client.query.select(query);
+    const stream = await client2.query.select(query);
 
     // Collect results from the stream
     let rawData = [];

@@ -4,7 +4,9 @@ import {
   setCachedAmenityCategories, 
   getCachedAmenityCategories,
   setCachedAreaAmenities,
-  getCachedAreaAmenities
+  getCachedAreaAmenities,
+  setCachedWalkabilityData,
+  getCachedWalkabilityData
  } from './cacheServices'
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -92,7 +94,7 @@ export const fetchAdministration = async (
       const response = await axios.post(`${API_BASE_URL}/api/admin-types`, {
         cityName: cityURLs[city],
       });
-
+      console.log('FETCH ADMIN AREA response: ', response)
       dispatchAdminAreaTypes({
         type: "SET_CURRENT_CITY",
         payload: city,
@@ -210,6 +212,42 @@ export const fetchAreaAmenities = async (
   
 }
 
+export const fetchWalkabilityData = async (
+  areaIdentifier,
+  cityURI
+) => {
+  if (areaIdentifier) {
+    try {
+      const cachedWalkabilityData = await getCachedWalkabilityData(areaIdentifier)
+      if (cachedWalkabilityData && isFresh(cachedWalkabilityData.timestamp)) {
+        console.log('found cached walkability data')
+        //dispatch results
+        return cachedWalkabilityData.data
+      } else {
+        // make new request
+
+        //get cached categories
+        const cityDetails = await getCachedAmenityCategories(cityURI)
+
+        const response = await axios.post(`${API_BASE_URL}/api/walkability-scores`, {
+          areaURI: areaIdentifier,
+          amenityCategories: cityDetails?.data
+        })
+        console.log('fetch walkability score response:', response)
+
+        //cache results
+        //cache them
+        await setCachedWalkabilityData(areaIdentifier,cityURI,response.data.data)
+
+        // return
+        return response.data.data
+      }
+    } catch (err) {
+      console.error('POST Error getting walkability data: ',err)
+    }
+  }
+}
+
 export const fetchIndicators = async (setIndicatorURLs) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/indicators`);
@@ -245,7 +283,7 @@ export const fetchLocations = async (
           adminType: areaTypeURL,
         }
       );
-
+      console.log('FETCH LOCATIONS response1: ',response1)
       const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
       const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
@@ -254,7 +292,7 @@ export const fetchLocations = async (
       });
 
       const updatedLocationURLs = {};
-
+      console.log('FETCH LOCATIONS resposne2 result: ',response2)
       // this extracts the cooridnates into the updatedLocationURLs variable
       response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
         var wkt = new Wkt.Wkt();
@@ -282,22 +320,24 @@ export const fetchLocations = async (
       });
 
       const areaNameToCoordsAndURL = {};
-
+      console.log('UPDATED LOCATION URLS: ', updatedLocationURLs)
       for (const key in updatedLocationURLs) {
+        console.log('key:', key)
+        console.log('key value', updatedLocationURLs[key])
         const areaName = mapAreaURLtoName(areaInstaceList, key);
         areaNameToCoordsAndURL[areaName] = {
           URL: key,
           coordinates: updatedLocationURLs[key].coordinates,
         };
       }
-      // console.log('fetchLocations result: ', areaNameToCoordsAndURL)
+      console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
         payload: areaNameToCoordsAndURL,
       });
     } catch (error) {
-      console.error("POST Error:", error);
+      console.error("fetch locations POST Error:", error);
     }
   }
 };

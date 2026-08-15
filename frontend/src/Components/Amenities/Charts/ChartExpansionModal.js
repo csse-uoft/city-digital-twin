@@ -13,7 +13,9 @@ const ChartExpansionModal = ({
     open,
     chartSelected,
     openCustomization,
-    amenityData
+    walkabilityData,
+    chartParameterState,
+    areaURI
 }) => {
     return(
         <Dialog open={open} onClose={onClose} PaperProps={{
@@ -60,7 +62,7 @@ const ChartExpansionModal = ({
             alignItems:"center",
             justifyContent:"center"
         }} >
-            {chartSelected === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : <AmenityBarChart amenityData={amenityData} />}
+            {chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} key={areaURI} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} key={areaURI} />}
 
         </Box>
 

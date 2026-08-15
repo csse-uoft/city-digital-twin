@@ -7,12 +7,20 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadDoneOutlin
 //charts
 import AmenityRadarChart from '../../DataVisComponents/AmenityRadarChart'
 import AmenityBarChart from '../../DataVisComponents/AmenityBarChart'
+
+import ChartCategoryFilter from './ChartCategoryFilter'
+import ChartSubtypeFilter from './ChartSubtypeFilter'
 const ChartCustomizationModal = ({
+    areaURI,
     onClose, 
     open,
     updateSelectedChart,
     chartSelected,
-    amenityData
+    walkabilityData,
+    chartEditParameterState,
+    chartParameterState,
+    dispatchChartEditParameterState,
+    dispatchChartParameterState
     }) => {
 
     const [tempSelection, setTempSelection] = useState(chartSelected ?? 'Radar')
@@ -20,16 +28,107 @@ const ChartCustomizationModal = ({
     const resetToDefault = () => {
         setTempSelection(chartSelected)
     }
+    // const [visibleCategories, setVisibleCategories] = useState(() => {
+    //     const areaNames = Object.keys(walkabilityData)
+    //     const categoryNames = [
+    //       ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
+    //     ]
+    //     let obj = {}
+    //     categoryNames.forEach((name) => {
+    //       obj[name] = true
+    //     })
+    //     return obj
+    //   })
+    
+    //   const [visibleSubtypes, setVisibleSubtypes] = useState(() => {
+    //     const areaNames = Object.keys(walkabilityData)
+    //     const categoryNames = [
+    //       ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
+    //     ]
+    //     let subtypeMap = {}
+    //     categoryNames.forEach((name) => {
+    //       //iterate over the areas 
+    //       let totalSubtypes = []
+    //       areaNames.forEach((area) => {
+    //         const subtypes = walkabilityData[area][name].subtypes
+    //         totalSubtypes = [
+    //           ...new Set([...totalSubtypes, subtypes])
+    //         ]
+    
+    //       })
+    
+    //       const obj = Object.entries(totalSubtypes.map(item => [item, true]))
+    //       subtypeMap[name] = obj
+    //     })
+    
+    //     return subtypeMap
+    //   })
 
     const onChartSelectChange = (event, newValue) => {
         console.log('changing chart selection: ',newValue)
         setTempSelection(newValue)
+    }
 
+    const onChartCategoryFilterChange = (newValue) => { //update the chart edit parameter state
+        console.log('updating chart category filters')
+        console.dir(newValue, {depth:null})
+
+        const nextState = {...chartEditParameterState}
+        nextState[areaURI].category = newValue
+        
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id: areaURI,
+                state: nextState[areaURI]
+            }
+        })
+    }
+
+    const onChartSubtypeFilterChange =(newValue) => {
+        console.log('updating chart category filters')
+        console.dir(newValue, {depth:null})
+        
+        const nextState = {...chartEditParameterState}
+        nextState[areaURI].subtype = newValue
+        
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id: areaURI,
+                state: nextState[areaURI]
+            }
+        })
     }
 
     const saveChanges = () => {
         console.log('saving chart changes')
+        //save changes to state
+        dispatchChartParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id:areaURI,
+                state: chartEditParameterState[areaURI]
+            }
+        })
+
+        //update selection
         updateSelectedChart(tempSelection)
+    }
+
+    const closeChartCustomizationModal = () => {
+        //reset the chart edit state
+        console.log('closing chart customization modal')
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id: areaURI,
+                state: chartParameterState[areaURI]
+            }
+        })
+
+        //close the modal
+        onClose()
     }
 
     const exportChart = () => {
@@ -72,7 +171,7 @@ const ChartCustomizationModal = ({
             left:0
             }}>
             <Typography variant="h3" style={{fontWeight:"semibold", fontSize:'16px'}}>Customization</Typography>
-            <CloseIcon onClick={()=>onClose()} style={{color:'var(--text-medium)', cursor:'pointer'}} />
+            <CloseIcon onClick={()=>closeChartCustomizationModal()} style={{color:'var(--text-medium)', cursor:'pointer'}} />
         </Box>
 
         <Box sx={{
@@ -163,12 +262,13 @@ const ChartCustomizationModal = ({
                                     '&:hover': { backgroundColor: 'transparent' }
                                 }}>By Subtype</ToggleButton>
                         </ToggleButtonGroup>
+                        {view === 'category' ? <ChartCategoryFilter categoryFilterState={chartEditParameterState[areaURI]?.category} onChange={onChartCategoryFilterChange} /> : <ChartSubtypeFilter subtypeFilterState={chartEditParameterState[areaURI]?.subtype} onChange={onChartSubtypeFilterChange} />}
                     </Box>
                 </Stack>
             </Box>
 
             <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
-                {tempSelection === 'Radar' ? <AmenityRadarChart amenityData={amenityData} /> : <AmenityBarChart amenityData={amenityData} />}
+                {tempSelection === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} key={areaURI} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} key={areaURI} mode={view} />}
             </Box>
 
         </Box>

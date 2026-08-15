@@ -62,3 +62,28 @@ export const getCachedAreaAmenities = async (areaIdentifier) => {
         return null
     }
 }
+
+//WALKABILITY DATA
+export const setCachedWalkabilityData = async (areaIdentifier, cityURI, walkabilityData) => {
+    try {
+        await db.walkabilityData.put({
+            areaInstanceId: areaIdentifier,
+            cityURI: cityURI,
+            data: walkabilityData,
+            timestamp: Date.now(),
+            areaName: 'Test name'
+        })
+    } catch (err) {
+        console.error('ERR caching area walkability data: ',err)
+    }
+}
+
+export const getCachedWalkabilityData = async (areaIdentifier) => {
+    try {
+        const record = await db.walkabilityData.get(areaIdentifier)
+        console.log('retrieved walkability data: ',record)
+        return record
+    } catch (err) {
+        console.error('ERR getting cached walkability data: ',err)
+    }
+}

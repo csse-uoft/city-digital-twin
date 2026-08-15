@@ -64,6 +64,200 @@ const mockAmenityData2 = {
 			       }
 }
 
+const mockWalkabilityData = {
+    'South Riverdale (70)':{
+        "Communal": {
+            "walkability": 0.5535714285714286,
+            "subtypes": [
+                {
+                    "subtype": "Library",
+                    "walkability": 0.5535714285714286
+                }
+            ],
+            "color": "EC4899"
+        },
+        "Cultural": {
+            "walkability": 0.5535714285714286,
+            "subtypes": [
+                {
+                    "subtype": "Library",
+                    "walkability": 0.5535714285714286
+                }
+            ],
+            "color": "92400E"
+        },
+        "EducationAndChildcare": {
+            "walkability": 0.9285714285714286,
+            "subtypes": [
+                {
+                    "subtype": "School",
+                    "walkability": 0.9285714285714286
+                }
+            ],
+            "color": "3B82F6"
+        },
+        "Health": {
+            "walkability": 0.9285714285714286,
+            "subtypes": [
+                {
+                    "subtype": "Clinic",
+                    "walkability": 0.21428571428571427
+                },
+                {
+                    "subtype": "DoctorsOffice",
+                    "walkability": 0.35714285714285715
+                },
+                {
+                    "subtype": "Hospital",
+                    "walkability": 0.125
+                },
+                {
+                    "subtype": "Pharmacy",
+                    "walkability": 0.9285714285714286
+                }
+            ],
+            "color": "EF4444"
+        },
+        "ParkService": {
+            "walkability": 1,
+            "subtypes": [
+                {
+                    "subtype": "ParkService",
+                    "walkability": 1
+                }
+            ],
+            "color": ""
+        },
+        "PublicTransitService": {
+            "walkability": 1,
+            "subtypes": [
+                {
+                    "subtype": "PublicTransitService",
+                    "walkability": 1
+                }
+            ],
+            "color": ""
+        },
+        "RetailAndServices": {
+            "walkability": 1,
+            "subtypes": [
+                {
+                    "subtype": "FastFood",
+                    "walkability": 0.9821428571428571
+                },
+                {
+                    "subtype": "Greengrocer",
+                    "walkability": 0.6607142857142857
+                },
+                {
+                    "subtype": "Restaurant",
+                    "walkability": 0.9642857142857143
+                },
+                {
+                    "subtype": "Supermarket",
+                    "walkability": 0.8571428571428571
+                }
+            ],
+            "color": "FB923C"
+        }
+    },
+    'North Riverdale (72)':{
+        "Communal": {
+            "walkability": 0.5535714285714286,
+            "subtypes": [
+                {
+                    "subtype": "Library",
+                    "walkability": 0.5535714285714286
+                }
+            ],
+            "color": "EC4899"
+        },
+        "Cultural": {
+            "walkability": 0.5535714285714286,
+            "subtypes": [
+                {
+                    "subtype": "Library",
+                    "walkability": 0.5535714285714286
+                }
+            ],
+            "color": "92400E"
+        },
+        "EducationAndChildcare": {
+            "walkability": 0.9285714285714286,
+            "subtypes": [
+                {
+                    "subtype": "School",
+                    "walkability": 0.9285714285714286
+                }
+            ],
+            "color": "3B82F6"
+        },
+        "Health": {
+            "walkability": 0.9285714285714286,
+            "subtypes": [
+                {
+                    "subtype": "Clinic",
+                    "walkability": 0.21428571428571427
+                },
+                {
+                    "subtype": "DoctorsOffice",
+                    "walkability": 0.35714285714285715
+                },
+                {
+                    "subtype": "Hospital",
+                    "walkability": 0.125
+                },
+                {
+                    "subtype": "Pharmacy",
+                    "walkability": 0.9285714285714286
+                }
+            ],
+            "color": "EF4444"
+        },
+        "ParkService": {
+            "walkability": 1,
+            "subtypes": [
+                {
+                    "subtype": "ParkService",
+                    "walkability": 1
+                }
+            ],
+            "color": ""
+        },
+        "PublicTransitService": {
+            "walkability": 1,
+            "subtypes": [
+                {
+                    "subtype": "PublicTransitService",
+                    "walkability": 1
+                }
+            ],
+            "color": ""
+        },
+        "RetailAndServices": {
+            "walkability": 1,
+            "subtypes": [
+                {
+                    "subtype": "FastFood",
+                    "walkability": 0.9821428571428571
+                },
+                {
+                    "subtype": "Greengrocer",
+                    "walkability": 0.6607142857142857
+                },
+                {
+                    "subtype": "Restaurant",
+                    "walkability": 0.9642857142857143
+                },
+                {
+                    "subtype": "Supermarket",
+                    "walkability": 0.8571428571428571
+                }
+            ],
+            "color": "FB923C"
+        }
+    }
+}
 
 function initializeFilterState (amenities) {
     let state = {}
@@ -78,6 +272,43 @@ function initializeFilterState (amenities) {
     console.log('amenity filter state: ',state)
     return state
 }  
+
+function initializeChartCategoryParameterState (walkabilityData) {
+    const areaNames = Object.keys(walkabilityData)
+    const categoryNames = [
+        ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
+    ]
+    let obj = {}
+    categoryNames.forEach((name) => {
+        obj[name] = true
+    })
+    console.log('initialized chart category param state: ',obj)
+    return obj
+}
+
+function initializeChartSubtypeParameterState (walkabilityData) {
+    const areaNames = Object.keys(walkabilityData)
+    const categoryNames = [
+        ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
+    ]
+    let subtypeMap = {}
+    categoryNames.forEach((name) => {
+        //iterate over the areas 
+        let totalSubtypes = []
+        areaNames.forEach((area) => {
+        const subtypes = walkabilityData[area][name].subtypes
+        totalSubtypes = [
+            ...new Set([...totalSubtypes, subtypes])
+        ]
+
+        })
+
+        const obj = Object.entries(totalSubtypes.map(item => [item, true]))
+        subtypeMap[name] = obj
+    })
+    console.log('initialized chart subtype param state:', subtypeMap)
+    return subtypeMap
+}
 
 
 function CustomTabPanel(props) {
@@ -136,10 +367,18 @@ const Amenities = ({
     dispatchCityState,
     filterPanelState,
     dispatchFilterPanelState,
+    chartCategoryParameterState,
+    dispatchChartCategoryParameterState,
+    chartSubtypeParameterState,
+    dispatchChartSubtypeParameterState,
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
     dispatchAdminAreaInstances,
-    dispatchCompareAdminAreaInstances
+    dispatchCompareAdminAreaInstances,
+    chartParameterState,
+    dispatchChartParameterState,
+    chartEditParameterState,
+    dispatchChartEditParameterState
 }) => {
     const [showSidePanel, setShowSidePanel] = useState(true)
 
@@ -211,6 +450,11 @@ const Amenities = ({
 
     const [tabValue, setTabValue] = useState(0);
     const [openComparisonModal, setOpenComparisonModal] = useState(false)
+
+    //chart panel
+    const [currentAreaURI, setCurrentAreaURI] = useState('http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood70')
+    const [currentCityURI, setCurrentCityURI] = useState('http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto')
+    const [currentAreaName, setCurrentAreaName] = useState('South Parkdale (70)')
 
 
     const handleTabChange = (event, newValue) => {
@@ -391,7 +635,7 @@ const Amenities = ({
             const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
             const fullKey = baseURI + locationIDKey;
             const overlayCoords = locationIDPolygons[fullKey]?.coordinates;
-
+            //initialzie the filter panel state
             if (overlayCoords != null && !filterPanelState[locationIDKey]) {
                 const initFilterState = initializeFilterState(cityState.amenityCategories);
                 dispatchFilterPanelState({
@@ -402,6 +646,28 @@ const Amenities = ({
                     }
                 });
             }
+            //initialize the chart category parameter state
+            // if (overlayCoords != null && !chartCategoryParameterState[locationIDKey]) {
+            //     const initChartCategoryParamState = initializeChartCategoryParameterState(cityState.amenityCategories);
+            //     dispatchChartCategoryParameterState({
+            //         type: 'SET_PARAMETER',
+            //         payload: {
+            //             id: locationIDKey,
+            //             state: initChartCategoryParamState
+            //         }
+            //     });
+            // }
+            //initialize the chart subtype parameter state
+            // if (overlayCoords != null && !chartSubtypeParameterState[locationIDKey]) {
+            //     const initChartSubtypeParamState = initializeChartSubtypeParameterState(cityState.amenityCategories);
+            //     dispatchChartSubtypeParameterState({
+            //         type: 'SET_PARAMETER',
+            //         payload: {
+            //             id: locationIDKey,
+            //             state: initChartSubtypeParamState
+            //         }
+            //     });
+            // }
         });
     }, [amenityPolygons, locationIDPolygons, cityState, selectedAdminInstancesURLs]);
 
@@ -460,7 +726,21 @@ const Amenities = ({
                                 </Box>}
                             
                             { //Object.keys(amenityData).length > 0
-                                selectedAdminInstancesURLs.length > 0 ? 2>1 ? (<ChartPanel amenityData={mockAmenityData} />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
+                                selectedAdminInstancesURLs.length && cityState != null > 0 ? (currentCityURI != '' && currentAreaURI != '' && currentAreaName != '') ? (
+                                <ChartPanel
+                                    cityURI={currentCityURI}
+                                    areaURI={currentAreaURI} 
+                                    areaName={currentAreaName}  
+                                    chartCategoryParameterState={chartCategoryParameterState}
+                                    dispatchChartCategoryParameterState={dispatchChartCategoryParameterState}
+                                    chartSubtypeParameterState={chartSubtypeParameterState}
+                                    dispatchChartSubtypeParameterState={dispatchChartSubtypeParameterState}
+                                    amenityCategories={cityState.amenityCategories}
+                                    chartParameterState={chartParameterState}
+                                    dispatchChartParameterState={dispatchChartParameterState}
+                                    chartEditParameterState={chartEditParameterState}
+                                    dispatchChartEditParameterState={dispatchChartEditParameterState}
+                                    />) : (<Box sx={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}><CircularProgress /></Box>) : <div></div>
                             }
 
                             {population != null && density != null && <Box sx={{width:"100%", flexDirection:"row", justifyContent: "flex-start, gap: 2"}}>

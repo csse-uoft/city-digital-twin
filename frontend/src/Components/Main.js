@@ -13,6 +13,7 @@ import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
 import { adminCompareAreaInstanceReducer } from '../reducers/adminCompareAreaInstanceReducer'
 import { cityReducer } from '../reducers/cityReducer'
 import { filterPanelReducer } from '../reducers/filterPanelReducer'
+import { chartCategoryParameterReducer, chartSubtypeParameterReducer, chartParameterReducer, chartEditParameterReducer } from '../reducers/chartParameterReducer'
 import { fetchCities } from "../helpers/fetchFunctions";
 
 // The main display that shows the navbar and the indicator dashboard pages
@@ -31,6 +32,11 @@ function Main() {
   const [compareAdminAreainstancesState, dispatchCompareAdminAreaInstances] = useReducer(adminCompareAreaInstanceReducer, {})
   const [cityState, dispatchCityState] = useReducer(cityReducer, {})
   const [filterPanelState, dispatchFilterPanelState] = useReducer(filterPanelReducer, {})
+  const [chartCategoryParameterState, dispatchChartCategoryParameterState] = useReducer(chartCategoryParameterReducer, {})
+  const [chartSubtypeParameterState, dispatchChartSubtypeParameterState] = useReducer(chartSubtypeParameterReducer, {})
+  //new
+  const [chartParameterState, dispatchChartParameterState] = useReducer(chartParameterReducer, {})
+  const [chartEditParameterState, dispatchChartEditParameterState] = useReducer(chartEditParameterReducer, {})
 
   useEffect(() => {
     fetchCities(setCityURLs);
@@ -91,11 +97,19 @@ function Main() {
                 dispatchCityState={dispatchCityState}
                 filterPanelState={filterPanelState}
                 dispatchFilterPanelState={dispatchFilterPanelState}
+                chartCategoryParameterState={chartCategoryParameterState}
+                dispatchChartCategoryParameterState={dispatchChartCategoryParameterState}
+                chartSubtypeParameterState={chartSubtypeParameterState}
+                dispatchChartSubtypeParameterState={dispatchChartSubtypeParameterState}
                 adminAreaTypesState={adminAreaTypesState}
                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                 adminAreaInstancesState={adminAreaInstancesState}
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances} 
                 dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
+                chartParameterState={chartParameterState}
+                dispatchChartParameterState={dispatchChartParameterState}
+                chartEditParameterState={chartEditParameterState}
+                dispatchChartEditParameterState={dispatchChartEditParameterState}
                 />
       case "faq":   // Not completed yet
         return <FAQ />;
