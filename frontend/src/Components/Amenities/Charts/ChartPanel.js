@@ -81,6 +81,7 @@ const ChartPanel = ({
         }) => {
 
     const [chartSelected, setChartSelected] = useState('Bar')
+    const [chartView, setChartView] = useState('category')
     const [openCustomizationModal, setOpenCustomizationModal] = useState(false)
     const [openExpansionModal, setOpenExpansionModal] = useState(false)
     const [walkabilityData, setWalkabilityData] = useState({})
@@ -166,7 +167,8 @@ const ChartPanel = ({
                         id: areaURI,
                         state: {
                             category: chartCategoryParamState,
-                            subtype: chartSubtypeParamState
+                            subtype: chartSubtypeParamState,
+                            chartView: chartView
                         }
                     }
                 })
@@ -177,7 +179,8 @@ const ChartPanel = ({
                         id: areaURI,
                         state: {
                             category: chartCategoryParamState,
-                            subtype: chartSubtypeParamState
+                            subtype: chartSubtypeParamState,
+                            chartView: chartView
                         }
                     }
                 })
@@ -215,7 +218,7 @@ const ChartPanel = ({
                     </IconButton>
                 </Box>
                 
-                {loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined ? (<CircularProgress />) : chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} categoryFilterState={chartParameterState[areaURI]?.category} subtypeFilterState={chartParameterState[areaURI]?.subtype} /> : <AmenityBarChart walkabilityData={walkabilityData} categoryFilterState={chartParameterState[areaURI]?.category} subtypeFilterState={chartParameterState[areaURI]?.subtype} />}
+                {loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined ? (<CircularProgress />) : chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} chartParameterKey={areaURI} mode={chartParameterState[areaURI]?.chartView ?? 'category'} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} chartParameterKey={areaURI} mode={chartParameterState[areaURI]?.chartView ?? 'category'} />}
 
                 <ChartCustomizationModal 
                     areaURI={areaURI}

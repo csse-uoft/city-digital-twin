@@ -1,4 +1,5 @@
 import { BarChart, Legend, XAxis, YAxis, CartesianGrid, Tooltip, Bar, Cell, ResponsiveContainer } from 'recharts';
+import { Select, Option } from '@mui/joy'
 // import { RechartsDevtools } from '@recharts/devtools';
 import { useState, useEffect, useMemo } from 'react'
 const AREA_COLOR_PALETTE = ['#3B82F6', '#EC4899', '#22C55E', '#FB923C', '#A855F7', '#EF4444', '#92400E']
@@ -11,19 +12,43 @@ const isMultiArea = (walkabilityData) => {
 
 const getColor = (rawColor, fallback = '#ccc') => (rawColor ? `#${rawColor}` : fallback)
 
-// Multi-area case: one row per category, one field per area for grouped bars
-const transformMultiAreaData = (walkabilityData) => {
+// Multi-area case
+// mode === 'category': one row per category, one field per area
+// mode === 'subtype': one row per subtype (within subtypeCategory only), one field per area
+const transformMultiAreaData = (walkabilityData, mode, subtypeCategory) => {
   const areaNames = Object.keys(walkabilityData)
 
-  // Union of all category names across all areas, in case areas differ
-  const categoryNames = [
-    ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
+  if (mode === 'category') {
+    const categoryNames = [
+      ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
+    ]
+
+    const rows = categoryNames.map((category) => {
+      const row = { name: category }
+      areaNames.forEach((area) => {
+        row[area] = walkabilityData[area]?.[category]?.walkability ?? null
+      })
+      return row
+    })
+
+    return { rows, areaNames }
+  }
+
+  // mode === 'subtype' — scoped to a single category, so no name collisions
+  const subtypeNames = [
+    ...new Set(
+      areaNames.flatMap((area) =>
+        (walkabilityData[area]?.[subtypeCategory]?.subtypes ?? []).map((k) => k.subtype)
+      )
+    )
   ]
 
-  const rows = categoryNames.map((category) => {
-    const row = { name: category }
+  const rows = subtypeNames.map((subtypeName) => {
+    const row = { name: subtypeName }
     areaNames.forEach((area) => {
-      row[area] = walkabilityData[area]?.[category]?.walkability ?? null
+      const subtypes = walkabilityData[area]?.[subtypeCategory]?.subtypes ?? []
+      const match = subtypes.find((s) => s.subtype === subtypeName)
+      row[area] = match?.walkability ?? null
     })
     return row
   })
@@ -31,11 +56,24 @@ const transformMultiAreaData = (walkabilityData) => {
   return { rows, areaNames }
 }
 
-const transformSingleAreaData = (categoryMap) => {
-  return Object.keys(categoryMap).map((name) => ({
-    name,
-    walkability: categoryMap[name]?.walkability,
-    color: getColor(categoryMap[name]?.color),
+// Single-area case
+const transformSingleAreaData = (categoryMap, mode, subtypeCategory) => {
+  if (mode === 'category') {
+    return Object.keys(categoryMap).map((name) => ({
+      name,
+      walkability: categoryMap[name]?.walkability,
+      color: getColor(categoryMap[name]?.color),
+    }))
+  }
+
+  // mode === 'subtype' — scoped to a single category
+  const subtypes = categoryMap[subtypeCategory]?.subtypes ?? []
+  const categoryColor = getColor(categoryMap[subtypeCategory]?.color)
+
+  return subtypes.map((subtype) => ({
+    name: subtype.subtype,
+    walkability: subtype.walkability,
+    color: categoryColor, // all subtypes inherit their parent category's color
   }))
 }
 
@@ -59,23 +97,36 @@ const isVisible = (mode,parameter,state) => {
 
 // }
 
-const AmenityBarChart = ({ walkabilityData, chartParameterState, key, mode }) => {
+const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterkey, mode }) => {
   const multiArea = useMemo(() => isMultiArea(walkabilityData), [walkabilityData])
   const [subtypeCategory, setSubtypeCategory] = useState('Health')
+  const categoryOptions = useMemo(() => {
+    if (!walkabilityData) return []
+    const areaNames = Object.keys(walkabilityData)
+    return [...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))]
+  }, [walkabilityData])
   const { chartData, areaNames } = useMemo(() => {
     console.log('walkability data received in bar chart: ',walkabilityData)
     if (!walkabilityData || Object.keys(walkabilityData).length === 0) {
       return { chartData: [], areaNames: [] }
     }
     if (multiArea) {
-      const { rows, areaNames } = transformMultiAreaData(walkabilityData)
+      const { rows, areaNames } = transformMultiAreaData(walkabilityData,mode,subtypeCategory)
       return { chartData: rows, areaNames }
     }
-    return { chartData: transformSingleAreaData(walkabilityData), areaNames: [] }
-  }, [walkabilityData, multiArea])
+    return { chartData: transformSingleAreaData(walkabilityData,mode,subtypeCategory), areaNames: [] }
+  }, [walkabilityData, multiArea, mode,subtypeCategory])
 
 
   return (
+    <>
+    {mode === 'subtype' && (
+        <Select value={subtypeCategory} onChange={(_, val) => setSubtypeCategory(val)}>
+          {categoryOptions.map((cat) => (
+            <Option key={cat} value={cat}>{cat}</Option>
+          ))}
+        </Select>
+      )}
     <ResponsiveContainer width="90%" height={500}>
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" />
@@ -105,6 +156,7 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, key, mode }) =>
         )}
       </BarChart>
     </ResponsiveContainer>
+    </>
   )
 }
 

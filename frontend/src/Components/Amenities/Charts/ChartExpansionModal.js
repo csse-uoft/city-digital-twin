@@ -62,7 +62,7 @@ const ChartExpansionModal = ({
             alignItems:"center",
             justifyContent:"center"
         }} >
-            {chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} key={areaURI} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} key={areaURI} />}
+            {chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} key={areaURI} mode={chartParameterState[areaURI]?.chartView} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} key={areaURI} mode={chartParameterState[areaURI]?.chartView} />}
 
         </Box>
 

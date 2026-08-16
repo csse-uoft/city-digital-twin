@@ -66,6 +66,16 @@ const ChartCustomizationModal = ({
 
     const onChartSelectChange = (event, newValue) => {
         console.log('changing chart selection: ',newValue)
+        //set filters to previous saved
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id:areaURI,
+                state: chartParameterState[areaURI]
+            }
+        })
+
+        // set chart type back to previous
         setTempSelection(newValue)
     }
 
@@ -97,6 +107,18 @@ const ChartCustomizationModal = ({
             payload: {
                 id: areaURI,
                 state: nextState[areaURI]
+            }
+        })
+    }
+
+    const updateChartView = (newChartView) => {
+        let nextState = {...chartEditParameterState[areaURI]}
+        nextState.chartView = newChartView
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id: areaURI,
+                state: nextState
             }
         })
     }
@@ -207,7 +229,12 @@ const ChartCustomizationModal = ({
                         <ToggleButtonGroup
                             value={view}
                             exclusive                    // only one can be selected at a time
-                            onChange={(e, newValue) => { if (newValue) setView(newValue) }}
+                            onChange={(e, newValue) => { 
+                                if (newValue) {
+                                    setView(newValue)
+                                    updateChartView(newValue)
+                                } 
+                            }}
                             size="small"
                             sx={{
                                 backgroundColor: '#f0f0f0',
@@ -223,6 +250,7 @@ const ChartCustomizationModal = ({
                             }}
                         >
                             <ToggleButton 
+                                // onChange={()=>setView('category')}
                                 value="category"
                                 disableRipple
                                 sx={{
@@ -242,7 +270,8 @@ const ChartCustomizationModal = ({
                                     '&:hover': { backgroundColor: 'transparent' }
                                 }}
                                 >By Category</ToggleButton>
-                            <ToggleButton 
+                            <ToggleButton
+                                // onChange={()=>setView('subtype')} 
                                 value="subtype"
                                 disableRipple
                                 sx={{
@@ -268,7 +297,7 @@ const ChartCustomizationModal = ({
             </Box>
 
             <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
-                {tempSelection === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} key={areaURI} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} key={areaURI} mode={view} />}
+                {tempSelection === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={areaURI} mode={view} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={areaURI} mode={view} />}
             </Box>
 
         </Box>
