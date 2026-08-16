@@ -204,13 +204,13 @@ const ChartPanel = ({
                 </Box>
 
                 <Box sx={{width:"100%", display:"flex", justifyContent:"flex-end", gap:2, alignItems:"center"}}>
-                    <Button startDecorator={<TuneIcon />} variant="soft" onClick={()=>{
+                    <Button disabled={loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined} startDecorator={<TuneIcon />} variant="soft" onClick={()=>{
                         setOpenExpansionModal(false)
                         setOpenCustomizationModal(true)
                         }}>
                         Customize Chart
                     </Button>
-                    <IconButton variant="soft" onClick={()=>{
+                    <IconButton disabled={loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined} variant="soft" onClick={()=>{
                         setOpenCustomizationModal(false)
                         setOpenExpansionModal(true)
                     }}>

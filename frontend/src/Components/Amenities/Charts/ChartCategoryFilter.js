@@ -49,7 +49,7 @@ const checkboxStyles = {
 
 const ChartCategoryFilter = ({
   categoryFilterState,
-  onChange = () => {},
+  onChange,
   title = 'Parameters',
 }) => {
   const normalizedState = categoryFilterState || defaultState;

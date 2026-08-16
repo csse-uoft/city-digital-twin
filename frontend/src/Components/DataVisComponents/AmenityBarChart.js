@@ -6,8 +6,10 @@ const AREA_COLOR_PALETTE = ['#3B82F6', '#EC4899', '#22C55E', '#FB923C', '#A855F7
 
 const isMultiArea = (walkabilityData) => {
   if (!walkabilityData || typeof walkabilityData !== 'object') return false
-  const firstValue = Object.values(walkabilityData)[0]
-  return !!firstValue && typeof firstValue === 'object' && !('walkability' in firstValue)
+  const areas = Object.keys(walkabilityData)
+  return areas.length > 1
+  // const firstValue = Object.values(walkabilityData)[0]
+  // return !!firstValue && typeof firstValue === 'object' && !('walkability' in firstValue)
 }
 
 const getColor = (rawColor, fallback = '#ccc') => (rawColor ? `#${rawColor}` : fallback)
@@ -57,10 +59,12 @@ const transformMultiAreaData = (walkabilityData, mode, subtypeCategory) => {
 }
 
 // Single-area case
-const transformSingleAreaData = (categoryMap, mode, subtypeCategory) => {
+const transformSingleAreaData = (walkabilityData, mode, subtypeCategory) => {
+  const area = Object.keys(walkabilityData).at(0)
+  const categoryMap = walkabilityData[area]
   if (mode === 'category') {
     return Object.keys(categoryMap).map((name) => ({
-      name,
+      name: name,
       walkability: categoryMap[name]?.walkability,
       color: getColor(categoryMap[name]?.color),
     }))
@@ -97,7 +101,7 @@ const isVisible = (mode,parameter,state) => {
 
 // }
 
-const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterkey, mode }) => {
+const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterKey, mode }) => {
   const multiArea = useMemo(() => isMultiArea(walkabilityData), [walkabilityData])
   const [subtypeCategory, setSubtypeCategory] = useState('Health')
   const categoryOptions = useMemo(() => {
@@ -115,8 +119,25 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterk
       return { chartData: rows, areaNames }
     }
     return { chartData: transformSingleAreaData(walkabilityData,mode,subtypeCategory), areaNames: [] }
-  }, [walkabilityData, multiArea, mode,subtypeCategory])
+  }, [walkabilityData, multiArea, mode, subtypeCategory])
+  console.log('walkability data: ',walkabilityData)
+  console.log('BAR CHART PARAM STATE')
+  console.dir(chartParameterState, {depth:null})
+  const areaState = chartParameterState[chartParameterKey]
 
+  const visibleChartData = useMemo(() => {
+    if (!areaState) return []
+    if (mode === 'subtype') {
+      const subtypeState = areaState.subtype?.[subtypeCategory] ?? {}
+      const visibleSubtypes = chartData.filter((entry) => subtypeState[entry.name]?.show)
+      console.log('visible subtyeps: ',visibleSubtypes)
+      return visibleSubtypes
+    }
+    const categoryState = areaState.category ?? {}
+    const visibleCategories = chartData.filter((entry) => categoryState[entry.name]?.show)
+    console.log('visible categories: ',visibleCategories)
+    return visibleCategories
+  }, [chartData, areaState, mode, subtypeCategory, chartParameterState])
 
   return (
     <>
@@ -128,7 +149,7 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterk
         </Select>
       )}
     <ResponsiveContainer width="90%" height={500}>
-      <BarChart data={chartData}>
+      <BarChart data={visibleChartData}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis width={60} domain={[0, 1]} />
@@ -149,7 +170,7 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterk
         ) : (
           // Single series, colored per-category
           <Bar dataKey="walkability" radius={[10, 10, 0, 0]}>
-            {chartData.map((entry, index) => (
+            {visibleChartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Bar>

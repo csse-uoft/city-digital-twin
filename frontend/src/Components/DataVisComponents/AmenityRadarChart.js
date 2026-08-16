@@ -15,8 +15,8 @@ const AREA_COLOR_PALETTE = ['#3B82F6', '#EC4899', '#22C55E', '#FB923C', '#A855F7
 
 const isMultiArea = (walkabilityData) => {
   if (!walkabilityData || typeof walkabilityData !== 'object') return false
-  const firstValue = Object.values(walkabilityData)[0]
-  return !!firstValue && typeof firstValue === 'object' && !('walkability' in firstValue)
+  const areas = Object.keys(walkabilityData)
+  return areas.length > 1
 }
 
 const getColor = (rawColor, fallback = '#ccc') => (rawColor ? `#${rawColor}` : fallback)
@@ -33,7 +33,7 @@ const transformMultiAreaData = (walkabilityData, mode, subtypeCategory) => {
     ]
 
     const rows = categoryNames.map((category) => {
-      const row = { amenity: category }
+      const row = { name: category }
       areaNames.forEach((area) => {
         row[area] = walkabilityData[area]?.[category]?.walkability ?? null
       })
@@ -53,7 +53,7 @@ const transformMultiAreaData = (walkabilityData, mode, subtypeCategory) => {
   ]
 
   const rows = subtypeNames.map((subtypeName) => {
-    const row = { amenity: subtypeName }
+    const row = { name: subtypeName }
     areaNames.forEach((area) => {
       const subtypes = walkabilityData[area]?.[subtypeCategory]?.subtypes ?? []
       const match = subtypes.find((s) => s.subtype === subtypeName)
@@ -66,10 +66,12 @@ const transformMultiAreaData = (walkabilityData, mode, subtypeCategory) => {
 }
 
 // Single-area case
-const transformSingleAreaData = (categoryMap, mode, subtypeCategory) => {
+const transformSingleAreaData = (walkabilityData, mode, subtypeCategory) => {
+  const area = Object.keys(walkabilityData).at(0)
+  const categoryMap = walkabilityData[area]
   if (mode === 'category') {
     return Object.keys(categoryMap).map((name) => ({
-      amenity: name,
+      name: name,
       walkability: categoryMap[name]?.walkability,
       color: getColor(categoryMap[name]?.color),
     }))
@@ -80,7 +82,7 @@ const transformSingleAreaData = (categoryMap, mode, subtypeCategory) => {
   const categoryColor = getColor(categoryMap[subtypeCategory]?.color)
 
   return subtypes.map((subtype) => ({
-    amenity: subtype.subtype,
+    name: subtype.subtype,
     walkability: subtype.walkability,
     color: categoryColor,
   }))
@@ -114,6 +116,23 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
     return { chartData: transformSingleAreaData(walkabilityData, mode, subtypeCategory), areaNames: [] }
   }, [walkabilityData, multiArea, mode, subtypeCategory])
 
+  const areaState = chartParameterState[chartParameterKey]
+
+  const visibleChartData = useMemo(() => {
+    console.log('chart radar data: ',chartData)
+    if (!areaState) return []
+    if (mode === 'subtype') {
+      const subtypeState = areaState.subtype?.[subtypeCategory] ?? {}
+      const visibleSubtypes = chartData.filter((entry) => subtypeState[entry.name]?.show)
+      console.log('visible subtyeps: ',visibleSubtypes)
+      return visibleSubtypes
+    }
+    const categoryState = areaState.category ?? {}
+    const visibleCategories = chartData.filter((entry) => categoryState[entry.name]?.show)
+    console.log('visible categories: ',visibleCategories)
+    return visibleCategories
+  }, [chartData, areaState, mode, subtypeCategory, chartParameterState])
+
   return (
     <>
       {mode === 'subtype' && (
@@ -124,9 +143,9 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
         </Select>
       )}
       <ResponsiveContainer width="90%" height={500}>
-        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
+        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={visibleChartData}>
           <PolarGrid />
-          <PolarAngleAxis dataKey="amenity" />
+          <PolarAngleAxis dataKey="name" />
           <PolarRadiusAxis angle={30} domain={[0, 1]} tick={{ fontSize: 2 }} />
           <Tooltip />
           <Legend />
