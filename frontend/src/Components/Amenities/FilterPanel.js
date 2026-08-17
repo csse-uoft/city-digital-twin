@@ -19,7 +19,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
         return null
     }
 
-    console.log('FILTERPANEL.JS filter state: ',filterState)
+    //console.log('FILTERPANEL.JS filter state: ',filterState)
     // const [amenityCheckBoxes, setAmenityCheckBoxes] = useState([])
 
     const children = (
@@ -29,7 +29,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
                     <Box sx={{width:'100%',py:1,px:1,boxSizing:'border-box'}}>
                     <Checkbox checked={filterState[selectedAmenity][type]?.show} onChange={(event) => {
                         const checked = event.target.checked
-                        console.log('checked event: ',event)
+                        //console.log('checked event: ',event)
                         // setAmenityCheckBoxes(prev => {
                         //     const checkList = [...prev]
                         //     checkList[index] = checked
@@ -48,7 +48,7 @@ const FilterPanel = ({isOpen,updateFilters,filterState,amenityCategories}) => {
     );
 
     const handleChange = (event) => {
-        // console.log('select all event: ',event)
+        // //console.log('select all event: ',event)
         if (event.target.checked) {
             updateFilters(selectedAmenity,'all')
         } 

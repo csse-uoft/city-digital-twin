@@ -119,17 +119,17 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
   const areaState = chartParameterState[chartParameterKey]
 
   const visibleChartData = useMemo(() => {
-    console.log('chart radar data: ',chartData)
+    //console.log('chart radar data: ',chartData)
     if (!areaState) return []
     if (mode === 'subtype') {
       const subtypeState = areaState.subtype?.[subtypeCategory] ?? {}
       const visibleSubtypes = chartData.filter((entry) => subtypeState[entry.name]?.show)
-      console.log('visible subtyeps: ',visibleSubtypes)
+      //console.log('visible subtyeps: ',visibleSubtypes)
       return visibleSubtypes
     }
     const categoryState = areaState.category ?? {}
     const visibleCategories = chartData.filter((entry) => categoryState[entry.name]?.show)
-    console.log('visible categories: ',visibleCategories)
+    //console.log('visible categories: ',visibleCategories)
     return visibleCategories
   }, [chartData, areaState, mode, subtypeCategory, chartParameterState])
 

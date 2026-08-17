@@ -26,9 +26,7 @@ const CompareSelect = ({
     amenityData
 }) => {
     const [openComparisonModal, setOpenComparisonModal] = useState(false)
-    console.log('selected compare instances: ',getSelectedAdminInstancesNames(
-                                adminAreaInstancesState
-                            ))
+    //console.log('selected compare instances: ',getSelectedAdminInstancesNames(adminAreaInstancesState))
     return (
         <JoyBox sx={{ textAlign: "center" }}>
             <JoyBox sx={{p: 2}}>
@@ -54,7 +52,7 @@ const CompareSelect = ({
                             )}
                             desc="Select the individual demarcation areas you want to compare."
                             onChange={(event, newValue) => {
-                                console.log('compare multiselect value: ', newValue)
+                                //console.log('compare multiselect value: ', newValue)
                                 dispatchCompareAdminAreaInstances({
                                     type:"SET_SELECTED",
                                     payload: newValue

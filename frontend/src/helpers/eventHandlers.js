@@ -251,7 +251,7 @@ export const handleGenerateVisualization = async (
     // If validation failed, show error and hide visualization
     setShowVisError(true);
     setShowingVisualization(false);
-    console.log("Can't generate visualization: missing or invalid data");
+    //console.log("Can't generate visualization: missing or invalid data");
   }
 
   // 9) Stop loading indicator

@@ -2,10 +2,10 @@ import db from '../db'
 //AMENITY CATEGORIES
 // set
 export const setCachedAmenityCategories = async (cityURI,amenities,coords) => {
-    console.log('CACHING amenity categories')
-    // console.log('cityURI: ', cityURI)
-    // console.log('mapCoords: ', coords)
-    // console.log('data: ', amenities)
+    //console.log('CACHING amenity categories')
+    // //console.log('cityURI: ', cityURI)
+    // //console.log('mapCoords: ', coords)
+    // //console.log('data: ', amenities)
     try {
         if (cityURI) {
             await db.amenityCategories.put({
@@ -24,7 +24,7 @@ export const setCachedAmenityCategories = async (cityURI,amenities,coords) => {
 export const getCachedAmenityCategories = async (cityURI) => {
     try {
         const record = await db.amenityCategories.get(cityURI)
-        console.log('retrieved amenity category: ', record)
+        //console.log('retrieved amenity category: ', record)
         return record
     } catch (err) {
         console.error('ERR getting cached amenity categories: ',err)
@@ -35,10 +35,10 @@ export const getCachedAmenityCategories = async (cityURI) => {
 
 //AMENITY DATA
 export const setCachedAreaAmenities = async (areaIdentifier,amenities,cityURI) => {
-    console.log('CACHING area amenities')
-    // console.log('cityURI: ',cityURI)
-    // console.log('area identifier: ',areaIdentifier)
-    // console.log('data: ',amenities)
+    //console.log('CACHING area amenities')
+    // //console.log('cityURI: ',cityURI)
+    // //console.log('area identifier: ',areaIdentifier)
+    // //console.log('data: ',amenities)
 
     try {
         await db.amenityData.put({
@@ -55,7 +55,7 @@ export const setCachedAreaAmenities = async (areaIdentifier,amenities,cityURI) =
 export const getCachedAreaAmenities = async (areaIdentifier) => {
     try {
         const record = await db.amenityData.get(areaIdentifier)
-        console.log('retrieved area amenities: ',record)
+        //console.log('retrieved area amenities: ',record)
         return record
     } catch (err) {
         console.error('ERR getting cached area amenity data: ',err)
@@ -81,7 +81,7 @@ export const setCachedWalkabilityData = async (areaIdentifier, cityURI, walkabil
 export const getCachedWalkabilityData = async (areaIdentifier) => {
     try {
         const record = await db.walkabilityData.get(areaIdentifier)
-        console.log('retrieved walkability data: ',record)
+        //console.log('retrieved walkability data: ',record)
         return record
     } catch (err) {
         console.error('ERR getting cached walkability data: ',err)

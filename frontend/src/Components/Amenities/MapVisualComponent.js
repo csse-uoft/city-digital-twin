@@ -27,16 +27,16 @@ import busIcon from '../../assets/icons/udrc-bus-icon.png'
 //             }
 //         })
 //     })
-//     console.log('amenity filter state: ',state)
+//     //console.log('amenity filter state: ',state)
 //     return state
 // }   
 
 function plotAmenity (amenity,index,cityState) {
-    // console.log('plotting amenity: ',amenity)
+    // //console.log('plotting amenity: ',amenity)
     const type = amenity.type
     if (type === 'point') {
         const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? busIcon
-        // console.log('iconURL: ',iconURL)
+        // //console.log('iconURL: ',iconURL)
 
         return (
             <Marker
@@ -75,10 +75,10 @@ const MapVisualComponent = ({
     dispatchFilterPanelState
 }) => {
 
-    console.log('MCV Filter State: ',filterPanelState)
+    //console.log('MCV Filter State: ',filterPanelState)
     const [filterPanelOpen, setFilterPanelOpen] = useState(false)
-    // console.log('map visual comp city state: ', cityState)
-    // console.log('OVERLAY COORDS: ',overlayCoords)
+    // //console.log('map visual comp city state: ', cityState)
+    // //console.log('OVERLAY COORDS: ',overlayCoords)
     // const [filterPanelState, setFilterPanelState] = useState(initializeFilterState(cityState.amenityCategories))
     const [amenities, setAmenities] = useState([])
     const [loadingAmenities, setLoadingAmenities] = useState(false)
@@ -88,7 +88,7 @@ const MapVisualComponent = ({
             try {
                 setLoadingAmenities(true)
                 const amenities = await fetchAreaAmenities(instanceURL,cityState.cityURI)
-                console.log('MVC amenities: ', amenities)
+                //console.log('MVC amenities: ', amenities)
                 setAmenities(amenities)
             } catch (err) {
                 console.error('ERR loading area amenities: ',err)
@@ -111,8 +111,8 @@ const MapVisualComponent = ({
     }
 
     const updateFilters = (category, filter) => {
-        // console.log('updating filters')
-        // console.log('old filterState: ',filterPanelState)
+        // //console.log('updating filters')
+        // //console.log('old filterState: ',filterPanelState)
         const prevState = filterPanelState
         const categoryState = prevState[category];
 
@@ -215,7 +215,7 @@ const MapVisualComponent = ({
                                 const type = amenity.type
                                 if (type === 'point') {
                                     const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? busIcon
-                                    console.log('iconURL: ',iconURL)
+                                    //console.log('iconURL: ',iconURL)
 
                                     return (
                                         <Marker

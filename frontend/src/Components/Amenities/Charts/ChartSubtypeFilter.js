@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Checkbox, FormControlLabel, Stack, Typography, Button } from '@mui/material';
 
 
@@ -37,7 +37,7 @@ const checkboxStyles = {
 };
 
 function formatSubtypes (subtypeState) {
-    console.log('subtype state: ', subtypeState)
+    //console.log('subtype state: ', subtypeState)
     return Object.values(subtypeState).reduce((acc, subtypes) => ({ ...acc, ...subtypes }), {})
 }
 
@@ -46,7 +46,9 @@ const ChartSubtypeFilter = ({
   onChange = () => {},
   title = 'Parameters',
 }) => {
-  const normalizedState = subtypeFilterState;
+  const normalizedState = useMemo(() => {
+    return subtypeFilterState
+  }, [subtypeFilterState]);
   const categories = Object.keys(normalizedState);
 
   const isVisible = (key,category) => {

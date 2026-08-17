@@ -11,7 +11,7 @@ const Legend = ({
   amenities
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  console.log('amenities: ', amenities)
+  //console.log('amenities: ', amenities)
   // const amenityCategories = [
   //   { id: 1, name: 'Health', color: '#EF4444', icon: '✚' },
   //   { id: 2, name: 'Retail & Services', color: '#FB923C', icon: <LocalMallOutlinedIcon color='white' /> },

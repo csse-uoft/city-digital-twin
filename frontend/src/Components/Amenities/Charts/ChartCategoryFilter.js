@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Checkbox, FormControlLabel, Stack, Typography, Button } from '@mui/material';
 
 const CATEGORY_ORDER = [
@@ -52,11 +52,14 @@ const ChartCategoryFilter = ({
   onChange,
   title = 'Parameters',
 }) => {
-  const normalizedState = categoryFilterState || defaultState;
-  const categories = Object.keys(categoryFilterState);
+
+  const normalizedState = useMemo(() => {
+    return categoryFilterState
+  },[categoryFilterState])
+  const categories = Object.keys(normalizedState);
 
   const isVisible = (key) => {
-    return categoryFilterState[key]?.show ?? false
+    return normalizedState[key]?.show ?? false
   };
 
   const handleToggle = (key) => {
@@ -149,7 +152,7 @@ const ChartCategoryFilter = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Box
                     component="img"
-                    src={categoryFilterState[key].icon ?? ''}
+                    src={normalizedState[key].icon ?? ''}
                     // alt={LABEL_MAP[key] || key}
                     sx={{ width: 20, height: 20, borderRadius: '4px', objectFit: 'cover' }}
                 />

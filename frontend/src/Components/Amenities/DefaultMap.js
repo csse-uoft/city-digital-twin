@@ -7,26 +7,30 @@ import MapController from './MapController'
 const DefaultMap = ({
     instancePolygons,
     selectInstance,
-    cityState
+    cityState,
+    updateCurrentAreaName,
+    updateCurrentAreaURI
 }) => {
-    // console.log('default map instance polygons: ', instancePolygons)
+    // //console.log('default map instance polygons: ', instancePolygons)
     //Each iterable instance needs the following
     // overlayCoords, instance name, area type, and city name
     const defaultStyle = { color: '#449bd1', fill: false, weight:1  };
     const hoverStyle = { color: 'blue', fillOpacity:0.3, fillColor:'blue', weight:3, fill:true };
     const [selectedInstanceName, setSelectedInstanceName] = useState('')
-    console.log('cityState: ', cityState)
-    const handlePolygonClick = (areaInstanceName) => {
+    const [selectedInstanceURI, setSelectedInstanceURI] = useState('')
+    //console.log('cityState: ', cityState)
+    const handlePolygonClick = (areaInstanceName,areaInstanceURI) => {
         // we just need to send the polygons information back to the parent
-        console.log(`User clicked on ${areaInstanceName}`)
+        //console.log(`User clicked on ${areaInstanceName} ${areaInstanceURI}`)
         setSelectedInstanceName(areaInstanceName)
+        setSelectedInstanceURI(areaInstanceURI)
         // selectInstance(areaInstanceName)
     };
     return(
         <Box sx={{width:'100%', marginTop: {xs: "85px", md: "0px"}}}>
             <Stack>
                 <Box sx={{width:'100%',height:'50px',py:1,px:1,boxSizing:'border-box',borderBottom:"1px solid var(--border-color)",display:'flex',justifyContent:'flex-end',alignItems:'center'}}>
-                    {selectedInstanceName === '' ? <Typography 
+                    {selectedInstanceName === '' || selectedInstanceURI === '' ? <Typography 
                                             variant="h5" 
                                             style={{
                                                 fontSize:'14px',
@@ -35,7 +39,11 @@ const DefaultMap = ({
                                             }}
                                             >No Area Selected
                                             </Typography> 
-                                            : <Button size="sm" onClick={()=>selectInstance(selectedInstanceName)}>Select {selectedInstanceName}</Button>}
+                                            : <Button size="sm" onClick={()=>{
+                                                selectInstance(selectedInstanceName)
+                                                updateCurrentAreaName(selectedInstanceName)
+                                                updateCurrentAreaURI(selectedInstanceURI)
+                                                }}>Select {selectedInstanceName}</Button>}
                 </Box>
                 <Box sx={{width:"100%", height:{xs:"calc(100dvh - 50px - 85px)", md:"calc(100dvh - 50px)"}}}>
                     <MapContainer
@@ -58,7 +66,7 @@ const DefaultMap = ({
                             const layer = e.target;
                             layer.setStyle(defaultStyle); // Resets to original
                             },
-                            click: () => handlePolygonClick(instance.instanceName)
+                            click: () => handlePolygonClick(instance.instanceName,instance.URL)
                         }}
 
                         >

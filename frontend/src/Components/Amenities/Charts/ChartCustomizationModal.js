@@ -11,7 +11,7 @@ import AmenityBarChart from '../../DataVisComponents/AmenityBarChart'
 import ChartCategoryFilter from './ChartCategoryFilter'
 import ChartSubtypeFilter from './ChartSubtypeFilter'
 const ChartCustomizationModal = ({
-    areaURI,
+    parameterStateKey,
     onClose, 
     open,
     updateSelectedChart,
@@ -26,8 +26,20 @@ const ChartCustomizationModal = ({
     const [tempSelection, setTempSelection] = useState(chartSelected ?? 'Radar')
     const [view, setView] = useState('category');
     const resetToDefault = () => {
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id: parameterStateKey,
+                state: structuredClone(chartParameterState[parameterStateKey])
+            }
+        })
         setTempSelection(chartSelected)
     }
+
+    useEffect(() => {
+        console.log('chart param state: ',chartParameterState)
+        console.log('chart edit param state: ', chartEditParameterState)
+    }, [chartParameterState, chartEditParameterState])
     // const [visibleCategories, setVisibleCategories] = useState(() => {
     //     const areaNames = Object.keys(walkabilityData)
     //     const categoryNames = [
@@ -65,72 +77,81 @@ const ChartCustomizationModal = ({
     //   })
 
     const onChartSelectChange = (event, newValue) => {
-        console.log('changing chart selection: ',newValue)
+        //console.log('changing chart selection: ',newValue)
         //set filters to previous saved
-        dispatchChartEditParameterState({
-            type:'SET_PARAMETERS',
-            payload: {
-                id:areaURI,
-                state: chartParameterState[areaURI]
-            }
-        })
+        // dispatchChartEditParameterState({
+        //     type:'SET_PARAMETERS',
+        //     payload: {
+        //         id:parameterStateKey,
+        //         state: chartParameterState[parameterStateKey]
+        //     }
+        // })
 
         // set chart type back to previous
         setTempSelection(newValue)
     }
 
     const onChartCategoryFilterChange = (newValue) => { //update the chart edit parameter state
-        console.log('updating chart category filters')
+        //console.log('SEEE MEEEE')
         console.dir(newValue, {depth:null})
 
-        const nextState = {...chartEditParameterState}
-        nextState[areaURI].category = newValue
+        // const nextState = {...chartEditParameterState}
+        // nextState[parameterStateKey].category = newValue
         
         dispatchChartEditParameterState({
             type:'SET_PARAMETERS',
             payload: {
-                id: areaURI,
-                state: nextState[areaURI]
+                id: parameterStateKey,
+                state: {
+                    ...chartEditParameterState[parameterStateKey],
+                    category: newValue
+                }
             }
         })
     }
 
     const onChartSubtypeFilterChange =(newValue) => {
-        console.log('updating chart category filters')
+        //console.log('updating chart category filters')
         console.dir(newValue, {depth:null})
         
-        const nextState = {...chartEditParameterState}
-        nextState[areaURI].subtype = newValue
+        // const nextState = {...chartEditParameterState}
+        // nextState[parameterStateKey].subtype = newValue
         
         dispatchChartEditParameterState({
             type:'SET_PARAMETERS',
             payload: {
-                id: areaURI,
-                state: nextState[areaURI]
+                id: parameterStateKey,
+                state: {
+                    ...chartEditParameterState[parameterStateKey],
+                    subtype: newValue
+                }
             }
         })
     }
 
     const updateChartView = (newChartView) => {
-        let nextState = {...chartEditParameterState[areaURI]}
-        nextState.chartView = newChartView
+        // let nextState = {...chartEditParameterState[parameterStateKey]}
+        // nextState.chartView = newChartView
         dispatchChartEditParameterState({
             type:'SET_PARAMETERS',
             payload: {
-                id: areaURI,
-                state: nextState
+                id: parameterStateKey,
+                state: {
+                    ...chartEditParameterState[parameterStateKey],
+                    chartView: newChartView
+                }
             }
         })
     }
 
     const saveChanges = () => {
-        console.log('saving chart changes')
+        //console.log('saving chart changes')
         //save changes to state
         dispatchChartParameterState({
             type:'SET_PARAMETERS',
             payload: {
-                id:areaURI,
-                state: chartEditParameterState[areaURI]
+                id:parameterStateKey,
+                state: chartEditParameterState[parameterStateKey]
             }
         })
 
@@ -140,12 +161,12 @@ const ChartCustomizationModal = ({
 
     const closeChartCustomizationModal = () => {
         //reset the chart edit state
-        console.log('closing chart customization modal')
+        //console.log('closing chart customization modal')
         dispatchChartEditParameterState({
             type:'SET_PARAMETERS',
             payload: {
-                id: areaURI,
-                state: chartParameterState[areaURI]
+                id: parameterStateKey,
+                state: structuredClone(chartParameterState[parameterStateKey])
             }
         })
 
@@ -154,7 +175,7 @@ const ChartCustomizationModal = ({
     }
 
     const exportChart = () => {
-        console.log('Exporting chart...')
+        //console.log('Exporting chart...')
     }
 
     useEffect(() => {
@@ -291,13 +312,13 @@ const ChartCustomizationModal = ({
                                     '&:hover': { backgroundColor: 'transparent' }
                                 }}>By Subtype</ToggleButton>
                         </ToggleButtonGroup>
-                        {view === 'category' ? <ChartCategoryFilter categoryFilterState={chartEditParameterState[areaURI]?.category} onChange={onChartCategoryFilterChange} /> : <ChartSubtypeFilter subtypeFilterState={chartEditParameterState[areaURI]?.subtype} onChange={onChartSubtypeFilterChange} />}
+                        {view === 'category' ? <ChartCategoryFilter categoryFilterState={chartEditParameterState[parameterStateKey]?.category} onChange={onChartCategoryFilterChange} /> : <ChartSubtypeFilter subtypeFilterState={chartEditParameterState[parameterStateKey]?.subtype} onChange={onChartSubtypeFilterChange} />}
                     </Box>
                 </Stack>
             </Box>
 
             <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
-                {tempSelection === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={areaURI} mode={view} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={areaURI} mode={view} />}
+                {tempSelection === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={parameterStateKey} mode={view} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={parameterStateKey} mode={view} />}
             </Box>
 
         </Box>

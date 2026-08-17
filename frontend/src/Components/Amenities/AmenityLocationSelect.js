@@ -24,6 +24,9 @@ const AmenityLocationSelect = ({
   dispatchAdminAreaInstances,
   dispatchCityState,
   isGeneratingVisualization,
+  updateCurrentCityURI,
+  updateCurrentAreaURI,
+  updateCurrentAreaName
 }) => {
   const [cityLoading, setCityLoading] = useState(false);
 
@@ -62,6 +65,7 @@ const AmenityLocationSelect = ({
                       cityURLs,
                       dispatchCityState
                     )
+                    updateCurrentCityURI(cityURLs[newValue])
                     setCityLoading(false);
                   }}
                   isLoading={cityLoading}
@@ -86,10 +90,10 @@ const AmenityLocationSelect = ({
                       type: "SET_SELECTED",
                       payload: newValue,
                     });
-                    console.log('fetchLocations newValue: ', newValue)
-                    console.log('fetchLocations cityURLS: ', cityURLs)
-                    console.log('fetchLocations adminAreaTypesState: ', adminAreaTypesState)
-                    console.log('fetchLocations dispatchAdminAreaInstances: ', dispatchAdminAreaInstances)
+                    //console.log('fetchLocations newValue: ', newValue)
+                    //console.log('fetchLocations cityURLS: ', cityURLs)
+                    //console.log('fetchLocations adminAreaTypesState: ', adminAreaTypesState)
+                    //console.log('fetchLocations dispatchAdminAreaInstances: ', dispatchAdminAreaInstances)
                     fetchLocations(
                       newValue,
                       cityURLs,
@@ -110,11 +114,16 @@ const AmenityLocationSelect = ({
                   options={Object.keys(adminAreaInstancesState)}
                   desc="Select the individual demarcation areas you want to analyze."
                   onChange={(event, newValue) => {
-                    console.log('multi select new value: ',newValue)
+                    //console.log('AREA INSTANCE multi select new value: ',newValue)
+                    //console.log('ADMIN AREA INSTANCE STATE: ',adminAreaInstancesState)
                     dispatchAdminAreaInstances({
                       type: "SET_SELECTED",
                       payload: newValue,
                     });
+                    //set data for parent
+                    const areaName = newValue[0]
+                    updateCurrentAreaName(areaName ?? '')
+                    updateCurrentAreaURI(adminAreaInstancesState[areaName]?.URL ?? '')
                   }}
                   currentlySelected={getSelectedAdminInstancesNames(
                     adminAreaInstancesState

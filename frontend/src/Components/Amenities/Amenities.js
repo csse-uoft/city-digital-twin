@@ -269,7 +269,7 @@ function initializeFilterState (amenities) {
             }
         })
     })
-    console.log('amenity filter state: ',state)
+    //console.log('amenity filter state: ',state)
     return state
 }  
 
@@ -282,7 +282,7 @@ function initializeChartCategoryParameterState (walkabilityData) {
     categoryNames.forEach((name) => {
         obj[name] = true
     })
-    console.log('initialized chart category param state: ',obj)
+    //console.log('initialized chart category param state: ',obj)
     return obj
 }
 
@@ -306,7 +306,7 @@ function initializeChartSubtypeParameterState (walkabilityData) {
         const obj = Object.entries(totalSubtypes.map(item => [item, true]))
         subtypeMap[name] = obj
     })
-    console.log('initialized chart subtype param state:', subtypeMap)
+    //console.log('initialized chart subtype param state:', subtypeMap)
     return subtypeMap
 }
 
@@ -452,19 +452,28 @@ const Amenities = ({
     const [openComparisonModal, setOpenComparisonModal] = useState(false)
 
     //chart panel
-    const [currentAreaURI, setCurrentAreaURI] = useState('http://ontology.eil.utoronto.ca/Toronto/Toronto#neighborhood70')
-    const [currentCityURI, setCurrentCityURI] = useState('http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto')
-    const [currentAreaName, setCurrentAreaName] = useState('South Parkdale (70)')
+    const [currentAreaURI, setCurrentAreaURI] = useState('')
+    const [currentCityURI, setCurrentCityURI] = useState('')
+    const [currentAreaName, setCurrentAreaName] = useState('')
+
+    //area uri list for chart panels
+
+
+    useEffect(() => {
+        //console.log('CURRENT CITY URI: ',currentCityURI)
+        //console.log('CURRENT AREA NAME: ',currentAreaName)
+        //console.log('CURRENT AREA URI: ', currentAreaURI)
+    },[currentCityURI,currentAreaURI,currentAreaName])
 
 
     const handleTabChange = (event, newValue) => {
-        // console.log('new tab value: ', newValue)
+        // //console.log('new tab value: ', newValue)
         setTabValue(newValue);
     };
 
     const selectInstance = (instanceName) => {
-        // console.log('user selected area instance name: ', instanceName)
-        // console.log('user selected area instance id: ',instanceID)
+        // //console.log('user selected area instance name: ', instanceName)
+        // //console.log('user selected area instance id: ',instanceID)
         //if we update the areaInstancesState that should work
         dispatchAdminAreaInstances({
             type: "SET_SELECTED",
@@ -477,23 +486,23 @@ const Amenities = ({
     const selectedAdminInstancesURLs = getSelectedAdminInstancesURLsAndNames(
         adminAreaInstancesState
     );
-    // console.log('admin area instance state: ', adminAreaInstancesState)
+    // //console.log('admin area instance state: ', adminAreaInstancesState)
 
     // const handleCityChange = (event) => {
     //     if (!event?.target?.value) return
-    //     console.log('user selected city: ', event.target.value)
+    //     //console.log('user selected city: ', event.target.value)
     //     setCity(event.target.value)
     // }
 
     // const handleAreaTypeChange = (event) => {
     //     if (!event?.target?.value) return
-    //     console.log('user selected area type: ', event.target.value)
+    //     //console.log('user selected area type: ', event.target.value)
     //     setAreaType(event.target.value)
     // }
 
     // const handleAreaInstanceChange = (event) => {
     //     if (!event?.target?.value) return
-    //     console.log('user selected area instance', event.target.value)
+    //     //console.log('user selected area instance', event.target.value)
     //     setAreaInstance(event.target.value)
     // }
 
@@ -506,13 +515,13 @@ const Amenities = ({
 
 
     useEffect(() => {
-        // console.log("Types State updated:", adminAreaTypesState);
+        // //console.log("Types State updated:", adminAreaTypesState);
       }, [adminAreaTypesState]);
 
     useEffect(() => {
-        // console.log("Current Admin Type", currentAdminType);
-        // console.log("Current City", cityURLs);
-        // console.log("Print Admin Area instance states", adminAreaInstancesState);
+        // //console.log("Current Admin Type", currentAdminType);
+        // //console.log("Current City", cityURLs);
+        // //console.log("Print Admin Area instance states", adminAreaInstancesState);
     
         /*
          * Fetches the amenity scores for the radar graph.
@@ -529,9 +538,9 @@ const Amenities = ({
             const adminNames = getSelectedAdminInstancesNames(
               adminAreaInstancesState
             );
-            // console.log('ADMIN NAMES: ',adminNames)
+            // //console.log('ADMIN NAMES: ',adminNames)
             const data = await fetchAmenityData(adminType);
-            // console.log('DATA: ',data)
+            // //console.log('DATA: ',data)
             adminNames.forEach((name) => {
               const amenitiesForArea = data.data.filter((obj) => obj.name === name);
     
@@ -547,7 +556,7 @@ const Amenities = ({
                 });
               }
             });
-            console.log('amenityDataResults: ',amenityDataResults)
+            //console.log('amenityDataResults: ',amenityDataResults)
             setAmenityData(amenityDataResults);
           } catch (error) {
             console.error("Error fetching amenity data:", error);
@@ -563,7 +572,7 @@ const Amenities = ({
           let newAmenityPolygons = {};
     
           for (const instance of selectedAdminInstancesURLs) {
-            console.log('OOOOOO: ', instance)
+            //console.log('OOOOOO: ', instance)
             // Extract the location_id part from the URL
             const locationID = instance.url.split("#")[1];
             const instanceName = instance.name
@@ -576,12 +585,12 @@ const Amenities = ({
               );
     
               const amenityData = rawData[0];
-            //   console.log('amenity data: ', amenityData)
+            //   //console.log('amenity data: ', amenityData)
               const locationIDLocationData = rawData[1];
               setlocationIDPolygons(locationIDLocationData);
               // Format the fetched Amenties using formatAmenties
               const formattedAmenities = formatAmenities(amenityData);
-            //   console.log('formattedAmenities: ', formattedAmenities)
+            //   //console.log('formattedAmenities: ', formattedAmenities)
               formattedAmenities.instanceName = instanceName
               formattedAmenities.instanceURL = instance.url
     
@@ -598,7 +607,7 @@ const Amenities = ({
     
           // Once all Amenties are fetched and formatted, update the state
           setLoading(false); // Data is ready, stop loading
-        //   console.log('new amenity polygons: ', newAmenityPolygons)
+        //   //console.log('new amenity polygons: ', newAmenityPolygons)
           setAmenityPolygons(newAmenityPolygons);
         };
     
@@ -617,7 +626,7 @@ const Amenities = ({
     useEffect(() => {
         if (Object.keys(adminAreaInstancesState).length === 0) return
         //we need to prepare what we need and call a fetch function to get a list of neighborhood area instances of toronto
-        // console.log('ADMIN AREA INSTANCES STATE: ',adminAreaInstancesState)
+        // //console.log('ADMIN AREA INSTANCES STATE: ',adminAreaInstancesState)
         //we need to enrich this user friendly identifiers, mainly the instance name
         const enrichedList = Object.keys(adminAreaInstancesState).map((key) => {
             const instanceName = key
@@ -626,7 +635,7 @@ const Amenities = ({
 
             return obj
         })
-        // console.log('enriched list: ', enrichedList)
+        // //console.log('enriched list: ', enrichedList)
         setEnrichedAmenityPolygons(enrichedList)
     }, [adminAreaInstancesState])
 
@@ -694,6 +703,9 @@ const Amenities = ({
                                 adminAreaInstancesState={adminAreaInstancesState}
                                 dispatchAdminAreaInstances={dispatchAdminAreaInstances}
                                 dispatchCityState={dispatchCityState}
+                                updateCurrentCityURI={setCurrentCityURI}
+                                updateCurrentAreaURI={setCurrentAreaURI}
+                                updateCurrentAreaName={setCurrentAreaName}
                                 isGeneratingVisualization={visLoading}
                                 />
 
@@ -731,10 +743,7 @@ const Amenities = ({
                                     cityURI={currentCityURI}
                                     areaURI={currentAreaURI} 
                                     areaName={currentAreaName}  
-                                    chartCategoryParameterState={chartCategoryParameterState}
-                                    dispatchChartCategoryParameterState={dispatchChartCategoryParameterState}
-                                    chartSubtypeParameterState={chartSubtypeParameterState}
-                                    dispatchChartSubtypeParameterState={dispatchChartSubtypeParameterState}
+                                    areaURIList={{ [currentAreaURI]: currentAreaName }}
                                     amenityCategories={cityState.amenityCategories}
                                     chartParameterState={chartParameterState}
                                     dispatchChartParameterState={dispatchChartParameterState}
@@ -856,10 +865,15 @@ const Amenities = ({
       height: '3px',
     }}}>
                                     {Object.keys(amenityPolygons).map((locationIDKey,index) => {
+                                        const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+                                        const fullKey = baseURI + locationIDKey;
                                         const instanceName = amenityPolygons[locationIDKey].instanceName
                                         //icon={<MapIcon />} iconPosition="start"
                                         return(
-                                            <Tab label={instanceName} value={index} color="blue"
+                                            <Tab label={instanceName} value={index} color="blue" onClick={()=>{
+                                                setCurrentAreaURI(fullKey)
+                                                setCurrentAreaName(instanceName)
+                                            }}
                                             sx={{textTransform: 'none', '&.Mui-selected': {          // active tab styles
                                                         fontWeight: 'bold',
                                                         color: 'var(--uoft-blue)'
@@ -875,9 +889,9 @@ const Amenities = ({
                             const locationID = amenityPolygons[locationIDKey];
                             const instanceName = amenityPolygons[locationIDKey].instanceName
                             const instanceURL = amenityPolygons[locationIDKey].instanceURL
-                            // console.log('AREA INSTANCE: ', amenityPolygons[locationIDKey])
-                            // console.log('AMENITIES: ', locationID)
-                            // console.log('test location: ', locationIDPolygons[fullKey])
+                            // //console.log('AREA INSTANCE: ', amenityPolygons[locationIDKey])
+                            // //console.log('AMENITIES: ', locationID)
+                            // //console.log('test location: ', locationIDPolygons[fullKey])
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                             if (overlayCoords != null) {
                                 //dispatch the filter state here
@@ -911,6 +925,8 @@ const Amenities = ({
                         <DefaultMap 
                         instancePolygons={enrichedAmenityPolygons}
                         selectInstance={selectInstance}
+                        updateCurrentAreaName={setCurrentAreaName}
+                        updateCurrentAreaURI={setCurrentAreaURI}
                         cityState={cityState}
                         />
                     )

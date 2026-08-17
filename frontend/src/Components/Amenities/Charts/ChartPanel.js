@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect, useReducer, useMemo } from "react";
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
 import { Input, Button, IconButton, Select, Autocomplete, Option, CircularProgress } from '@mui/joy';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -9,6 +9,15 @@ import AmenityBarChart from '../../DataVisComponents/AmenityBarChart'
 import ChartCustomizationModal from "./ChartCustomizationModal";
 import ChartExpansionModal from "./ChartExpansionModal"
 import { fetchWalkabilityData } from '../../../helpers/fetchFunctions'
+
+function isMultiArea (areaURIList) {
+    const areas = Object.keys(areaURIList)
+    return areas.length > 1
+}
+
+function createParameterStateKey (areaURIList) {
+    return Object.keys(areaURIList).sort().join('_')
+}
 
 function formatWalkabilityData (data,areaName) {
     let obj = {}
@@ -28,7 +37,7 @@ function initializeChartCategoryParameterState (walkabilityData,amenityCategorie
             icon: amenityCategories[name]?.icon ?? ''
         }
     })
-    console.log('initialized chart category param state: ',obj)
+    //console.log('initialized chart category param state: ',obj)
     return obj
 }
 
@@ -37,14 +46,14 @@ function initializeChartSubtypeParameterState (walkabilityData,amenityCategories
     const categoryNames = [
         ...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))
     ]
-    // console.log('category names: ', categoryNames)
+    // //console.log('category names: ', categoryNames)
     let subtypeMap = {}
     categoryNames.forEach((name) => {
         //iterate over the areas 
         let totalSubtypes = []
         areaNames.forEach((area) => {
         const subtypes = walkabilityData[area][name].subtypes.map(k => k.subtype)
-        // console.log(`subtypes of category ${name} in area ${area}: `,subtypes)
+        // //console.log(`subtypes of category ${name} in area ${area}: `,subtypes)
         totalSubtypes = [
             ...new Set([...totalSubtypes, ...subtypes])
         ]
@@ -60,7 +69,7 @@ function initializeChartSubtypeParameterState (walkabilityData,amenityCategories
         // const obj = Object.entries(totalSubtypes.map(item => [item, true]))
         subtypeMap[name] = obj
     })
-    // console.log('initialized chart subtype param state:')
+    // //console.log('initialized chart subtype param state:')
     // console.dir(subtypeMap, { depth: null})
     return subtypeMap
 }
@@ -69,10 +78,7 @@ const ChartPanel = ({
     areaURI,
     areaName,
     cityURI,
-    chartCategoryParameterState,
-    dispatchChartCategoryParameterState,
-    chartSubtypeParameterState,
-    dispatchChartSubtypeParameterState,
+    areaURIList,
     amenityCategories,
     chartParameterState,
     dispatchChartParameterState,
@@ -88,8 +94,12 @@ const ChartPanel = ({
     const [formattedWalkabilityData, setFormattedWalkabilityData] = useState({})
     const [loading, setLoading] = useState(false)
 
-    console.log('chart panel amenity data: ', walkabilityData)
-    console.log('chart panel amenity categories: ', amenityCategories)
+    //console.log('chart panel amenity data: ', walkabilityData)
+    //console.log('chart panel amenity categories: ', amenityCategories)
+
+    const multiArea = useMemo(() => { return isMultiArea(areaURIList)}, [areaURIList])
+
+    const parameterStateKey = useMemo(() => { return createParameterStateKey(areaURIList)}, [areaURIList])
 
     // useEffect(() => {
     //     if(!walkabilityData) return
@@ -147,43 +157,92 @@ const ChartPanel = ({
 
     useEffect(() => {
         //fetch the data
+        if(!parameterStateKey) return
         const getData = async () => {
             try {
                 setLoading(true)
-                const data = await fetchWalkabilityData(areaURI,cityURI)
-                const formattedWD = formatWalkabilityData(data,areaName)
-                setWalkabilityData(formattedWD)
+                if (multiArea) { //there are multiple areas (comparison)
 
-                //check if filter states are not initialized for the area URI already
+                    //get the walkabilityData for all the areas and construct
+                    let obj = {}
+                    const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI)})))
+                    dataResult.forEach((item) => {
+                        obj[item.areaName] = item.data
+                    })
+                    setWalkabilityData(obj)
 
-                //initialize filter states
-                const chartCategoryParamState = initializeChartCategoryParameterState(formattedWD,amenityCategories)
+                    //initialization of the filter state
 
-                const chartSubtypeParamState = initializeChartSubtypeParameterState(formattedWD,amenityCategories)
+                    //create the key
 
-                dispatchChartParameterState({
-                    type:'SET_PARAMETERS',
-                    payload: {
-                        id: areaURI,
-                        state: {
+                    if (!Object.hasOwn(chartParameterState,parameterStateKey)) {
+                        const chartCategoryParamState = initializeChartCategoryParameterState(obj,amenityCategories)
+
+                        const chartSubtypeParamState = initializeChartSubtypeParameterState(obj,amenityCategories)
+
+                        const initialParamState = {
                             category: chartCategoryParamState,
                             subtype: chartSubtypeParamState,
                             chartView: chartView
                         }
-                    }
-                })
 
-                dispatchChartEditParameterState({
-                    type:'SET_PARAMETERS',
-                    payload: {
-                        id: areaURI,
-                        state: {
+                        dispatchChartParameterState({
+                            type:'SET_PARAMETERS',
+                            payload: {
+                                id: parameterStateKey,
+                                state: initialParamState
+                            }
+                        })
+
+                        dispatchChartEditParameterState({
+                            type:'SET_PARAMETERS',
+                            payload: {
+                                id: parameterStateKey,
+                                state: structuredClone(initialParamState)
+                            }
+                        })
+                    }
+
+                } else { //there is only one area 
+                    const areaURI = Object.keys(areaURIList).at(0)
+                    const data = await fetchWalkabilityData(areaURI,cityURI)
+                    const formattedWD = formatWalkabilityData(data,areaName)
+                    setWalkabilityData(formattedWD)
+
+                    //check if filter states are not initialized for the area URI already
+                    if (!Object.hasOwn(chartParameterState,areaURI)) {
+                        //initialize filter states
+                        //console.log('initializing new parameter states for instance ',areaURI)
+                        const chartCategoryParamState = initializeChartCategoryParameterState(formattedWD,amenityCategories)
+
+                        const chartSubtypeParamState = initializeChartSubtypeParameterState(formattedWD,amenityCategories)
+
+                        const initialParamState = {
                             category: chartCategoryParamState,
                             subtype: chartSubtypeParamState,
                             chartView: chartView
                         }
+
+                        dispatchChartParameterState({
+                            type:'SET_PARAMETERS',
+                            payload: {
+                                id: parameterStateKey,
+                                state: initialParamState
+                            }
+                        })
+
+                        dispatchChartEditParameterState({
+                            type:'SET_PARAMETERS',
+                            payload: {
+                                id: parameterStateKey,
+                                state: structuredClone(initialParamState)
+                            }
+                        })
                     }
-                })
+                
+                }
+
+                
             } catch (err) {
                 console.error('Failed to get walkability data in chartpanel: ',err)
             } finally {
@@ -192,7 +251,7 @@ const ChartPanel = ({
         }
         getData()
 
-    },[areaURI])
+    },[areaURIList])
     
 
     return (
@@ -204,13 +263,13 @@ const ChartPanel = ({
                 </Box>
 
                 <Box sx={{width:"100%", display:"flex", justifyContent:"flex-end", gap:2, alignItems:"center"}}>
-                    <Button disabled={loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined} startDecorator={<TuneIcon />} variant="soft" onClick={()=>{
+                    <Button disabled={loading || !walkabilityData || chartEditParameterState[parameterStateKey] == undefined || chartParameterState[parameterStateKey] == undefined} startDecorator={<TuneIcon />} variant="soft" onClick={()=>{
                         setOpenExpansionModal(false)
                         setOpenCustomizationModal(true)
                         }}>
                         Customize Chart
                     </Button>
-                    <IconButton disabled={loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined} variant="soft" onClick={()=>{
+                    <IconButton disabled={loading || !walkabilityData || chartEditParameterState[parameterStateKey] == undefined || chartParameterState[parameterStateKey] == undefined} variant="soft" onClick={()=>{
                         setOpenCustomizationModal(false)
                         setOpenExpansionModal(true)
                     }}>
@@ -218,10 +277,10 @@ const ChartPanel = ({
                     </IconButton>
                 </Box>
                 
-                {loading || !walkabilityData || chartEditParameterState[areaURI] == undefined || chartParameterState[areaURI] == undefined ? (<CircularProgress />) : chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} chartParameterKey={areaURI} mode={chartParameterState[areaURI]?.chartView ?? 'category'} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} chartParameterKey={areaURI} mode={chartParameterState[areaURI]?.chartView ?? 'category'} />}
+                {loading || !walkabilityData || chartEditParameterState[parameterStateKey] == undefined || chartParameterState[parameterStateKey] == undefined ? (<CircularProgress />) : chartSelected === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} chartParameterKey={parameterStateKey} mode={chartParameterState[parameterStateKey]?.chartView ?? 'category'} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartParameterState} chartParameterKey={parameterStateKey} mode={chartParameterState[parameterStateKey]?.chartView ?? 'category'} />}
 
                 <ChartCustomizationModal 
-                    areaURI={areaURI}
+                    parameterStateKey={parameterStateKey}
                     updateSelectedChart={(chart) => setChartSelected(chart)} 
                     open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} 
                     chartSelected={chartSelected} 
@@ -239,7 +298,7 @@ const ChartPanel = ({
                     chartSelected={chartSelected} 
                     walkabilityData={walkabilityData} 
                     chartParameterState={chartParameterState} 
-                    areaURI={areaURI} 
+                    parameterStateKey={parameterStateKey} 
                     openCustomization={()=>{
                     setOpenExpansionModal(false)
                     setOpenCustomizationModal(true)

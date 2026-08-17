@@ -19,24 +19,24 @@ const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
  */
 
 function getSubtypeMap (amenityData) {
-  console.log('creating amenity subtype map')
+  //console.log('creating amenity subtype map')
   const m = {}
   Object.keys(amenityData).forEach((key) => {
     amenityData[key].subtypes.forEach((subtype) => {
       m[subtype] = key
     })
   })
-  console.log('amenity subtype map: ', m)
+  //console.log('amenity subtype map: ', m)
   return m
 }
 
 function transformAmenities (amenityData) {
-  console.log('amenity: ',amenityData)
+  //console.log('amenity: ',amenityData)
   let amenities = {}
 
   amenityData.forEach((amenity) => {
     const name = amenity.d?.value.split('/').at(-1)
-    console.log('name: ',name)
+    //console.log('name: ',name)
     const colour = amenity?.colour?.value
     const iconUrl = amenity?.icon?.value
     if (name) {
@@ -60,13 +60,13 @@ export const testBackendConnection = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/health-check`);
     if (response.data.success) {
-      console.log("Backend connection successful");
+      //console.log("Backend connection successful");
       return true;
     } else {
       return false;
     }
   } catch (error) {
-    console.log("Failed to connect to backend:", error);
+    //console.log("Failed to connect to backend:", error);
     return false;
   }
 };
@@ -94,7 +94,7 @@ export const fetchAdministration = async (
       const response = await axios.post(`${API_BASE_URL}/api/admin-types`, {
         cityName: cityURLs[city],
       });
-      console.log('FETCH ADMIN AREA response: ', response)
+      //console.log('FETCH ADMIN AREA response: ', response)
       dispatchAdminAreaTypes({
         type: "SET_CURRENT_CITY",
         payload: city,
@@ -126,6 +126,7 @@ export const fetchCityDetails = async (
     const cityURI = cityURLs[city]
     try {
       //check whether it is already cached
+      //console.log('CITY URLS: ',cityURLs)
       const cachedResults = await getCachedAmenityCategories(cityURI)
       if (cachedResults && isFresh(cachedResults.timestamp)) {
         dispatchCityState({
@@ -139,18 +140,18 @@ export const fetchCityDetails = async (
         })
       } else {
           //get map coordinates
-          console.log('making server request to get cityDetails')
-          console.log('city: ', cityURI)
+          //console.log('making server request to get cityDetails')
+          //console.log('city: ', cityURI)
           const mapCoordsResponse = await axios.post(`${API_BASE_URL}/api/map-coords`, {
             cityURI: cityURI
           })
-          // console.log('city detail map coords response: ', mapCoordsResponse)
+          // //console.log('city detail map coords response: ', mapCoordsResponse)
           const mapCoords = mapCoordsResponse.data.data
           //get amenity categories
           const amenityCategoryResponse = await axios.post(`${API_BASE_URL}/api/amenity-categories`, {
             cityURI: cityURI
           })
-          // console.log('amenity cat resposne: ', amenityCategoryResponse)
+          // //console.log('amenity cat resposne: ', amenityCategoryResponse)
           const amenityCategories = amenityCategoryResponse.data?.data
 
           //cache
@@ -178,17 +179,17 @@ export const fetchAreaAmenities = async (
   areaIdentifier,
   cityURI
 ) => {
-  // console.log('area identifier to fetch amenities: ', areaIdentifier)
+  // //console.log('area identifier to fetch amenities: ', areaIdentifier)
   if (areaIdentifier) {
     try {
       //check whether the amenities are already cached
       const cachedAmenities = await getCachedAreaAmenities(areaIdentifier)
       if (cachedAmenities && isFresh(cachedAmenities.timestamp)) {
-        console.log('found cached amenities')
+        //console.log('found cached amenities')
         //dispatch results
         return cachedAmenities.data
       } else {
-        console.log('fetching area amenities')
+        //console.log('fetching area amenities')
         //make the subtype map 
         const cityDetails = await getCachedAmenityCategories(cityURI)
         const subtypeMap = getSubtypeMap(cityDetails.data)
@@ -197,7 +198,7 @@ export const fetchAreaAmenities = async (
           areaId: areaIdentifier,
           subTypeMap: subtypeMap
         })
-        // console.log('fetching area amenities response: ',response)
+        // //console.log('fetching area amenities response: ',response)
 
         //cache them
         await setCachedAreaAmenities(areaIdentifier,response.data.data,cityURI)
@@ -220,7 +221,7 @@ export const fetchWalkabilityData = async (
     try {
       const cachedWalkabilityData = await getCachedWalkabilityData(areaIdentifier)
       if (cachedWalkabilityData && isFresh(cachedWalkabilityData.timestamp)) {
-        console.log('found cached walkability data')
+        //console.log('found cached walkability data')
         //dispatch results
         return cachedWalkabilityData.data
       } else {
@@ -233,7 +234,7 @@ export const fetchWalkabilityData = async (
           areaURI: areaIdentifier,
           amenityCategories: cityDetails?.data
         })
-        console.log('fetch walkability score response:', response)
+        //console.log('fetch walkability score response:', response)
 
         //cache results
         //cache them
@@ -283,7 +284,7 @@ export const fetchLocations = async (
           adminType: areaTypeURL,
         }
       );
-      console.log('FETCH LOCATIONS response1: ',response1)
+      //console.log('FETCH LOCATIONS response1: ',response1)
       const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
       const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
@@ -292,7 +293,7 @@ export const fetchLocations = async (
       });
 
       const updatedLocationURLs = {};
-      console.log('FETCH LOCATIONS resposne2 result: ',response2)
+      //console.log('FETCH LOCATIONS resposne2 result: ',response2)
       // this extracts the cooridnates into the updatedLocationURLs variable
       response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
         var wkt = new Wkt.Wkt();
@@ -320,17 +321,18 @@ export const fetchLocations = async (
       });
 
       const areaNameToCoordsAndURL = {};
-      console.log('UPDATED LOCATION URLS: ', updatedLocationURLs)
+      //console.log('UPDATED LOCATION URLS: ', updatedLocationURLs)
       for (const key in updatedLocationURLs) {
-        console.log('key:', key)
-        console.log('key value', updatedLocationURLs[key])
+        //console.log('key:', key)
+        //console.log('key value', updatedLocationURLs[key])
         const areaName = mapAreaURLtoName(areaInstaceList, key);
+        //console.log('key area name: ',areaName)
         areaNameToCoordsAndURL[areaName] = {
           URL: key,
           coordinates: updatedLocationURLs[key].coordinates,
         };
       }
-      console.log('fetchLocations result: ', areaNameToCoordsAndURL)
+      //console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
@@ -368,14 +370,14 @@ export const fetchAmenityLocations = async (
   adminAreaTypesState
 ) => {
   try {
-    console.log('Calling fetchAmenityLocations: ', locationID)
+    //console.log('Calling fetchAmenityLocations: ', locationID)
     const response = await axios.post(
       `${API_BASE_URL}/api/amenity-location-all`,
       {
         location_id: locationID,
       }
     );
-    console.log('/api/amenity-location-all response: ',response)
+    //console.log('/api/amenity-location-all response: ',response)
 
     const updatedLocationURLs = [];
 
@@ -436,7 +438,7 @@ export const fetchAmenityLocations = async (
       cityName: cityName,
       adminType: areaTypeURL,
     });
-    console.log('api response1: ', response1)
+    //console.log('api response1: ', response1)
 
     const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
@@ -482,9 +484,9 @@ export const fetchAmenityLocations = async (
         coordinates: NeighborhoodLocationURLs[key].coordinates,
       };
     }
-    console.log('fetchAmenityLocations response')
-    console.log('updatedLocationURLs: ', updatedLocationURLs)
-    console.log('NeighborhoodLocatoinURLs: ', NeighborhoodLocationURLs)
+    //console.log('fetchAmenityLocations response')
+    //console.log('updatedLocationURLs: ', updatedLocationURLs)
+    //console.log('NeighborhoodLocatoinURLs: ', NeighborhoodLocationURLs)
     return [updatedLocationURLs, NeighborhoodLocationURLs];
   } catch (error) {
     console.error("POST Error:", error);

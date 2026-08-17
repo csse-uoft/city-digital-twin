@@ -110,7 +110,7 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterK
     return [...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))]
   }, [walkabilityData])
   const { chartData, areaNames } = useMemo(() => {
-    console.log('walkability data received in bar chart: ',walkabilityData)
+    //console.log('walkability data received in bar chart: ',walkabilityData)
     if (!walkabilityData || Object.keys(walkabilityData).length === 0) {
       return { chartData: [], areaNames: [] }
     }
@@ -120,8 +120,8 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterK
     }
     return { chartData: transformSingleAreaData(walkabilityData,mode,subtypeCategory), areaNames: [] }
   }, [walkabilityData, multiArea, mode, subtypeCategory])
-  console.log('walkability data: ',walkabilityData)
-  console.log('BAR CHART PARAM STATE')
+  //console.log('walkability data: ',walkabilityData)
+  //console.log('BAR CHART PARAM STATE')
   console.dir(chartParameterState, {depth:null})
   const areaState = chartParameterState[chartParameterKey]
 
@@ -130,12 +130,12 @@ const AmenityBarChart = ({ walkabilityData, chartParameterState, chartParameterK
     if (mode === 'subtype') {
       const subtypeState = areaState.subtype?.[subtypeCategory] ?? {}
       const visibleSubtypes = chartData.filter((entry) => subtypeState[entry.name]?.show)
-      console.log('visible subtyeps: ',visibleSubtypes)
+      //console.log('visible subtyeps: ',visibleSubtypes)
       return visibleSubtypes
     }
     const categoryState = areaState.category ?? {}
     const visibleCategories = chartData.filter((entry) => categoryState[entry.name]?.show)
-    console.log('visible categories: ',visibleCategories)
+    //console.log('visible categories: ',visibleCategories)
     return visibleCategories
   }, [chartData, areaState, mode, subtypeCategory, chartParameterState])
 

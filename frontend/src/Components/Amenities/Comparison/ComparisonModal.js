@@ -11,7 +11,14 @@ import TabularBreakdownComponent from './TabularBreakdownComponent'
 const ComparisonModal = ({
     onClose,
     open,
-    amenityData
+    amenityData,
+    cityURI,
+    areaURIList,
+    amenityCategories,
+    chartParameterState,
+    dispatchChartParameterState,
+    chartEditParameterState,
+    dispatchChartEditParameterState
 }) => {
     const numInstances = Object.keys(amenityData).length
     const [chartSelected, setChartSelected] = useState('Radar')
@@ -68,7 +75,15 @@ const ComparisonModal = ({
                 numInstances >= 2 ? (
                     <>
                     <Box sx={{width: {xs: '100%', md: '450px'}, p:1, boxSizing:"border-box", height: {xs: 'auto', md:'100%'}, flexShrink:0, borderRight: {xs:'none', md:"1px solid var(--border-color)"}}}>
-                        <ChartPanel amenityData={amenityData} />
+                        <ChartPanel
+                         cityURI={cityURI} 
+                         areaURIList={areaURIList} //object with area uris mapped to area names
+                         amenityCategories={amenityCategories} 
+                         chartParameterState={chartParameterState}
+                         dispatchChartParameterState={dispatchChartParameterState}
+                         chartEditParameterState={dispatchChartEditParameterState}
+                         dispatchChartEditParameterState={dispatchChartEditParameterState}
+                         />
                     </Box>
 
                     <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
