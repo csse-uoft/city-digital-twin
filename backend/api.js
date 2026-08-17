@@ -398,28 +398,28 @@ router.post("/admin-instances", async (req, res) => {
     const [prefix, citySuffix] = splitURI(req.body.cityName);
     const [, adminTypeSuffix] = splitURI(req.body.adminType);
 
-    // const query = `
-    //   PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-    //   PREFIX CITY: <${prefix}>
-    //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-    //   SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-    //   CITY:${citySuffix} ?p ?adminAreaInstance.
-    //   ?adminAreaInstance genprop:hasName ?areaName.
-    //   ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-    //   }
-    // `;
     const query = `
-    PREFIX CITY: <${prefix}>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+      PREFIX CITY: <${prefix}>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-    SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-    CITY:${citySuffix} ?p ?adminAreaInstance.
-    ?adminAreaInstance rdfs:comment ?areaName.
-    ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-    }`
+      SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+      CITY:${citySuffix} ?p ?adminAreaInstance.
+      ?adminAreaInstance genprop:hasName ?areaName.
+      ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
+      }
+    `;
+    // const query = `
+    // PREFIX CITY: <${prefix}>
+    // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+    // SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+    // CITY:${citySuffix} ?p ?adminAreaInstance.
+    // ?adminAreaInstance rdfs:comment ?areaName.
+    // ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
+    // }`
     //CITY:${citySuffix} ?p ?adminAreaInstance.
 
     // Check if city is in database; if not, quit
@@ -477,7 +477,7 @@ router.post("/admin-instances", async (req, res) => {
       stream.on("data", (row) => {
         var singleRow = {};
         Object.entries(row).forEach(([key, value]) => {
-          singleRow[key] = value.value;
+          singleRow[key] = value.value?.split('_').join('').replace('neighbourhood','neighborhood');
         });
         result.push(singleRow);
         totalResults++;
@@ -1052,7 +1052,7 @@ router.post("/6", async (req, res) => {
       });
 
       stream.on("end", () => {
-        console.log('area instance names: ',result)
+        // console.log('area instance names: ',result)
         console.log('total results: ', totalResults)
         res.json({
           message: "success",
@@ -1184,7 +1184,7 @@ router.post("/amenity-location-all", async (req, res) => {
           color: binding.color ? binding.color.value : null,
         };
       });
-      console.log('formatted data: ', formattedData)
+      // console.log('formatted data: ', formattedData)
       // Send the formatted data as JSON
       res.json({ success: true, data: formattedData });
     });
@@ -1449,6 +1449,7 @@ router.post('/get-area-amenities', async (req,res) => {
   const area_id = req.body.areaId
   const categoryFilters = req.body.subTypeMap //Map, which we can check in constant time to filter
   console.log('subtype category filters: ', categoryFilters)
+  console.log('/get-area-amenities areaURI: ',area_id)
   try {
     const query = `
       PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
@@ -1549,11 +1550,11 @@ router.post('/get-area-amenities', async (req,res) => {
     });
 
     stream.on("end", async () => {
-      console.log("get-area-amenities API  result: ", rawData.slice(0,80))
+      // console.log("get-area-amenities API  result: ", rawData.slice(0,1))
       //first pre filter the raw data, by categories matching the subtype categories of the city
 
       const amenities = transformAreaAmenities(rawData,categoryFilters)
-      console.log('filtered amenities: ', amenities)
+      // console.log('filtered amenities: ', amenities)
       const formattedAmenities = formatAmenities(amenities,categoryFilters)
       
       // Send the formatted data as JSON
@@ -1577,6 +1578,7 @@ router.post('/walkability-scores', async (req,res) => {
     const areaURI = req.body.areaURI
     const areaId = areaURI.split("#").at(-1)
     const amenityCategories = req.body.amenityCategories
+    console.log('/walkability-scores areaURI: ', areaURI)
 
     const query = `
     PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
