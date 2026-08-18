@@ -221,12 +221,12 @@ export const fetchWalkabilityData = async (
     try {
       const cachedWalkabilityData = await getCachedWalkabilityData(areaIdentifier)
       if (cachedWalkabilityData && isFresh(cachedWalkabilityData.timestamp)) {
-        //console.log('found cached walkability data')
+        console.log('found cached walkability data of ',areaIdentifier)
         //dispatch results
         return cachedWalkabilityData.data
       } else {
         // make new request
-
+        console.log('making server request for walkability data of',areaIdentifier)
         //get cached categories
         const cityDetails = await getCachedAmenityCategories(cityURI)
 
@@ -329,7 +329,7 @@ export const fetchLocations = async (
         //console.log('key area name: ',areaName)
         areaNameToCoordsAndURL[areaName] = {
           URL: key,
-          coordinates: updatedLocationURLs[key].coordinates,
+          coordinates: updatedLocationURLs[key].coordinates
         };
       }
       //console.log('fetchLocations result: ', areaNameToCoordsAndURL)

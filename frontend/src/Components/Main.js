@@ -10,7 +10,7 @@ import { useState, useEffect, useReducer } from "react";
 import CompleteCommunitiesDashboard from "./CompleteCommunitiesDashboard";
 import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
-import { adminCompareAreaInstanceReducer } from '../reducers/adminCompareAreaInstanceReducer'
+// import { adminCompareAreaInstanceReducer } from '../reducers/adminCompareAreaInstanceReducer'
 import { cityReducer } from '../reducers/cityReducer'
 import { filterPanelReducer } from '../reducers/filterPanelReducer'
 import { chartCategoryParameterReducer, chartSubtypeParameterReducer, chartParameterReducer, chartEditParameterReducer } from '../reducers/chartParameterReducer'
@@ -29,7 +29,7 @@ function Main() {
   // Checkout reducers.js for the state structure
   const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
   const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
-  const [compareAdminAreainstancesState, dispatchCompareAdminAreaInstances] = useReducer(adminCompareAreaInstanceReducer, {})
+  // const [compareAdminAreaInstancesState, dispatchCompareAdminAreaInstances] = useReducer(adminCompareAreaInstanceReducer, {})
   const [cityState, dispatchCityState] = useReducer(cityReducer, {})
   const [filterPanelState, dispatchFilterPanelState] = useReducer(filterPanelReducer, {})
   const [chartCategoryParameterState, dispatchChartCategoryParameterState] = useReducer(chartCategoryParameterReducer, {})
@@ -105,7 +105,8 @@ function Main() {
                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                 adminAreaInstancesState={adminAreaInstancesState}
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances} 
-                dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
+                // compareAdminAreaInstancesState={compareAdminAreaInstancesState}
+                // dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
                 chartParameterState={chartParameterState}
                 dispatchChartParameterState={dispatchChartParameterState}
                 chartEditParameterState={chartEditParameterState}

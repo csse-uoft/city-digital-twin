@@ -114,8 +114,8 @@ const AmenityLocationSelect = ({
                   options={Object.keys(adminAreaInstancesState)}
                   desc="Select the individual demarcation areas you want to analyze."
                   onChange={(event, newValue) => {
-                    //console.log('AREA INSTANCE multi select new value: ',newValue)
-                    //console.log('ADMIN AREA INSTANCE STATE: ',adminAreaInstancesState)
+                    // console.log('amenity location select AREA INSTANCE multi select new value: ',newValue)
+                    //console.log(ADMIN AREA INSTANCE STATE: ',adminAreaInstancesState)
                     dispatchAdminAreaInstances({
                       type: "SET_SELECTED",
                       payload: newValue,

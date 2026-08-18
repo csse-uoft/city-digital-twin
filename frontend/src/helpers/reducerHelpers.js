@@ -42,10 +42,33 @@ export const getSelectedAdminInstancesURLsAndNames = (adminAreaInstancesState) =
   return selectedAreasURLs;
 }
 
+export const getSelectedCompareAdminInstancesURLsAndNames = (adminAreaInstancesState) => {
+  const selectedAreasURLs = [];
+  for (const key in adminAreaInstancesState) {
+    if (adminAreaInstancesState[key].selected === true && adminAreaInstancesState[key].compare === true) {
+      selectedAreasURLs.push({
+        url: adminAreaInstancesState[key].URL,
+        name: key
+      });
+    }
+  }
+  return selectedAreasURLs;
+}
+
 export const getSelectedAdminInstancesNames = (adminAreaInstancesState) => {
   const selectedAreasNames = [];
   for (const key in adminAreaInstancesState) {
       if (adminAreaInstancesState[key].selected === true) {
+        selectedAreasNames.push(key);
+      }
+  }
+  return selectedAreasNames;
+}
+
+export const getSelectedCompareAdminInstancesNames = (adminAreaInstancesState) => {
+  const selectedAreasNames = [];
+  for (const key in adminAreaInstancesState) {
+      if (adminAreaInstancesState[key].selected === true && adminAreaInstancesState[key].compare ===  true) {
         selectedAreasNames.push(key);
       }
   }

@@ -37,8 +37,8 @@ const ChartCustomizationModal = ({
     }
 
     useEffect(() => {
-        console.log('chart param state: ',chartParameterState)
-        console.log('chart edit param state: ', chartEditParameterState)
+        // console.log('chart param state: ',chartParameterState)
+        // console.log('chart edit param state: ', chartEditParameterState)
     }, [chartParameterState, chartEditParameterState])
     // const [visibleCategories, setVisibleCategories] = useState(() => {
     //     const areaNames = Object.keys(walkabilityData)

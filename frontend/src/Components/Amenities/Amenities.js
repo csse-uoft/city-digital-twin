@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect, useReducer, useMemo } from "react";
 import { Box, Container, Grid, Paper, Stack, Typography, Tab, Tabs } from "@mui/material";
 import { Input, Button, Select, Autocomplete, Option, CircularProgress } from '@mui/joy';
 import SaveIcon from '@mui/icons-material/Save';
@@ -17,6 +17,7 @@ import {
   getCurrentAdminTypeURL,
   getSelectedAdminInstancesURLs,
   getSelectedAdminInstancesURLsAndNames,
+  getSelectedCompareAdminInstancesURLsAndNames,
   getSelectedAdminInstancesNames,
 } from "../../helpers/reducerHelpers";
 import {
@@ -374,7 +375,8 @@ const Amenities = ({
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
     dispatchAdminAreaInstances,
-    dispatchCompareAdminAreaInstances,
+    // compareAdminAreaInstancesState,
+    // dispatchCompareAdminAreaInstances,
     chartParameterState,
     dispatchChartParameterState,
     chartEditParameterState,
@@ -455,6 +457,22 @@ const Amenities = ({
     const [currentAreaURI, setCurrentAreaURI] = useState('')
     const [currentCityURI, setCurrentCityURI] = useState('')
     const [currentAreaName, setCurrentAreaName] = useState('')
+
+    
+
+    const areaURIList = useMemo(() => {
+        const selectedCompareAdminInstancesURLs = getSelectedCompareAdminInstancesURLsAndNames(
+            adminAreaInstancesState
+        );
+        // console.log('selected admin instance urls: ', selectedCompareAdminInstancesURLs)
+        let obj = {}
+        selectedCompareAdminInstancesURLs.forEach((item) => {
+            obj[item.url] = item.name
+        })
+        // console.log('asdfs: ',obj)
+        return obj
+        
+    }, [adminAreaInstancesState])
 
     //area uri list for chart panels
 
@@ -686,7 +704,7 @@ const Amenities = ({
             setTabValue(Math.max(tabCount - 1, 0));
         }
     }, [amenityPolygons]);
-
+    // console.log('admin area instance stae: ',adminAreaInstancesState)
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
@@ -710,14 +728,21 @@ const Amenities = ({
                                 />
 
                             <CompareSelect
-                                cityURLs={cityURLs}
-                                setCityURLs={setCityURLs}
+                                cityURI={currentCityURI}
                                 adminAreaTypesState={adminAreaTypesState}
                                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                                 adminAreaInstancesState={adminAreaInstancesState}
-                                dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
+                                dispatchAdminAreaInstances={dispatchAdminAreaInstances}
+                                // compareAdminAreaInstancesState={compareAdminAreaInstancesState}
+                                // dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
                                 isGeneratingVisualization={visLoading} 
+                                areaURIList={areaURIList}
+                                chartParameterState={chartParameterState}
+                                dispatchChartParameterState={dispatchChartParameterState}
+                                chartEditParameterState={chartEditParameterState}
+                                dispatchChartEditParameterState={dispatchChartEditParameterState}
                                 amenityData={mockAmenityData2}
+                                amenityCategories={cityState.amenityCategories}
 
                             />
                            

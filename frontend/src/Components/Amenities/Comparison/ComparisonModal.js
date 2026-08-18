@@ -20,7 +20,8 @@ const ComparisonModal = ({
     chartEditParameterState,
     dispatchChartEditParameterState
 }) => {
-    const numInstances = Object.keys(amenityData).length
+    const numInstances = Object.keys(areaURIList).length
+    // console.log('comparison Modal areaURIList: ',areaURIList)
     const [chartSelected, setChartSelected] = useState('Radar')
     const [openCustomizationModal, setOpenCustomizationModal] = useState(false)
     const [openExpansionModal, setOpenExpansionModal] = useState(false)
@@ -81,14 +82,14 @@ const ComparisonModal = ({
                          amenityCategories={amenityCategories} 
                          chartParameterState={chartParameterState}
                          dispatchChartParameterState={dispatchChartParameterState}
-                         chartEditParameterState={dispatchChartEditParameterState}
+                         chartEditParameterState={chartEditParameterState}
                          dispatchChartEditParameterState={dispatchChartEditParameterState}
                          />
                     </Box>
 
-                    <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
+                    {/* <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
                         <TabularBreakdownComponent amenityData={amenityData} />
-                    </Box>
+                    </Box> */}
                     </>
                 ) : (
                     <Box sx={{width:'100%',p:1,boxSizing:'border-box', height: {xs: 'auto', md:'100%'}, display:'flex', alignItems:'center', justifyContent:'center'}}>

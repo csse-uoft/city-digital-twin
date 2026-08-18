@@ -11,26 +11,45 @@ import {
 import {
   getCurrentAdminTypeURL,
   getSelectedAdminInstancesNames,
+  getSelectedCompareAdminInstancesNames,
   getCurrentAdminTypeName,
 } from "../../helpers/reducerHelpers";
 import ComparisonModal from './Comparison/ComparisonModal'
 
 const CompareSelect = ({
-    cityURLs,
-    setCityURLs,
+    cityURI,
     adminAreaTypesState,
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
-    dispatchCompareAdminAreaInstances,
+    dispatchAdminAreaInstances,
+    areaURIList,
+    // compareAdminAreaInstancesState,
+    // dispatchCompareAdminAreaInstances,
     isGeneratingVisualization,
-    amenityData
+    amenityData,
+    chartParameterState,
+    dispatchChartParameterState,
+    chartEditParameterState,
+    dispatchChartEditParameterState,
+    amenityCategories
 }) => {
     const [openComparisonModal, setOpenComparisonModal] = useState(false)
     //console.log('selected compare instances: ',getSelectedAdminInstancesNames(adminAreaInstancesState))
     return (
         <JoyBox sx={{ textAlign: "center" }}>
             <JoyBox sx={{p: 2}}>
-                <ComparisonModal amenityData={amenityData} open={openComparisonModal} onClose={()=>setOpenComparisonModal(false)} />
+                <ComparisonModal 
+                    amenityData={amenityData} 
+                    open={openComparisonModal} 
+                    areaURIList={areaURIList} 
+                    amenityCategories={amenityCategories}
+                    cityURI={cityURI}
+                    chartParameterState={chartParameterState}
+                    dispatchChartParameterState={dispatchChartParameterState}
+                    chartEditParameterState={chartEditParameterState}
+                    dispatchChartEditParameterState={dispatchChartEditParameterState}
+                    onClose={()=>setOpenComparisonModal(false)}
+                     />
                 <Grid container>
                     <JoyBox
                     sx={{
@@ -52,12 +71,15 @@ const CompareSelect = ({
                             )}
                             desc="Select the individual demarcation areas you want to compare."
                             onChange={(event, newValue) => {
-                                //console.log('compare multiselect value: ', newValue)
-                                dispatchCompareAdminAreaInstances({
-                                    type:"SET_SELECTED",
+                                // console.log('compare multiselect value: ', newValue)
+                                dispatchAdminAreaInstances({
+                                    type:"SET_COMPARE",
                                     payload: newValue
                                 })
                             }}
+                            currentlySelected={getSelectedCompareAdminInstancesNames(
+                                adminAreaInstancesState
+                            )}
                             />
 
                             <JoyButton sx={{width:"150px"}} variant="outlined" size="sm" onClick={()=>setOpenComparisonModal(true)}>Compare</JoyButton>

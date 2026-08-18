@@ -8,7 +8,7 @@ export const adminCompareAreaInstanceReducer = (state, action) => {
         // payload is an object of the form { areaName: {URL, coordinates} }
         for (const key in action.payload) {
           const { URL, coordinates } = action.payload[key];
-          newState[key] = { URL, coordinates: coordinates, selected: false };
+          newState[key] = { URL, coordinates: coordinates, selected: false, compare: false };
         }
         return newState;
       case "SET_SELECTED":
@@ -21,9 +21,24 @@ export const adminCompareAreaInstanceReducer = (state, action) => {
         for (const areaName of action.payload) {
           if (newState.hasOwnProperty(areaName)) {
             newState[areaName] = { ...state[areaName], selected: true };
+          } else {
+            newState[areaName] = {selected: true }
           }
         }
         return newState;
+      case 'SET_COMPARE':
+        for (const key in state) {
+          newState[key] = {...newState[key], compare: false}
+        }
+
+        for (const areaName of action.payload) {
+          if (newState.hasOwnProperty(areaName)) {
+            newState[areaName] = { ...state[areaName], compare: true };
+          } else {
+            newState[areaName] = {compare: true}
+          }
+        }
+        return newState
       default:
         return {...state};
     }

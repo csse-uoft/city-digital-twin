@@ -101,60 +101,6 @@ const ChartPanel = ({
 
     const parameterStateKey = useMemo(() => { return createParameterStateKey(areaURIList)}, [areaURIList])
 
-    // useEffect(() => {
-    //     if(!walkabilityData) return
-    //     //check if a state already exist
-
-    //     //initialize the filter param models
-
-    //     const chartCategoryParamState = initializeChartCategoryParameterState(walkabilityData,amenityCategories)
-
-    //     const chartSubtypeParamState = initializeChartSubtypeParameterState(walkabilityData,amenityCategories)
-
-
-    //     //dispatch the filter models
-    //     dispatchChartCategoryParameterState({
-    //         type:'SET_PARAMETERS',
-    //         payload: {
-    //             id: areaURI,
-    //             state: chartCategoryParamState
-    //         }
-    //     })
-
-    //     dispatchChartSubtypeParameterState({
-    //         type:'SET_PARAMETERS',
-    //         payload: {
-    //             id: areaURI,
-    //             state: chartSubtypeParamState
-    //         }
-    //     })
-
-    //     dispatchChartParameterState({
-    //         type:'SET_PARAMETER',
-    //         payload: {
-    //             id: areaURI,
-    //             state: {
-    //                 category: chartCategoryParamState,
-    //                 subtype: chartSubtypeParamState
-    //             }
-    //         }
-    //     })
-
-    //     dispatchChartEditParameterState({
-    //         type:'SET_PARAMETER',
-    //         payload: {
-    //             id: areaURI,
-    //             state: {
-    //                 category: chartCategoryParamState,
-    //                 subtype: chartSubtypeParamState
-    //             }
-    //         }
-    //     })
-
-    // }, [walkabilityData])
-
-
-
     useEffect(() => {
         //fetch the data
         if(!parameterStateKey) return
@@ -251,9 +197,11 @@ const ChartPanel = ({
         }
         getData()
 
-    },[areaURIList])
+    },[parameterStateKey])
     
-
+    console.log('walkability data: ', walkabilityData)
+    console.log('chart param state: ', chartParameterState)
+    console.log('state key: ', parameterStateKey)
     return (
         <Box sx={{width: '100%', height: 'auto', px:2, boxSizing:'border-box'}}>
             <Stack spacing={2} sx={{alignItems:"center", justifyContent:"center"}}>
