@@ -105,7 +105,7 @@ function transformAreaAmenities (amenityData,subTypeMap) {
       const data = parseMapCoords(item?.pwkt?.value,type)
       const category = parseAmenityCategory(item?.class?.value)
       const subCategory = parseAmenityCategory(item?.class?.value)
-      const name = item?.name?.value ?? 'Public Transit'
+      const name = item?.name?.value ?? 'No Name'
 
       return {
         category: subTypeMap[type],
