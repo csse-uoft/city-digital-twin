@@ -673,28 +673,6 @@ const Amenities = ({
                     }
                 });
             }
-            //initialize the chart category parameter state
-            // if (overlayCoords != null && !chartCategoryParameterState[locationIDKey]) {
-            //     const initChartCategoryParamState = initializeChartCategoryParameterState(cityState.amenityCategories);
-            //     dispatchChartCategoryParameterState({
-            //         type: 'SET_PARAMETER',
-            //         payload: {
-            //             id: locationIDKey,
-            //             state: initChartCategoryParamState
-            //         }
-            //     });
-            // }
-            //initialize the chart subtype parameter state
-            // if (overlayCoords != null && !chartSubtypeParameterState[locationIDKey]) {
-            //     const initChartSubtypeParamState = initializeChartSubtypeParameterState(cityState.amenityCategories);
-            //     dispatchChartSubtypeParameterState({
-            //         type: 'SET_PARAMETER',
-            //         payload: {
-            //             id: locationIDKey,
-            //             state: initChartSubtypeParamState
-            //         }
-            //     });
-            // }
         });
     }, [amenityPolygons, locationIDPolygons, cityState, selectedAdminInstancesURLs]);
 

@@ -185,7 +185,7 @@ function formatWalkability (data,amenityCategories) {
     if (Object.hasOwn(transformedWalkabilityData, category)) {
       // add this category to the new structure
       const highLevelCategoryWalkability = transformedWalkabilityData[category]?.buildingsWithin400mCount / transformedWalkabilityData[category]?.totalBuildingCount
-      scores[category] = { walkability: highLevelCategoryWalkability, subtypes: [], color: amenityCategories[category]?.colour ?? 'ccc'}
+      scores[category] = { walkability: highLevelCategoryWalkability.toFixed(2), subtypes: [], color: amenityCategories[category]?.colour ?? 'ccc'}
     }
 
     //now check it's subtypes
@@ -194,7 +194,7 @@ function formatWalkability (data,amenityCategories) {
       //check whether the walkability data contains this subtype
       if (Object.hasOwn(transformedWalkabilityData, subtype)) {
         const subtypeWalkability = transformedWalkabilityData[subtype]?.buildingsWithin400mCount / transformedWalkabilityData[subtype]?.totalBuildingCount
-        scores[category].subtypes?.push({subtype: subtype, walkability: subtypeWalkability})
+        scores[category].subtypes?.push({subtype: subtype, walkability: subtypeWalkability.toFixed(2)})
       }
     })
   })

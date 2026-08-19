@@ -91,16 +91,31 @@ const transformSingleAreaData = (walkabilityData, mode, categoryOptions) => {
     }))
   }
 
-  return categoryOptions.flatMap((category) => {
+  let encounteredSubtypes = {}
+  const l = categoryOptions.flatMap((category) => {
     const subtypes = categoryMap[category]?.subtypes ?? []
     const categoryColor = getColor(categoryMap[category]?.color)
-    return subtypes.map((subtype) => ({
-      name: subtype.subtype,
-      walkability: subtype.walkability,
-      color: categoryColor,
-      category: category
-    }))
+    return subtypes.map((subtype) => {
+      if (!Object.hasOwn(encounteredSubtypes,subtype.subtype)) {
+        encounteredSubtypes[subtype.subtype] = true
+        return {
+        name: subtype.subtype,
+        walkability: subtype.walkability,
+        color: categoryColor,
+        category: category
+        }
+      } else {
+        return {
+        name: `${subtype.subtype} - ${category}`,
+        walkability: subtype.walkability,
+        color: categoryColor,
+        category: category
+        }
+      }
+    })
   })
+  console.log('bar chart subtype list: ',l)
+  return l
 }
 
 const isVisible = (mode,parameter,state) => {
@@ -157,7 +172,10 @@ const AmenityBarChart = ({
     if (!areaState) return []
     
     if (mode === 'subtype' && !multiArea) {
-      const visibleSubtypes = chartData.filter((entry) => areaState.subtype?.[entry.category][entry.name]?.show)
+      const visibleSubtypes = chartData.filter((entry) => {
+        const entrySubtype = entry.name.split(' - ').at(0)
+        return areaState.subtype?.[entry.category][entrySubtype]?.show
+      })
       //console.log('visible subtyeps: ',visibleSubtypes)
       return visibleSubtypes
     } else if (mode === 'subtype' && multiArea) {

@@ -23,7 +23,7 @@ const ChartCustomizationModal = ({
     dispatchChartParameterState
     }) => {
 
-    const [tempSelection, setTempSelection] = useState(chartSelected ?? 'Radar')
+    const [tempSelection, setTempSelection] = useState(chartSelected)
     const [view, setView] = useState('category');
     const resetToDefault = () => {
         dispatchChartEditParameterState({
@@ -317,7 +317,7 @@ const ChartCustomizationModal = ({
                 </Stack>
             </Box>
 
-            <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
+            <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center', overflowX:'auto'}}>
                 {tempSelection === 'Radar' ? <AmenityRadarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={parameterStateKey} mode={view} /> : <AmenityBarChart walkabilityData={walkabilityData} chartParameterState={chartEditParameterState} chartParameterKey={parameterStateKey} mode={view} />}
             </Box>
 

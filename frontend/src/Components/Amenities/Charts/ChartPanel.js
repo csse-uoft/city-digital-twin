@@ -199,9 +199,9 @@ const ChartPanel = ({
 
     },[parameterStateKey])
     
-    console.log('walkability data: ', walkabilityData)
-    console.log('chart param state: ', chartParameterState)
-    console.log('state key: ', parameterStateKey)
+    // console.log('walkability data: ', walkabilityData)
+    // console.log('chart param state: ', chartParameterState)
+    // console.log('state key: ', parameterStateKey)
     return (
         <Box sx={{width: '100%', height: 'auto', px:2, boxSizing:'border-box'}}>
             <Stack spacing={2} sx={{alignItems:"center", justifyContent:"center"}}>

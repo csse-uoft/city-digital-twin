@@ -98,16 +98,41 @@ const transformSingleAreaData = (walkabilityData, mode, categoryOptions) => {
     }))
   }
 
-  return categoryOptions.flatMap((category) => {
+  // return categoryOptions.flatMap((category) => {
+  //   const subtypes = categoryMap[category]?.subtypes ?? []
+  //   const categoryColor = getColor(categoryMap[category]?.color)
+  //   return subtypes.map((subtype) => ({
+  //     name: subtype.subtype,
+  //     walkability: subtype.walkability,
+  //     color: categoryColor,
+  //     category: category
+  //   }))
+  // })
+  let encounteredSubtypes = {}
+  const l = categoryOptions.flatMap((category) => {
     const subtypes = categoryMap[category]?.subtypes ?? []
     const categoryColor = getColor(categoryMap[category]?.color)
-    return subtypes.map((subtype) => ({
-      name: subtype.subtype,
-      walkability: subtype.walkability,
-      color: categoryColor,
-      category: category
-    }))
+    return subtypes.map((subtype) => {
+      if (!Object.hasOwn(encounteredSubtypes,subtype.subtype)) {
+        encounteredSubtypes[subtype.subtype] = true
+        return {
+        name: subtype.subtype,
+        walkability: subtype.walkability,
+        color: categoryColor,
+        category: category
+        }
+      } else {
+        return {
+        name: `${subtype.subtype} - ${category}`,
+        walkability: subtype.walkability,
+        color: categoryColor,
+        category: category
+        }
+      }
+    })
   })
+  console.log('bar chart subtype list: ',l)
+  return l
 
 }
 
@@ -145,7 +170,10 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
     //console.log('chart radar data: ',chartData)
     if (!areaState) return []
     if (mode === 'subtype' && !multiArea) {
-      const visibleSubtypes = chartData.filter((entry) => areaState.subtype?.[entry.category][entry.name]?.show)
+      const visibleSubtypes = chartData.filter((entry) => {
+        const entrySubtype = entry.name.split(' - ').at(0)
+        return areaState.subtype?.[entry.category][entrySubtype]?.show
+      })
       //console.log('visible subtyeps: ',visibleSubtypes)
       return visibleSubtypes
     } else if (mode === 'subtype' && multiArea) {
@@ -183,6 +211,7 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
                 stroke={AREA_COLOR_PALETTE[index % AREA_COLOR_PALETTE.length]}
                 fill={AREA_COLOR_PALETTE[index % AREA_COLOR_PALETTE.length]}
                 fillOpacity={0.6}
+                isAnimationActive={true}
               />
             ))
           ) : (
@@ -192,6 +221,7 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
               stroke={AREA_COLOR_PALETTE[0]}
               fill={AREA_COLOR_PALETTE[0]}
               fillOpacity={0.6}
+              isAnimationActive={true}
             />
           )}
         </RadarChart>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Box, Table, TableHead, TableBody, TableRow, TableCell, Paper, TableContainer, Typography } from "@mui/material";
 import { Input, Button, IconButton, Select, Autocomplete, Option } from '@mui/joy';
+import { fetchWalkabilityData } from '../../../helpers/fetchFunctions'
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 const categories = [
   { id: 'health', label: 'Health', icon: '...', color: '#EF4444' },
@@ -94,15 +95,30 @@ const rows = {
   }
 }
 
+function transformRows (walkabilityData,categoryOptions) {
+  console.log('rows walkabilityData: ',walkabilityData)
+  let rows = {}
+  const areaNames = Object.keys(walkabilityData)
+  // const categoryOptions = [...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))]
+  areaNames.forEach((area) => {
+    rows[area] = {}
+    categoryOptions.forEach((category) => {
+      rows[area][category] = walkabilityData[area]?.[category]?.walkability ?? null
+    })
+  })
+  console.log('tabular rows: ',rows)
+  return rows
+}
+
 function getCellStyle (delta) {
     if (delta === null) return {}                          // city avg — no color
-    if (delta > 0)  return { backgroundColor: '#f0fdf4' } // green tint
-    if (delta < 0)  return { backgroundColor: '#fef2f2' } // red tint
+    if (delta > 0)  return { backgroundColor: '#cdf6d9' } // green tint
+    if (delta < 0)  return { backgroundColor: '#ffd8d8' } // red tint
     return { backgroundColor: '#f9fafb' }                  // neutral
 }
 
 
-function IconTableCell({ icon: Icon, iconSrc, iconSize = 16, label, align = 'left', ...props }) {
+function IconTableCell({ icon: Icon, iconSrc, iconSize = 22, label, align = 'left', ...props }) {
   return (
     <TableCell align={align} {...props}>
       <Box sx={{
@@ -122,14 +138,14 @@ function IconTableCell({ icon: Icon, iconSrc, iconSize = 16, label, align = 'lef
         ) : Icon ? (
           <Icon fontSize="small" sx={{ color: 'var(--text-medium)' }} />
         ) : null}
-        <Typography sx={{fontWeight:'semibold', fontSize:12}}>{label}</Typography>
+        <Typography sx={{fontWeight:'semibold', fontSize:13}}>{label}</Typography>
       </Box>
     </TableCell>
   );
 }
 
 function RowCell({walkability,cityAvg, ...props}) {
-  const delta = walkability - cityAvg
+  const delta = ((walkability - cityAvg)*100).toFixed(0) ?? null
   const background = getCellStyle(delta)
   return(
     <TableCell sx={{width:'150px'}} {...props}>
@@ -142,28 +158,58 @@ function RowCell({walkability,cityAvg, ...props}) {
         justifyContent: 'center',
         backgroundColor: background?.backgroundColor ? background.backgroundColor : '#fff'
       }}>
-        <Typography sx={{fontSize:12}}>{walkability}%</Typography>
-        <Typography sx={{fontSize:10}}>{delta > 0 ? '+' : delta < 0 ? '-' : ''}{delta} vs city</Typography>
+        <Typography sx={{fontSize:12}}>{(walkability*100).toFixed(0) ?? null}%</Typography>
+        <Typography sx={{fontSize:10}}>{delta > 0 ? '+' : ''}{delta} vs city</Typography>
       </Box>
     </TableCell>
   )
 }
 
 const TabularBreakDownComponent = ({
-    amenityData
+    cityURI,
+    amenityCategories,
+    areaURIList
 }) => {
     const [cityAvg, setCityAvg] = useState({
-      health: 25,
-      retail: 60,
-      education: 60,
-      cultural: 60,
-      communal:60,
-      spiritual: 60,
-      recreational:60
+      Health: 0.25,
+      RetailAndServices: 0.60,
+      EducationAndChildcare: 0.60,
+      Cultural: 0.60,
+      Communal:0.60,
+      Spiritual: 0.60,
+      Recreational:0.60,
+      ParkService: 0.90,
+      PublicTransitService: 0.95
     })
 
+    const [walkabilityData, setWalkabilityData] = useState({})
+
+    useEffect(() => {
+      const getData = async () => {
+        let obj = {}
+        const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI)})))
+        dataResult.forEach((item) => {
+            obj[item.areaName] = item.data
+        })
+        setWalkabilityData(obj)
+      }
+
+      getData()
+    }, [areaURIList])
+
+    const categoryOptions = useMemo(() => {
+      if (!walkabilityData) return []
+      const areaNames = Object.keys(walkabilityData)
+      return [...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))]
+    }, [walkabilityData])
+
+    const rows = useMemo(() => {
+      if (!walkabilityData) return {}
+      return transformRows(walkabilityData,categoryOptions)
+    }, [walkabilityData,categoryOptions]) 
+
     return(
-        <Box sx={{width:'100%', maxWidth: {xs: '90dvw',md: 'calc(95dvw-450px)'},overflowX:'auto', height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start',px:1,marginTop:'20px'}}>
+        <Box sx={{width:'100%', maxWidth: {xs: '90dvw',md: 'calc(95dvw - 450px)'},overflowX:'auto', boxSixing:'border-box', height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start',px:1, margin:'auto'}}>
             <TableContainer component={Paper} 
               sx={{
               overflowX:"auto", 
@@ -174,30 +220,30 @@ const TabularBreakDownComponent = ({
                 <TableHead>
                 <TableRow>
                   <TableCell align="left" sx={{fontWeight:"semibold"}}>Area</TableCell>
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="HEALTH" />
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="RETAIL & SERVICES" />
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="EDUCATION & CHILDCARE" />
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="CULTURAL" />
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="COMMUNAL" />
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="SPIRITUAL" />
-                  <IconTableCell icon={HighlightOffIcon} iconSrc="" label="RECREATIONAL" />
+                  {categoryOptions?.map((category) => (
+                    <IconTableCell icon={HighlightOffIcon} iconSrc={amenityCategories[category]?.icon ?? ''} label={category}  />
+                  ))}
+                  
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Object.entries(rows).map(([key,value]) => {
+                {Object.entries(rows)?.map(([key,value]) => {
 
                   return(
                     <TableRow>
                       <TableCell>
                         {key}
                       </TableCell>
-                     <RowCell walkability={value.health} cityAvg={cityAvg.health} />
+                      {categoryOptions.map((category) => (
+                        <RowCell walkability={value[category]} cityAvg={cityAvg[category]} />
+                      ))}
+                     {/* <RowCell walkability={value.health} cityAvg={cityAvg.health} />
                      <RowCell walkability={value.retail} cityAvg={cityAvg.retail} />
                      <RowCell walkability={value.education} cityAvg={cityAvg.education} />
                      <RowCell walkability={value.cultural} cityAvg={cityAvg.cultural} />
                      <RowCell walkability={value.communal} cityAvg={cityAvg.communal} />
                      <RowCell walkability={value.spiritual} cityAvg={cityAvg.spiritual} />
-                     <RowCell walkability={value.recreational} cityAvg={cityAvg.recreational} />
+                     <RowCell walkability={value.recreational} cityAvg={cityAvg.recreational} /> */}
                     </TableRow>
                   )
                 })}
