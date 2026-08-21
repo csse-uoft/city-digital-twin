@@ -4,6 +4,8 @@ import { Box as JoyBox } from "@mui/joy";
 import { Button as JoyButton } from "@mui/joy"
 import { useState, useEffect } from 'react'
 import { NewDropdownMultiSelect } from "../SearchPageComponents/NewDropdownMultiSelect";
+import TableChartIcon from '@mui/icons-material/TableChart';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import {
   fetchAdministration,
   fetchLocations,
@@ -82,7 +84,7 @@ const CompareSelect = ({
                             )}
                             />
 
-                            <JoyButton sx={{width:"150px"}} variant="outlined" size="sm" onClick={()=>setOpenComparisonModal(true)}>Compare</JoyButton>
+                            <JoyButton startDecorator={<CompareArrowsIcon />} disabled={Object.keys(areaURIList).length < 2} sx={{width:"150px"}} variant="outlined" size="sm" onClick={()=>setOpenComparisonModal(true)}>Compare</JoyButton>
                         </Stack>
                     </JoyBox>
                 </Grid>

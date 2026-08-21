@@ -316,6 +316,8 @@ export const fetchLocations = async (
             )
           );
         }
+        // add the center coord
+        flipped.centerCoords = Instance["centerCoords"]
 
         updatedLocationURLs[Instance["adminAreaInstance"]] = flipped;
       });
@@ -329,10 +331,11 @@ export const fetchLocations = async (
         //console.log('key area name: ',areaName)
         areaNameToCoordsAndURL[areaName] = {
           URL: key,
-          coordinates: updatedLocationURLs[key].coordinates
+          coordinates: updatedLocationURLs[key].coordinates,
+          centerCoords: updatedLocationURLs[key].centerCoords
         };
       }
-      //console.log('fetchLocations result: ', areaNameToCoordsAndURL)
+      console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
@@ -409,6 +412,7 @@ export const fetchAmenityLocations = async (
           )
         );
       }
+      
 
       updatedLocationURLs.push({
         name: Instance.name,
@@ -471,6 +475,7 @@ export const fetchAmenityLocations = async (
           )
         );
       }
+      flipped.centerCoords = Instance["centerCoords"]
 
       NeighborhoodLocationURLs[Instance["adminAreaInstance"]] = flipped;
     });
@@ -482,6 +487,7 @@ export const fetchAmenityLocations = async (
       areaNameToCoordsAndURL[areaName] = {
         URL: key,
         coordinates: NeighborhoodLocationURLs[key].coordinates,
+        centerCoords: NeighborhoodLocationURLs[key].centerCoords
       };
     }
     //console.log('fetchAmenityLocations response')

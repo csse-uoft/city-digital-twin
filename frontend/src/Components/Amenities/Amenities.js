@@ -313,7 +313,7 @@ function initializeChartSubtypeParameterState (walkabilityData) {
 
 
 function CustomTabPanel(props) {
-  const { children, value, index, overlayCoords, locationIDKey, instanceName, instanceURL, amenities, cityState, filterPanelState, dispatchFilterPanelState, ...other } = props;
+  const { children, value, index, overlayCoords, centerCoords, locationIDKey, instanceName, instanceURL, amenities, cityState, filterPanelState, dispatchFilterPanelState, ...other } = props;
 
   return (
     <div
@@ -325,6 +325,7 @@ function CustomTabPanel(props) {
     >
       {value === index && <MapVisualComponent
                                         overlayCoords={overlayCoords}
+                                        centerCoords={centerCoords}
                                         locationIDKey={locationIDKey}
                                         instanceName={instanceName}
                                         instanceURL={instanceURL}
@@ -605,6 +606,7 @@ const Amenities = ({
               const amenityData = rawData[0];
             //   //console.log('amenity data: ', amenityData)
               const locationIDLocationData = rawData[1];
+              console.log('locationIDLocationData: ',locationIDLocationData)
               setlocationIDPolygons(locationIDLocationData);
               // Format the fetched Amenties using formatAmenties
               const formattedAmenities = formatAmenities(amenityData);
@@ -859,7 +861,7 @@ const Amenities = ({
                 {/* {showMap === true && ( */}
                     <Box sx={{display: {xs: showSidePanel ? "none" : "block", md:"block"}, width:"100%", height:"100%"}}>
                         <Button variant="outlined" size="sm" onClick={()=>setShowSidePanel(true)} sx={{display: {md:"none", xs:"block"}, position:"fixed", bottom:"10px", left:"10px", zIndex:10000}}>Show Panel</Button>
-                        {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length && cityState != null > 0 ? (
+                        {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length > 0 && cityState != null ? (
                             <Box>
                             <Box sx={{ borderBottom: 1, borderColor: 'var(--border-color)' }}>
                                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" variant="scrollable"
@@ -896,6 +898,7 @@ const Amenities = ({
                             // //console.log('AMENITIES: ', locationID)
                             // //console.log('test location: ', locationIDPolygons[fullKey])
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
+                            let centerCoords = locationIDPolygons[fullKey]?.centerCoords
                             if (overlayCoords != null) {
                                 //dispatch the filter state here
                                 // const initFilterState = initializeFilterState(cityState.amenityCategories)
@@ -912,6 +915,7 @@ const Amenities = ({
                                         value={tabValue} 
                                         index={index} 
                                         overlayCoords={overlayCoords} 
+                                        centerCoords={centerCoords}
                                         locationIDKey={locationIDKey} 
                                         amenities={locationID} 
                                         instanceName={instanceName} 

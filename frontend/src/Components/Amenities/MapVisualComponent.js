@@ -15,21 +15,7 @@ import "leaflet/dist/leaflet.css";
 
 //icons
 import busIcon from '../../assets/icons/udrc-bus-icon.png'
-
-
-// function initializeFilterState (amenities) {
-//     let state = {}
-//     Object.entries(amenities).map(([name,data]) => {
-//         state[name] ??= {showAll: true}
-//         data?.subtypes?.map((subtype) => {
-//             state[name][subtype] = {
-//                 show:true
-//             }
-//         })
-//     })
-//     //console.log('amenity filter state: ',state)
-//     return state
-// }   
+  
 
 function plotAmenity (amenity,index,cityState) {
     // //console.log('plotting amenity: ',amenity)
@@ -69,6 +55,7 @@ const MapVisualComponent = ({
     instanceName,
     instanceURL,
     overlayCoords,
+    centerCoords,
     locationIDKey,
     cityState,
     filterPanelState,
@@ -77,9 +64,6 @@ const MapVisualComponent = ({
 
     //console.log('MCV Filter State: ',filterPanelState)
     const [filterPanelOpen, setFilterPanelOpen] = useState(false)
-    // //console.log('map visual comp city state: ', cityState)
-    // //console.log('OVERLAY COORDS: ',overlayCoords)
-    // const [filterPanelState, setFilterPanelState] = useState(initializeFilterState(cityState.amenityCategories))
     const [amenities, setAmenities] = useState([])
     const [loadingAmenities, setLoadingAmenities] = useState(false)
 
@@ -101,14 +85,6 @@ const MapVisualComponent = ({
         getAreaAmenities()
     },[])
 
-    if (!filterPanelState) {
-        // still initializing — show a loading state instead of crashing
-        return (
-            <Box sx={{ display:'flex', alignItems:'center', justifyContent:'center', width:'100%', height:'100%' }}>
-                <CircularProgress />
-            </Box>
-        )
-    }
 
     const updateFilters = (category, filter) => {
         // //console.log('updating filters')
@@ -176,11 +152,11 @@ const MapVisualComponent = ({
         <Box sx={{width:"100%", marginTop: {xs: "40px", md:"0px"}}}>
             <Stack>
                 <Box sx={{width:"100%", px:1, display:"flex", py:1, boxSizing:"border-box", height: "50px",borderBottom:"1px solid var(--border-color)", backgroundColor:"white", alignItems:"center", justifyContent:"flex-start", gap:2}}>
-                    <Button size="sm" variant="outlined" color="neutral" startDecorator={<FilterAltOutlinedIcon />} onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
+                    <Button disabled={!filterPanelState} size="sm" variant="outlined" color="neutral" startDecorator={<FilterAltOutlinedIcon />} onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
                         Filter
                     </Button>
 
-                    <Button size="sm" variant="outlined" color="neutral" startDecorator={<CircleOutlinedIcon />}>
+                    <Button disabled={true} size="sm" variant="outlined" color="neutral" startDecorator={<CircleOutlinedIcon />}>
                         Catchment Area
                     </Button>
 
@@ -189,7 +165,7 @@ const MapVisualComponent = ({
 
                 <Box sx={{ width: "100%", height: {xs:"calc(100dvh - 99px - 40px)", md:"calc(100dvh - 99px)"}, position:'relative' }}>
                     <MapContainer
-                        center={[cityState?.mapCoords?.lat ?? 43.65323, cityState?.mapCoords?.lon ?? -79.38318]}
+                        center={[centerCoords?.lat ?? cityState?.mapCoords?.lat ?? 43.65323, centerCoords?.lon ?? cityState?.mapCoords?.lon ?? -79.38318]}
                         zoom={16}
                         minZoom={12}
                         maxZoom={18}
@@ -208,41 +184,6 @@ const MapVisualComponent = ({
                                 <Popup>{`Overlay for ${instanceName}`}</Popup>
                               </Polygon>
 
-                              
-                              {/* {amenities?.map(
-                              (amenity,index) => {
-                                //check the type
-                                const type = amenity.type
-                                if (type === 'point') {
-                                    const iconURL = cityState.amenityCategories[amenity.category]?.icon ?? busIcon
-                                    //console.log('iconURL: ',iconURL)
-
-                                    return (
-                                        <Marker
-                                            icon={customAmenityMarker(iconURL)}
-                                            key={index}
-                                            position={[
-                                                amenity.mapCoords.lat,
-                                                amenity.mapCoords.lon,
-                                            ]}
-                                        >
-                                        <Popup>{amenity.name}</Popup>
-                                        </Marker>
-                                    );
-                                } else if (type === 'polygon') {
-                                    return (
-                                        <Polygon positions={amenity.mapCoords}
-                                        pathOptions={{
-                                            fillOpacity: 0.3,
-                                            color: '#0c5203',
-                                            fillColor:'green'
-                                        }}>
-
-                                        </Polygon>
-                                    )
-                                }
-                                
-                            })} */}
 
                             {Object.keys(amenities)?.flatMap((category) => {
                                 const categoryFilter = filterPanelState[category];
@@ -268,10 +209,6 @@ const MapVisualComponent = ({
                                         );
                                 }
                             })}
-
-                    
-
-
                     </MapContainer>
 
                     <Box
