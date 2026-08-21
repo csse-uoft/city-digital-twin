@@ -1045,7 +1045,20 @@ router.post("/6", async (req, res) => {
       stream.on("data", (row) => {
         var singleRow = {};
         Object.entries(row).forEach(([key, value]) => {
+          console.log('area key: ',key)
+          // console.log('area value: ', value.value)
+          // const areaCenterCoords = parseMapCoords(value.value,'area instance')
+          // console.log('area center coords: ', areaCenterCoords)
+          //get center coord in here
           singleRow[key] = value.value;
+          if (key === 'areaLocation') {
+            try {
+              singleRow.centerCoords = parseMapCoords(value.value, 'area location')?.coords;
+            } catch (err) {
+              console.error(`Failed to compute centreCoords for row:`, singleRow.adminAreaInstance ?? '(unknown)', err.message);
+              singleRow.centerCoords = null; // don't crash — just omit it
+            }
+          }
         });
         result.push(singleRow);
         totalResults++;
@@ -1053,7 +1066,7 @@ router.post("/6", async (req, res) => {
 
       stream.on("end", () => {
         // console.log('area instance names: ',result)
-        console.log('total results: ', totalResults)
+        console.log('total results: ', result.slice(0,10))
         res.json({
           message: "success",
           adminAreaInstanceNames: result,
