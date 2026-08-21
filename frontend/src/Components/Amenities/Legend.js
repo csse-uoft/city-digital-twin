@@ -94,7 +94,7 @@ const Legend = ({
                 }}
               >
                 {/* Icon Circle */}
-                {category.icon ? <img style={{}} src={category.icon ?? ''} /> : <img style={{height:'38px',width:'38px'}} src={category.name === 'Park' ? parkIcon : busIcon} /> }
+                {category.icon ? <img style={{maxHeight:'38px', maxWidth:'38px'}} src={category.icon ?? ''} /> : <img style={{height:'38px',width:'38px'}} src={category.name === 'Park' ? parkIcon : busIcon} /> }
 
                 {/* Label */}
                 <Typography

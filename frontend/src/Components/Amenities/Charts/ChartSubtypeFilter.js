@@ -38,6 +38,7 @@ const checkboxStyles = {
 
 function formatSubtypes (subtypeState) {
     //console.log('subtype state: ', subtypeState)
+    console.log('aa: ',Object.values(subtypeState).reduce((acc, subtypes) => ({ ...acc, ...subtypes }), {}))
     return Object.values(subtypeState).reduce((acc, subtypes) => ({ ...acc, ...subtypes }), {})
 }
 
@@ -68,16 +69,45 @@ const ChartSubtypeFilter = ({
   };
 
   const handleDeselectAll = () => {
-    const nextState = {...normalizedState}
-    Object.keys(nextState).forEach((category) => {
-        Object.keys(normalizedState[category]).forEach((key) => {
-            nextState[category][key].show = false
-        })
-    })
+    const nextState = {};
+    Object.keys(normalizedState).forEach((category) => {
+      nextState[category] = {};
+      Object.keys(normalizedState[category]).forEach((key) => {
+        nextState[category][key] = {
+          ...normalizedState[category][key],
+          show: false,
+        };
+      });
+    });
     onChange(nextState);
   };
 
-  const selectedCount = Object.keys(formatSubtypes(subtypeFilterState)).length;
+  const handleSelectAll = () => {
+    const nextState = {};
+    Object.keys(normalizedState).forEach((category) => {
+      nextState[category] = {};
+      Object.keys(normalizedState[category]).forEach((key) => {
+        nextState[category][key] = {
+          ...normalizedState[category][key],
+          show: true,
+        };
+      });
+    });
+    onChange(nextState);
+  };
+
+  const handleSelect = (selectedCount) => {
+    if (selectedCount === 0) {
+      handleSelectAll()
+    } else {
+      handleDeselectAll()
+    }
+  }
+
+  const selectedCount = useMemo(() => {
+    const formattedSubtypes = formatSubtypes(subtypeFilterState)
+    return Object.keys(formattedSubtypes).filter(k => formattedSubtypes[k].show).length
+  }, [subtypeFilterState])
 
   return (
     <Box
@@ -114,7 +144,7 @@ const ChartSubtypeFilter = ({
         <Button
           variant="text"
           size="small"
-          onClick={handleDeselectAll}
+          onClick={() => handleSelect(selectedCount)}
           sx={{
             minWidth: 'auto',
             p: 0,

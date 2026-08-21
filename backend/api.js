@@ -1491,54 +1491,54 @@ router.post('/get-area-amenities', async (req,res) => {
       }
     `
 
-    const query2 = `
-      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-      PREFIX owl: <http://www.w3.org/2002/07/owl#>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-      PREFIX org: <http://www.w3.org/ns/org#>
-      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-      PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
+    // const query2 = `
+    //   PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+    //   PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    //   PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+    //   PREFIX org: <http://www.w3.org/ns/org#>
+    //   PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+    //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    //   PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    //   PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+    //   PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
 
-      SELECT ?pwkt ?class ?name
-      WHERE {{
-          # Get the area's WKT boundary geometry
-          <${area_id}> loc:hasLocation ?nloc.
-          ?nloc geo:asWKT ?areawkt.           # ← fetch the actual geometry
+    //   SELECT ?pwkt ?class ?name
+    //   WHERE {{
+    //       # Get the area's WKT boundary geometry
+    //       <${area_id}> loc:hasLocation ?nloc.
+    //       ?nloc geo:asWKT ?areawkt.           # ← fetch the actual geometry
 
-          {{
-              # Branch 1 — CompleteCommunityAmenity
-              ?x a cdt:CompleteCommunityAmenity.
-              ?x a ?class.
-              ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.
-              ?p cdt:providesService ?x;
-                org:hasSite [ loc:hasLocation ?ploc ].
-              ?ploc geo:asWKT ?pwkt.
-              OPTIONAL {{?p genprop:hasName ?name}}
+    //       {{
+    //           # Branch 1 — CompleteCommunityAmenity
+    //           ?x a cdt:CompleteCommunityAmenity.
+    //           ?x a ?class.
+    //           ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.
+    //           ?p cdt:providesService ?x;
+    //             org:hasSite [ loc:hasLocation ?ploc ].
+    //           ?ploc geo:asWKT ?pwkt.
+    //           OPTIONAL {{?p genprop:hasName ?name}}
 
-              # ← spatial containment filter
-              FILTER(geof:sfWithin(?pwkt, ?areawkt))
-          }}
-          UNION
-          {{
-              # Branch 2 — Service
-              <${area_id}> loc:hasLocation ?nloc2.
-              ?nloc2 geo:asWKT ?areawkt2.
+    //           # ← spatial containment filter
+    //           FILTER(geof:sfWithin(?pwkt, ?areawkt))
+    //       }}
+    //       UNION
+    //       {{
+    //           # Branch 2 — Service
+    //           <${area_id}> loc:hasLocation ?nloc2.
+    //           ?nloc2 geo:asWKT ?areawkt2.
 
-              ?x a cdt:Service.
-              ?x a ?class.
-              ?class rdfs:subClassOf cdt:Service.
-              ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
-              ?ploc geo:asWKT ?pwkt.
+    //           ?x a cdt:Service.
+    //           ?x a ?class.
+    //           ?class rdfs:subClassOf cdt:Service.
+    //           ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
+    //           ?ploc geo:asWKT ?pwkt.
 
-              # ← spatial containment filter
-              FILTER(geof:sfWithin(?pwkt, ?areawkt2))
-          }}
-      }}
-    `
+    //           # ← spatial containment filter
+    //           FILTER(geof:sfWithin(?pwkt, ?areawkt2))
+    //       }}
+    //   }}
+    // `
 
     // Execute the query
     const stream = await client2.query.select(sanitizeSparqlQuery(query));

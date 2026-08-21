@@ -75,14 +75,31 @@ const ChartCategoryFilter = ({
     });
   };
 
-  const handleDeselectAll = () => {
-    const nextState = {...normalizedState}
-    Object.keys(nextState).forEach((key) => {
-        nextState[key].show = false
-    })
 
+
+  const handleDeselectAll = () => {
+    const nextState = {}
+    Object.keys(normalizedState).forEach((key) => {
+      nextState[key] = { ...normalizedState[key], show: false }
+    })
     onChange(nextState);
   };
+
+  const handleSelectAll = () => {
+    const nextState = {}
+    Object.keys(normalizedState).forEach((key) => {
+      nextState[key] = { ...normalizedState[key], show: true }
+    })
+    onChange(nextState);
+  }
+
+  const handleSelect = (selectedCount) => {
+    if (selectedCount === 0) {
+      handleSelectAll()
+    } else {
+      handleDeselectAll()
+    }
+  }
 
   const selectedCount = categories.filter((key) => isVisible(key)).length;
 
@@ -119,7 +136,7 @@ const ChartCategoryFilter = ({
         <Button
           variant="text"
           size="small"
-          onClick={handleDeselectAll}
+          onClick={() => handleSelect(selectedCount)}
           sx={{
             minWidth: 'auto',
             p: 0,
