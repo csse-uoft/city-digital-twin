@@ -368,15 +368,9 @@ const Amenities = ({
     dispatchCityState,
     filterPanelState,
     dispatchFilterPanelState,
-    chartCategoryParameterState,
-    dispatchChartCategoryParameterState,
-    chartSubtypeParameterState,
-    dispatchChartSubtypeParameterState,
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
     dispatchAdminAreaInstances,
-    // compareAdminAreaInstancesState,
-    // dispatchCompareAdminAreaInstances,
     chartParameterState,
     dispatchChartParameterState,
     chartEditParameterState,
@@ -409,36 +403,6 @@ const Amenities = ({
     */
     const [locationIDPolygons, setlocationIDPolygons] = useState({});
 
-    /*
-    * The time ranges being considered for the indicators.
-    */
-    const [years, setYears] = useState([{ value1: 0, value2: 0, id: 0 }]);
-
-    /*
-    * Whether the visualization generation functions should activate.
-    * True if the program is ready for the visualization to generate, false otherwise.
-    */
-    const [beginGeneration, setBeginGeneration] = useState(false);
-
-    /*
-    * Indicator names mapped to their unique URIs.
-    */
-    const [indicatorURLs, setIndicatorURLs] = useState({});
-
-    /*
-    * The names of the indicators that are currently selected from each dropdown.
-    */
-    const [selectedIndicators, setSelectedIndicators] = useState({ 0: "" });
-
-    /*
-    * The data for each selected indicator.
-    */
-    const [indicatorData, setIndicatorData] = useState({});
-
-    /*
-    * The polygons used to draw the administrative area instances on the map.
-    */
-    const [mapPolygons, setMapPolygons] = useState({});
 
     /*
     * Indicates if the program is loading the indicator visualization.
@@ -451,7 +415,6 @@ const Amenities = ({
     const [data, setData] = useState(null)
 
     const [tabValue, setTabValue] = useState(0);
-    const [openComparisonModal, setOpenComparisonModal] = useState(false)
 
     //chart panel
     const [currentAreaURI, setCurrentAreaURI] = useState('')
@@ -500,9 +463,10 @@ const Amenities = ({
     }
 
 
-    const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
-    const selectedAdminInstancesURLs = getSelectedAdminInstancesURLsAndNames(
-        adminAreaInstancesState
+    // const currentAdminType = getCurrentAdminTypeURL(adminAreaTypesState);
+    const selectedAdminInstancesURLs = useMemo(
+    () => getSelectedAdminInstancesURLsAndNames(adminAreaInstancesState),
+    [adminAreaInstancesState]
     );
     // //console.log('admin area instance state: ', adminAreaInstancesState)
 
@@ -544,90 +508,117 @@ const Amenities = ({
         /*
          * Fetches the amenity scores for the radar graph.
          */
-        const fetchAmenityDataResults = async () => {
-          // update this if we want to query score for \
-          var adminType = "";
-          if (currentAdminType) {
-            adminType = currentAdminType.split("#")[1];
-          }
+        // const fetchAmenityDataResults = async () => {
+        //   // update this if we want to query score for \
+        //   var adminType = "";
+        //   if (currentAdminType) {
+        //     adminType = currentAdminType.split("#")[1];
+        //   }
     
-          let amenityDataResults = {}; // Store amenity data by area
-          try {
-            const adminNames = getSelectedAdminInstancesNames(
-              adminAreaInstancesState
-            );
-            // //console.log('ADMIN NAMES: ',adminNames)
-            const data = await fetchAmenityData(adminType);
-            // //console.log('DATA: ',data)
-            adminNames.forEach((name) => {
-              const amenitiesForArea = data.data.filter((obj) => obj.name === name);
+        //   let amenityDataResults = {}; // Store amenity data by area
+        //   try {
+        //     const adminNames = getSelectedAdminInstancesNames(
+        //       adminAreaInstancesState
+        //     );
+        //     // //console.log('ADMIN NAMES: ',adminNames)
+        //     const data = await fetchAmenityData(adminType);
+        //     // //console.log('DATA: ',data)
+        //     adminNames.forEach((name) => {
+        //       const amenitiesForArea = data.data.filter((obj) => obj.name === name);
     
-              if (amenitiesForArea.length > 0) {
-                amenitiesForArea.forEach(({ type, value }) => {
-                  const amenityType = type.split("#").pop();
+        //       if (amenitiesForArea.length > 0) {
+        //         amenitiesForArea.forEach(({ type, value }) => {
+        //           const amenityType = type.split("#").pop();
     
-                  if (!amenityDataResults[name]) {
-                    amenityDataResults[name] = {};
-                  }
-                  amenityDataResults[name][amenityType] =
-                    parseFloat(value).toFixed(2);
-                });
-              }
-            });
-            //console.log('amenityDataResults: ',amenityDataResults)
-            setAmenityData(amenityDataResults);
-          } catch (error) {
-            console.error("Error fetching amenity data:", error);
-          }
-        };
+        //           if (!amenityDataResults[name]) {
+        //             amenityDataResults[name] = {};
+        //           }
+        //           amenityDataResults[name][amenityType] =
+        //             parseFloat(value).toFixed(2);
+        //         });
+        //       }
+        //     });
+        //     //console.log('amenityDataResults: ',amenityDataResults)
+        //     setAmenityData(amenityDataResults);
+        //   } catch (error) {
+        //     console.error("Error fetching amenity data:", error);
+        //   }
+        // };
     
         /*
          * Fetches the admin instance outlines (polygons) as well as the amenity locations
          */
-        const locationIDfetchAndFormatAmenties = async () => {
-          // Initialize an empty object to store all the Amenties
-          setLoading(true);
-          let newAmenityPolygons = {};
+        // const locationIDfetchAndFormatAmenties = async () => {
+        //   // Initialize an empty object to store all the Amenties
+        //   setLoading(true);
+        //   let newAmenityPolygons = {};
     
-          for (const instance of selectedAdminInstancesURLs) {
-            //console.log('OOOOOO: ', instance)
-            // Extract the location_id part from the URL
-            const locationID = instance.url.split("#")[1];
-            const instanceName = instance.name
+        //   for (const instance of selectedAdminInstancesURLs) {
+        //     //console.log('OOOOOO: ', instance)
+        //     // Extract the location_id part from the URL
+        //     const locationID = instance.url.split("#")[1];
+        //     const instanceName = instance.name
     
-            try {
-              // Fetch the amenity locations for the current location_id
-              const rawData = await fetchAmenityLocations(
-                locationID,
-                adminAreaTypesState
-              );
+        //     try {
+        //       // Fetch the amenity locations for the current location_id
+        //       const rawData = await fetchAmenityLocations(
+        //         locationID,
+        //         adminAreaTypesState
+        //       );
     
-              const amenityData = rawData[0];
-            //   //console.log('amenity data: ', amenityData)
-              const locationIDLocationData = rawData[1];
-              console.log('locationIDLocationData: ',locationIDLocationData)
-              setlocationIDPolygons(locationIDLocationData);
-              // Format the fetched Amenties using formatAmenties
-              const formattedAmenities = formatAmenities(amenityData);
-            //   //console.log('formattedAmenities: ', formattedAmenities)
-              formattedAmenities.instanceName = instanceName
-              formattedAmenities.instanceURL = instance.url
+        //       const amenityData = rawData[0];
+        //     //   //console.log('amenity data: ', amenityData)
+        //       const locationIDLocationData = rawData[1];
+        //       console.log('locationIDLocationData: ',locationIDLocationData)
+        //       setlocationIDPolygons(locationIDLocationData);
+        //       // Format the fetched Amenties using formatAmenties
+        //       const formattedAmenities = formatAmenities(amenityData);
+        //     //   //console.log('formattedAmenities: ', formattedAmenities)
+        //       formattedAmenities.instanceName = instanceName
+        //       formattedAmenities.instanceURL = instance.url
     
-              // Add the formatted Amenties to the newAmenityPolygons object
-              newAmenityPolygons[locationID] = formattedAmenities;
+        //       // Add the formatted Amenties to the newAmenityPolygons object
+        //       newAmenityPolygons[locationID] = formattedAmenities;
 
-            } catch (error) {
-              console.error(
-                `Error fetching or formatting Amenties for ${locationID}:`,
-                error
-              );
-            }
-          }
+        //     } catch (error) {
+        //       console.error(
+        //         `Error fetching or formatting Amenties for ${locationID}:`,
+        //         error
+        //       );
+        //     }
+        //   }
     
-          // Once all Amenties are fetched and formatted, update the state
-          setLoading(false); // Data is ready, stop loading
-        //   //console.log('new amenity polygons: ', newAmenityPolygons)
-          setAmenityPolygons(newAmenityPolygons);
+        //   // Once all Amenties are fetched and formatted, update the state
+        //   setLoading(false); // Data is ready, stop loading
+        // //   //console.log('new amenity polygons: ', newAmenityPolygons)
+        //   setAmenityPolygons(newAmenityPolygons);
+        // };
+
+        const locationIDfetchAndFormatAmenties = async () => {
+            const instancesToFetch = selectedAdminInstancesURLs.filter(
+                (instance) => !amenityPolygons[instance.url.split('#')[1]]
+            );
+
+            await Promise.all(
+                instancesToFetch.map(async (instance) => {
+                const locationID = instance.url.split('#')[1];
+                try {
+                    const rawData = await fetchAmenityLocations(locationID, adminAreaTypesState);
+                    const [amenityData, locationIDLocationData] = rawData;
+
+                    setlocationIDPolygons((prev) => ({ ...prev, ...locationIDLocationData }));
+
+                    const formattedAmenities = formatAmenities(amenityData);
+                    formattedAmenities.instanceName = instance.name;
+                    formattedAmenities.instanceURL = instance.url;
+
+                    // update incrementally — this is the key change
+                    setAmenityPolygons((prev) => ({ ...prev, [locationID]: formattedAmenities }));
+                } catch (error) {
+                    console.error(`Error fetching or formatting amenities for ${locationID}:`, error);
+                }
+                })
+            );
         };
     
         // Call the function to fetch and format Amenties
@@ -641,6 +632,17 @@ const Amenities = ({
         adminAreaInstancesState,
         dispatchAdminAreaInstances,
       ]);
+
+    useEffect(() => {
+        const selectedIDs = new Set(selectedAdminInstancesURLs.map(i => i.url.split('#')[1]));
+        setAmenityPolygons((prev) => {
+            const next = {};
+            Object.keys(prev).forEach((id) => {
+            if (selectedIDs.has(id)) next[id] = prev[id];
+            });
+            return next;
+        });
+    }, [selectedAdminInstancesURLs]);
 
     useEffect(() => {
         if (Object.keys(adminAreaInstancesState).length === 0) return
@@ -659,8 +661,9 @@ const Amenities = ({
     }, [adminAreaInstancesState])
 
     useEffect(() => {
-        Object.keys(amenityPolygons).forEach((locationIDKey) => {
+        selectedAdminInstancesURLs.forEach((instance) => {
             const baseURI = "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
+            const locationIDKey = instance.url.split("#")[1]
             const fullKey = baseURI + locationIDKey;
             const overlayCoords = locationIDPolygons[fullKey]?.coordinates;
             //initialzie the filter panel state
@@ -675,18 +678,21 @@ const Amenities = ({
                 });
             }
         });
-    }, [amenityPolygons, locationIDPolygons, cityState, selectedAdminInstancesURLs]);
+    }, [locationIDPolygons, cityState, selectedAdminInstancesURLs]);
 
     useEffect(() => {
-        const tabCount = Object.keys(amenityPolygons).length;
+        const tabCount = Object.keys(selectedAdminInstancesURLs).length;
         if (tabValue >= tabCount) {
             setTabValue(Math.max(tabCount - 1, 0));
         }
-    }, [amenityPolygons]);
+    }, [selectedAdminInstancesURLs]);
     // console.log('admin area instance stae: ',adminAreaInstancesState)
-    console.log('amenity polygons keys: ', amenityPolygons)
+    // console.log('amenity polygons keys: ', amenityPolygons)
     console.log('current area name: ',currentAreaName)
     console.log('current area uri: ', currentAreaURI)
+    console.log('citystate: ',cityState)
+    console.log('selected admin instance urls: ', selectedAdminInstancesURLs)
+    console.log('cityURI: ', currentCityURI)
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
@@ -745,7 +751,7 @@ const Amenities = ({
                                 </Box>}
                             
                             { //Object.keys(amenityData).length > 0
-                                selectedAdminInstancesURLs.length && cityState != null > 0 ? (currentCityURI != '' && currentAreaURI != '' && currentAreaName != '') ? (
+                                selectedAdminInstancesURLs.length > 0 && cityState != null ? (currentCityURI != '' && currentAreaURI != '' && currentAreaName != '') ? (
                                 <ChartPanel
                                     cityURI={currentCityURI}
                                     areaURI={currentAreaURI} 
@@ -944,35 +950,35 @@ const Amenities = ({
                         })} */}
 
                         {selectedAdminInstancesURLs.map((instance, index) => {
-      const locationID = instance.url.split('#')[1];
-      const fullKey = "http://ontology.eil.utoronto.ca/Toronto/Toronto#" + locationID;
-      const isReady = Boolean(amenityPolygons[locationID]);
+                            const locationID = instance.url.split('#')[1];
+                            const fullKey = "http://ontology.eil.utoronto.ca/Toronto/Toronto#" + locationID;
+                            const isReady = Boolean(amenityPolygons[locationID]);
 
-      return (
-        <div role="tabpanel" hidden={tabValue !== index} key={locationID}>
-          {tabValue === index && (
-            isReady && locationIDPolygons[fullKey] != undefined ? (
-              <CustomTabPanel
-                value={tabValue}
-                index={index}
-                overlayCoords={locationIDPolygons[fullKey]?.coordinates}
-                centerCoords={locationIDPolygons[fullKey]?.centerCoords}
-                locationIDKey={locationID}
-                instanceName={instance.name}
-                instanceURL={instance.url}
-                cityState={cityState}
-                filterPanelState={filterPanelState}
-                dispatchFilterPanelState={dispatchFilterPanelState}
-              />
-            ) : (
-              <Box sx={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%'}}>
-                <CircularProgress />
-              </Box>
-            )
-          )}
-        </div>
-      );
-    })}
+                            return (
+                                <div role="tabpanel" hidden={tabValue !== index} key={locationID}>
+                                {tabValue === index && (
+                                    isReady && locationIDPolygons[fullKey] != undefined ? (
+                                    <CustomTabPanel
+                                        value={tabValue}
+                                        index={index}
+                                        overlayCoords={locationIDPolygons[fullKey]?.coordinates}
+                                        centerCoords={locationIDPolygons[fullKey]?.centerCoords}
+                                        locationIDKey={locationID}
+                                        instanceName={instance.name}
+                                        instanceURL={instance.url}
+                                        cityState={cityState}
+                                        filterPanelState={filterPanelState}
+                                        dispatchFilterPanelState={dispatchFilterPanelState}
+                                    />
+                                    ) : (
+                                    <Box sx={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%'}}>
+                                        <CircularProgress />
+                                    </Box>
+                                    )
+                                )}
+                                </div>
+                            );
+                        })}
                         </Box>
                     ) : (<Box sx={{display:"flex",alignItems:"center", justifyContent:'center', width:'100%',height:'100%'}}> <CircularProgress /> </Box>) : (
                         <DefaultMap 
