@@ -232,7 +232,8 @@ const ChartCustomizationModal = ({
                     <Box sx={{width:'100%',display:"flex",flexDirection:"column",alignItems:"flex-start", gap:1,py:1,px:1, boxSizing:'border-box'}}>
                         <Typography variant="h3" style={{fontSize:14, fontWeight:"bold"}}>Chart Type</Typography>
                         <Select 
-                            defaultValue={chartSelected} 
+                            defaultValue={chartSelected}
+                            value={tempSelection}
                             sx={{width:'100%'}} 
                             onChange={onChartSelectChange}
                             slotProps={{

@@ -219,7 +219,11 @@ const TabularBreakDownComponent = ({
 
     return(
         <Box sx={{width:'100%', maxWidth: {xs: '90dvw',md: 'calc(95dvw - 450px)'},overflowX:'auto', boxSixing:'border-box', height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'start',px:1, margin:'auto'}}>
-            {loading ? <CircularProgress /> :
+            {loading ? (<Box sx={{height:'100%',width:'100%',display:'flex',alginItems:'center', justifyContent:'center'}}>
+                <CircularProgress />
+              </Box>
+              
+            ) :
             <TableContainer component={Paper} 
               sx={{
               overflowX:"auto", 

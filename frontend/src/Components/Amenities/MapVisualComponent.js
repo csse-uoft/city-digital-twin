@@ -51,7 +51,6 @@ function plotAmenity (amenity,index,cityState) {
 }
 
 const MapVisualComponent = ({
-    locationIDPolygons,
     instanceName,
     instanceURL,
     overlayCoords,
@@ -185,7 +184,7 @@ const MapVisualComponent = ({
                               </Polygon>
 
 
-                            {Object.keys(amenities)?.flatMap((category) => {
+                            {filterPanelState && Object.keys(amenities)?.flatMap((category) => {
                                 const categoryFilter = filterPanelState[category];
                                 if (!categoryFilter) return [];
 

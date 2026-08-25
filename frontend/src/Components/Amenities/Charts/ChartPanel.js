@@ -52,7 +52,7 @@ function initializeChartSubtypeParameterState (walkabilityData,amenityCategories
         //iterate over the areas 
         let totalSubtypes = []
         areaNames.forEach((area) => {
-        const subtypes = walkabilityData[area][name].subtypes.map(k => k.subtype)
+        const subtypes = walkabilityData[area][name]?.subtypes.map(k => k.subtype) ?? []
         // //console.log(`subtypes of category ${name} in area ${area}: `,subtypes)
         totalSubtypes = [
             ...new Set([...totalSubtypes, ...subtypes])
@@ -116,7 +116,7 @@ const ChartPanel = ({
                         obj[item.areaName] = item.data
                     })
                     setWalkabilityData(obj)
-
+                    console.log('multi area walkability data: ',obj)
                     //initialization of the filter state
 
                     //create the key

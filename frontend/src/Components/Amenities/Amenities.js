@@ -313,7 +313,7 @@ function initializeChartSubtypeParameterState (walkabilityData) {
 
 
 function CustomTabPanel(props) {
-  const { children, value, index, overlayCoords, centerCoords, locationIDKey, instanceName, instanceURL, amenities, cityState, filterPanelState, dispatchFilterPanelState, ...other } = props;
+  const { children, value, index, overlayCoords, centerCoords, locationIDKey, instanceName, instanceURL, cityState, filterPanelState, dispatchFilterPanelState, ...other } = props;
 
   return (
     <div
@@ -330,7 +330,6 @@ function CustomTabPanel(props) {
                                         instanceName={instanceName}
                                         instanceURL={instanceURL}
                                         cityState={cityState}
-                                        amenities={amenities}
                                         filterPanelState={filterPanelState[locationIDKey]}
                                         dispatchFilterPanelState={dispatchFilterPanelState}
                                           />}
@@ -632,7 +631,7 @@ const Amenities = ({
         };
     
         // Call the function to fetch and format Amenties
-        fetchAmenityDataResults();
+        // fetchAmenityDataResults(); don't need this??
         locationIDfetchAndFormatAmenties();
       }, [
         cityURLs,
@@ -685,6 +684,9 @@ const Amenities = ({
         }
     }, [amenityPolygons]);
     // console.log('admin area instance stae: ',adminAreaInstancesState)
+    console.log('amenity polygons keys: ', amenityPolygons)
+    console.log('current area name: ',currentAreaName)
+    console.log('current area uri: ', currentAreaURI)
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box
@@ -864,7 +866,7 @@ const Amenities = ({
                         {selectedAdminInstancesURLs.length > 0 ? Object.keys(amenityPolygons).length > 0 && cityState != null ? (
                             <Box>
                             <Box sx={{ borderBottom: 1, borderColor: 'var(--border-color)' }}>
-                                <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" variant="scrollable"
+                                {/* <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" variant="scrollable"
                                 sx={{'& .MuiTabs-indicator': {      // the active underline bar
       backgroundColor: 'var(--uoft-blue)',
       height: '3px',
@@ -885,31 +887,44 @@ const Amenities = ({
                                                         }}} />
                                         )
                                     })}
+                                </Tabs> */}
+                                <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" variant="scrollable" sx={{'& .MuiTabs-indicator': {      // the active underline bar
+                                    backgroundColor: 'var(--uoft-blue)',
+                                    height: '3px',
+                                    }}}>
+                                {selectedAdminInstancesURLs.map((instance, index) => {
+                                    const locationID = instance.url.split('#')[1];
+                                    return (
+                                    <Tab
+                                        key={locationID}
+                                        label={instance.name}
+                                        value={index}
+                                        onClick={() => {
+                                        setCurrentAreaURI(instance.url);
+                                        setCurrentAreaName(instance.name);
+                                        }}
+                                        sx={{textTransform: 'none', '&.Mui-selected': {          // active tab styles
+                                                        fontWeight: 'bold',
+                                                        color: 'var(--uoft-blue)'
+                                                        }}}
+                                    />
+                                    );
+                                })}
                                 </Tabs>
                             </Box>
-                        {Object.keys(amenityPolygons).map((locationIDKey,index) => {
+
+
+                        {/* {Object.keys(amenityPolygons).map((locationIDKey,index) => {
                             const baseURI =
                             "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                             const fullKey = baseURI + locationIDKey;
                             const locationID = amenityPolygons[locationIDKey];
                             const instanceName = amenityPolygons[locationIDKey].instanceName
                             const instanceURL = amenityPolygons[locationIDKey].instanceURL
-                            // //console.log('AREA INSTANCE: ', amenityPolygons[locationIDKey])
-                            // //console.log('AMENITIES: ', locationID)
-                            // //console.log('test location: ', locationIDPolygons[fullKey])
+                            
                             let overlayCoords = locationIDPolygons[fullKey]?.coordinates;
                             let centerCoords = locationIDPolygons[fullKey]?.centerCoords
                             if (overlayCoords != null) {
-                                //dispatch the filter state here
-                                // const initFilterState = initializeFilterState(cityState.amenityCategories)
-                                // dispatchFilterPanelState({
-                                //     type:'SET_FILTER',
-                                //     payload: {
-                                //         id: locationIDKey,
-                                //         state: initFilterState
-                                //     }
-                                // })
-                                //create the panel
                                 return(
                                      <CustomTabPanel 
                                         value={tabValue} 
@@ -926,7 +941,38 @@ const Amenities = ({
                                         />
                                 )
                             }
-                        })}
+                        })} */}
+
+                        {selectedAdminInstancesURLs.map((instance, index) => {
+      const locationID = instance.url.split('#')[1];
+      const fullKey = "http://ontology.eil.utoronto.ca/Toronto/Toronto#" + locationID;
+      const isReady = Boolean(amenityPolygons[locationID]);
+
+      return (
+        <div role="tabpanel" hidden={tabValue !== index} key={locationID}>
+          {tabValue === index && (
+            isReady && locationIDPolygons[fullKey] != undefined ? (
+              <CustomTabPanel
+                value={tabValue}
+                index={index}
+                overlayCoords={locationIDPolygons[fullKey]?.coordinates}
+                centerCoords={locationIDPolygons[fullKey]?.centerCoords}
+                locationIDKey={locationID}
+                instanceName={instance.name}
+                instanceURL={instance.url}
+                cityState={cityState}
+                filterPanelState={filterPanelState}
+                dispatchFilterPanelState={dispatchFilterPanelState}
+              />
+            ) : (
+              <Box sx={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%'}}>
+                <CircularProgress />
+              </Box>
+            )
+          )}
+        </div>
+      );
+    })}
                         </Box>
                     ) : (<Box sx={{display:"flex",alignItems:"center", justifyContent:'center', width:'100%',height:'100%'}}> <CircularProgress /> </Box>) : (
                         <DefaultMap 
@@ -936,8 +982,7 @@ const Amenities = ({
                         updateCurrentAreaURI={setCurrentAreaURI}
                         cityState={cityState}
                         />
-                    )
-                        }
+                    )}
                        
                     </Box>
                     
