@@ -1349,78 +1349,78 @@ router.post("/amenity-score", async (req, res) => {
 });
 
 // API 10
-router.post("/neighborhood-amenities", async (req,res) => {
-  const neighborhoodURI = req.body.neighborhoodURI
-  const amenityURI = req.body.amenityURI
-  console.log('API 10')
-  console.log('neighborhood URI: ', neighborhoodURI)
-  console.log('amneityURI: ',amenityURI)
+// router.post("/neighborhood-amenities", async (req,res) => {
+//   const neighborhoodURI = req.body.neighborhoodURI
+//   const amenityURI = req.body.amenityURI
+//   console.log('API 10')
+//   console.log('neighborhood URI: ', neighborhoodURI)
+//   console.log('amneityURI: ',amenityURI)
 
-  try {
-    const query = `
-      PREFIX owl: <http://www.w3.org/2002/07/owl#>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      PREFIX i72: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
-      PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
-      PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-      PREFIX cdt_old: <http://ontology.eil.utoronto.ca/CDT#>
-      PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
-      PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-      PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
-      PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-      PREFIX cacensus: <http://ontology.eil.utoronto.ca/tove/cacensus#>
-      PREFIX cdt_temp: <http://ontology.eil.utoronto.ca/CDT_temp_extension/>
+//   try {
+//     const query = `
+//       PREFIX owl: <http://www.w3.org/2002/07/owl#>
+//       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+//       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+//       PREFIX i72: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+//       PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+//       PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+//       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//       PREFIX cdt_old: <http://ontology.eil.utoronto.ca/CDT#>
+//       PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+//       PREFIX toronto: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+//       PREFIX iso50871: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
+//       PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+//       PREFIX cacensus: <http://ontology.eil.utoronto.ca/tove/cacensus#>
+//       PREFIX cdt_temp: <http://ontology.eil.utoronto.ca/CDT_temp_extension/>
 
-      SELECT ?score 
+//       SELECT ?score 
 
-      WHERE {
-          ?i a cdt_old:PercentWalkingDistance;
-          cacensus:hasLocation <${neighborhoodURI}>;	#?x is the neighbourhood identifier
-          i72:numerator [i72:cardinality_of ?pop].
+//       WHERE {
+//           ?i a cdt_old:PercentWalkingDistance;
+//           cacensus:hasLocation <${neighborhoodURI}>;	#?x is the neighbourhood identifier
+//           i72:numerator [i72:cardinality_of ?pop].
 
-          ?i i72:hasValue [i72:hasNumericalValue ?score].
+//           ?i i72:hasValue [i72:hasNumericalValue ?score].
 
-          ?pop rdf:type ?popclass.
-          ?popclass rdfs:subClassOf [
-                  rdf:type owl:Restriction;
-              owl:onProperty i72:defined_by;
-              owl:allValuesFrom [ rdf:type owl:Restriction;
-                  owl:onProperty cdt_temp:walkingDistanceFrom;
-                  owl:someValuesFrom <${amenityURI}>	#cdt:ParkService is the amenity type identifier
-                  #TODO extend CDT_temp for other available amenities in this repo
-              ]
-          ]
-      }
-    `
+//           ?pop rdf:type ?popclass.
+//           ?popclass rdfs:subClassOf [
+//                   rdf:type owl:Restriction;
+//               owl:onProperty i72:defined_by;
+//               owl:allValuesFrom [ rdf:type owl:Restriction;
+//                   owl:onProperty cdt_temp:walkingDistanceFrom;
+//                   owl:someValuesFrom <${amenityURI}>	#cdt:ParkService is the amenity type identifier
+//                   #TODO extend CDT_temp for other available amenities in this repo
+//               ]
+//           ]
+//       }
+//     `
 
-    // Execute the query
-    const stream = await client2.query.select(query);
+//     // Execute the query
+//     const stream = await client2.query.select(query);
 
-    // Collect results from the stream
-    let rawData = [];
-    stream.on("data", (row) => {
-      rawData.push(row);
-    });
+//     // Collect results from the stream
+//     let rawData = [];
+//     stream.on("data", (row) => {
+//       rawData.push(row);
+//     });
 
-    stream.on("end", () => {
-      console.log("neighborhood amenities result: ", rawData)
+//     stream.on("end", () => {
+//       console.log("neighborhood amenities result: ", rawData)
 
-      // Send the formatted data as JSON
-      res.json({ success: true, data: rawData });
-    });
+//       // Send the formatted data as JSON
+//       res.json({ success: true, data: rawData });
+//     });
 
-    // Handle errors in the query or stream
-    stream.on("error", (err) => {
-      console.error("Query error: ", err);
-      res.status(500).send("Error executing query");
-    });
-  } catch (err) {
-    console.error("Server error: ", err);
-    res.status(500).send("Internal server error");
-  }
-})
+//     // Handle errors in the query or stream
+//     stream.on("error", (err) => {
+//       console.error("Query error: ", err);
+//       res.status(500).send("Error executing query");
+//     });
+//   } catch (err) {
+//     console.error("Server error: ", err);
+//     res.status(500).send("Internal server error");
+//   }
+// })
 
 // API 11 (new endpoint)
 router.post("/map-coords", async (req,res) => {
@@ -1772,6 +1772,7 @@ router.post('/walkability-scores', async (req,res) => {
 
 })
 
+// API 15
 router.post('/city-average-walkability', async (req,res) => {
     const areaURIList = req.body.areaURIList
     const amenityCategories = req.body.amenityCategories
