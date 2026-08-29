@@ -171,7 +171,80 @@ function transformWalkabilityData (data) {
   return obj
 }
 
+function formatWalkabilityQuery (areaId) {
+  const query = `
+    PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
+    PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+    PREFIX hp: <http://ontology.eil.utoronto.ca/HPCDM/>
+    PREFIX bdg: <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/Building/>
 
+    SELECT 
+      ?class 
+      ?totalBuildingCount
+      (COUNT(DISTINCT ?b) AS ?buildingsWithin400mCount)
+    WHERE {
+      # 1. Compute total buildings ONCE in a fast, isolated subquery
+      {
+        SELECT (COUNT(DISTINCT ?bTotal) AS ?totalBuildingCount) WHERE {
+          tor:${areaId} a tor:Neighborhood .
+          ?bTotal a bdg:Building ;
+                  bdg:use ?use ;
+                  cdt:locatedInAdministrativeArea tor:${areaId} .
+        }
+      }
+
+          {
+        tor:${areaId} a tor:Neighborhood.
+        ?b a bdg:Building;
+          bdg:use ?use;    #add clause to capture bdg:use residential only
+          cdt:locatedInAdministrativeArea tor:${areaId};
+          loc:hasLocation ?bloc.
+        ?bloc geo:asWKT ?bwkt.
+        # Fetch candidate amenities
+        ?x a cdt:CompleteCommunityAmenity.
+        ?x a ?class.
+        ?class rdfs:subClassOf cdt:CompleteCommunityAmenity.    
+        # within 400m of some amenity of type x
+        FILTER EXISTS {
+
+            ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
+            ?ploc geo:asWKT ?pwkt.
+
+            FILTER(geof:distance(?bwkt, ?pwkt, uom:metre) <= 400)
+        }
+    }
+        UNION
+        {
+            #select DISTINCT ?b where{
+        
+        tor:${areaId} a tor:Neighborhood.
+        ?b a bdg:Building;
+          bdg:use ?use;    #add clause to capture bdg:use residential only
+          cdt:locatedInAdministrativeArea tor:${areaId};
+          loc:hasLocation ?bloc.
+        ?bloc geo:asWKT ?bwkt.
+        # Fetch candidate amenities
+        ?x a cdt:Service.
+        ?x a ?class.
+        ?class rdfs:subClassOf cdt:Service.    
+        # within 400m of some amenity of type x
+        FILTER EXISTS {
+
+            ?x hp:providedFromSite [ loc:hasLocation ?ploc ].
+            ?ploc geo:asWKT ?pwkt.
+
+            FILTER(geof:distance(?bwkt, ?pwkt, uom:metre) <= 400)
+        }
+        }
+    }
+    GROUP BY ?class ?totalBuildingCount`
+    return query
+}
 
 function formatWalkability (data,amenityCategories) {
 
@@ -397,7 +470,7 @@ router.post("/admin-instances", async (req, res) => {
   } else {
     const [prefix, citySuffix] = splitURI(req.body.cityName);
     const [, adminTypeSuffix] = splitURI(req.body.adminType);
-
+    console.log('REQUEST TO ADMIN-INSTANCES')
     const query = `
       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
       PREFIX CITY: <${prefix}>
@@ -484,6 +557,7 @@ router.post("/admin-instances", async (req, res) => {
       });
 
       stream.on("end", () => {
+        console.log('closing admin-instances')
         res.json({
           message: "success",
           adminAreaInstanceNames: result,
@@ -1695,6 +1769,66 @@ router.post('/walkability-scores', async (req,res) => {
     console.error("Server error on walkability score: ", err);
     res.status(500).send("Internal server error");
   }
+
+})
+
+router.post('/city-average-walkability', async (req,res) => {
+    const areaURIList = req.body.areaURIList
+    const amenityCategories = req.body.amenityCategories
+    console.log('/CITY-AVERAGE-WALKABILITY')
+
+    //iterate over the area Ids, and format a query for each id. Then execute the query stream in a try catch on each iteration
+    let obj = {}
+    Object.keys(amenityCategories).forEach((category) => {
+      obj[category] = []
+    })
+
+    for (const areaId of areaURIList) {
+      try {
+        console.log('area id: ',areaId)
+        const query = formatWalkabilityQuery(areaId)
+        const stream = await client2.query.select(sanitizeSparqlQuery(query));
+
+        // Collect results from the stream
+        let rawData = [];
+        stream.on("data", (row) => {
+          rawData.push(row);
+        });
+
+        stream.on("end", async () => {
+          console.log("walkability-scores API  result: ", rawData)
+          //first pre filter the raw data, by categories matching the subtype categories of the city
+          const formattedWalkability = formatWalkability(rawData,amenityCategories)
+          Object.keys(amenityCategories).forEach((category) => {
+            const score = formattedWalkability[category]?.walkability
+            obj[category].push(score ? Number(parseFloat(score).toFixed(2)) : null)
+          })
+                    
+          //iterate over categories to add totals to obj
+        });
+
+        // Handle errors in the query or stream
+        stream.on("error", (err) => {
+          console.error("Query error: ", err);
+          // res.status(500).send("Error executing query");
+          //if error, skip that areas walkability data
+        });
+      } catch (err) {
+        console.error(`city-average walkability server error for ${areaId}: `, err)
+      }
+    }
+    //format the obj and return
+    let avgWalkability = {}
+    console.log('aggregate walkabilities: ',obj)
+    Object.keys(obj).forEach((category) => {
+      const scores = obj[category]
+      const len = scores.length
+      const total = scores.reduce((accumulator, current) => accumulator + current, 0);
+      const avg = total/len ?? null
+      avgWalkability[category] = Number(avg.toFixed(2))
+    })
+
+    res.json({ data: avgWalkability, success: true})
 
 })
 

@@ -86,7 +86,7 @@ const ChartPanel = ({
     dispatchChartEditParameterState
         }) => {
 
-    const [chartSelected, setChartSelected] = useState('Bar')
+    
     const [chartView, setChartView] = useState('category')
     const [openCustomizationModal, setOpenCustomizationModal] = useState(false)
     const [openExpansionModal, setOpenExpansionModal] = useState(false)
@@ -100,6 +100,10 @@ const ChartPanel = ({
     const multiArea = useMemo(() => { return isMultiArea(areaURIList)}, [areaURIList])
 
     const parameterStateKey = useMemo(() => { return createParameterStateKey(areaURIList)}, [areaURIList])
+
+    const chartSelected = useMemo(() => {
+        return chartParameterState[parameterStateKey]?.chartSelected ?? 'Bar'
+    }, [chartParameterState,parameterStateKey])
 
     useEffect(() => {
         //fetch the data
@@ -129,7 +133,8 @@ const ChartPanel = ({
                         const initialParamState = {
                             category: chartCategoryParamState,
                             subtype: chartSubtypeParamState,
-                            chartView: chartView
+                            chartView: chartView,
+                            chartSelected: chartSelected
                         }
 
                         dispatchChartParameterState({
@@ -166,7 +171,8 @@ const ChartPanel = ({
                         const initialParamState = {
                             category: chartCategoryParamState,
                             subtype: chartSubtypeParamState,
-                            chartView: chartView
+                            chartView: chartView,
+                            chartSelected: chartSelected
                         }
 
                         dispatchChartParameterState({
@@ -229,7 +235,7 @@ const ChartPanel = ({
 
                 <ChartCustomizationModal 
                     parameterStateKey={parameterStateKey}
-                    updateSelectedChart={(chart) => setChartSelected(chart)} 
+                    // updateSelectedChart={(chart) => setChartSelected(chart)} 
                     open={openCustomizationModal} onClose={()=>setOpenCustomizationModal(false)} 
                     chartSelected={chartSelected} 
                     walkabilityData={walkabilityData} 

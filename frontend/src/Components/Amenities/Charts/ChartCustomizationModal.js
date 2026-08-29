@@ -14,7 +14,7 @@ const ChartCustomizationModal = ({
     parameterStateKey,
     onClose, 
     open,
-    updateSelectedChart,
+    // updateSelectedChart,
     chartSelected,
     walkabilityData,
     chartEditParameterState,
@@ -23,8 +23,10 @@ const ChartCustomizationModal = ({
     dispatchChartParameterState
     }) => {
 
-    const [tempSelection, setTempSelection] = useState(chartSelected)
-    const [view, setView] = useState('category');
+    const currentChartState = chartEditParameterState?.[parameterStateKey] ?? chartParameterState?.[parameterStateKey] ?? {};
+    const tempSelection = currentChartState.chartSelected ?? 'Bar';
+    const view = currentChartState.chartView ?? 'category';
+
     const resetToDefault = () => {
         dispatchChartEditParameterState({
             type:'SET_PARAMETERS',
@@ -33,7 +35,7 @@ const ChartCustomizationModal = ({
                 state: structuredClone(chartParameterState[parameterStateKey])
             }
         })
-        setTempSelection(chartSelected)
+        // setTempSelection(chartSelected)
     }
 
     useEffect(() => {
@@ -79,20 +81,20 @@ const ChartCustomizationModal = ({
     const onChartSelectChange = (event, newValue) => {
         //console.log('changing chart selection: ',newValue)
         //set filters to previous saved
-        // dispatchChartEditParameterState({
-        //     type:'SET_PARAMETERS',
-        //     payload: {
-        //         id:parameterStateKey,
-        //         state: chartParameterState[parameterStateKey]
-        //     }
-        // })
-
-        // set chart type back to previous
-        setTempSelection(newValue)
+        dispatchChartEditParameterState({
+            type:'SET_PARAMETERS',
+            payload: {
+                id:parameterStateKey,
+                state: {
+                    ...(chartEditParameterState[parameterStateKey] ?? chartParameterState[parameterStateKey] ?? {}),
+                    chartSelected: newValue
+                }
+            }
+        })
     }
 
     const onChartCategoryFilterChange = (newValue) => { //update the chart edit parameter state
-        //console.log('SEEE MEEEE')
+        //console.log('SEEE MEEEE') 
         console.dir(newValue, {depth:null})
 
         // const nextState = {...chartEditParameterState}
@@ -156,7 +158,7 @@ const ChartCustomizationModal = ({
         })
 
         //update selection
-        updateSelectedChart(tempSelection)
+        // updateSelectedChart(tempSelection)
     }
 
     const closeChartCustomizationModal = () => {
@@ -232,7 +234,7 @@ const ChartCustomizationModal = ({
                     <Box sx={{width:'100%',display:"flex",flexDirection:"column",alignItems:"flex-start", gap:1,py:1,px:1, boxSizing:'border-box'}}>
                         <Typography variant="h3" style={{fontSize:14, fontWeight:"bold"}}>Chart Type</Typography>
                         <Select 
-                            defaultValue={chartSelected}
+                            // defaultValue={chartSelected}
                             value={tempSelection}
                             sx={{width:'100%'}} 
                             onChange={onChartSelectChange}
@@ -253,7 +255,6 @@ const ChartCustomizationModal = ({
                             exclusive                    // only one can be selected at a time
                             onChange={(e, newValue) => { 
                                 if (newValue) {
-                                    setView(newValue)
                                     updateChartView(newValue)
                                 } 
                             }}

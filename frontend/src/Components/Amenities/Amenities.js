@@ -24,6 +24,7 @@ import {
   fetchAmenityLocations,
   testBackendConnection,
   fetchAmenityData,
+  fetchCityAverage
 } from "../../helpers/fetchFunctions";
 import ChartPanel from "./Charts/ChartPanel";
 
@@ -381,6 +382,7 @@ const Amenities = ({
     //loading signals
     const [cityLoading, setCityLoading] = useState(false);
     const [saveLoading, setSaveLoading] = useState(false)
+    const [loadingCityAverage, setLoadingCityAverage] = useState(false)
     const [exportLoading, setExportLoading] = useState(false)
     const [loading, setLoading] = useState(true)
     const [defaultMapLoading, setDefaultMapLoading] = useState(true)
@@ -468,25 +470,6 @@ const Amenities = ({
     () => getSelectedAdminInstancesURLsAndNames(adminAreaInstancesState),
     [adminAreaInstancesState]
     );
-    // //console.log('admin area instance state: ', adminAreaInstancesState)
-
-    // const handleCityChange = (event) => {
-    //     if (!event?.target?.value) return
-    //     //console.log('user selected city: ', event.target.value)
-    //     setCity(event.target.value)
-    // }
-
-    // const handleAreaTypeChange = (event) => {
-    //     if (!event?.target?.value) return
-    //     //console.log('user selected area type: ', event.target.value)
-    //     setAreaType(event.target.value)
-    // }
-
-    // const handleAreaInstanceChange = (event) => {
-    //     if (!event?.target?.value) return
-    //     //console.log('user selected area instance', event.target.value)
-    //     setAreaInstance(event.target.value)
-    // }
 
     /**
      * Formats a list of amenity objects into a keyed dictionary by amenity name.
@@ -498,102 +481,21 @@ const Amenities = ({
 
     useEffect(() => {
         // //console.log("Types State updated:", adminAreaTypesState);
-      }, [adminAreaTypesState]);
+        if(Object.keys(cityState).length === 0 || Object.keys(adminAreaInstancesState).length === 0) return
+        console.log('X citystate: ',cityState)
+        console.log('X adminAreaInstances: ',adminAreaInstancesState)
+        //check if the city average for the current city is in session storage
+        const currentCityAverageWalkability = sessionStorage.getItem(cityState.cityURI)
+        console.log('current city avg walkability: ',currentCityAverageWalkability)
+        if (currentCityAverageWalkability === undefined) {
+            //fetch it and store it
+            console.log('fetching city avg data')
+            fetchCityAverage(adminAreaInstancesState,cityState)
+
+        }
+      }, [adminAreaInstancesState,cityState]);
 
     useEffect(() => {
-        // //console.log("Current Admin Type", currentAdminType);
-        // //console.log("Current City", cityURLs);
-        // //console.log("Print Admin Area instance states", adminAreaInstancesState);
-    
-        /*
-         * Fetches the amenity scores for the radar graph.
-         */
-        // const fetchAmenityDataResults = async () => {
-        //   // update this if we want to query score for \
-        //   var adminType = "";
-        //   if (currentAdminType) {
-        //     adminType = currentAdminType.split("#")[1];
-        //   }
-    
-        //   let amenityDataResults = {}; // Store amenity data by area
-        //   try {
-        //     const adminNames = getSelectedAdminInstancesNames(
-        //       adminAreaInstancesState
-        //     );
-        //     // //console.log('ADMIN NAMES: ',adminNames)
-        //     const data = await fetchAmenityData(adminType);
-        //     // //console.log('DATA: ',data)
-        //     adminNames.forEach((name) => {
-        //       const amenitiesForArea = data.data.filter((obj) => obj.name === name);
-    
-        //       if (amenitiesForArea.length > 0) {
-        //         amenitiesForArea.forEach(({ type, value }) => {
-        //           const amenityType = type.split("#").pop();
-    
-        //           if (!amenityDataResults[name]) {
-        //             amenityDataResults[name] = {};
-        //           }
-        //           amenityDataResults[name][amenityType] =
-        //             parseFloat(value).toFixed(2);
-        //         });
-        //       }
-        //     });
-        //     //console.log('amenityDataResults: ',amenityDataResults)
-        //     setAmenityData(amenityDataResults);
-        //   } catch (error) {
-        //     console.error("Error fetching amenity data:", error);
-        //   }
-        // };
-    
-        /*
-         * Fetches the admin instance outlines (polygons) as well as the amenity locations
-         */
-        // const locationIDfetchAndFormatAmenties = async () => {
-        //   // Initialize an empty object to store all the Amenties
-        //   setLoading(true);
-        //   let newAmenityPolygons = {};
-    
-        //   for (const instance of selectedAdminInstancesURLs) {
-        //     //console.log('OOOOOO: ', instance)
-        //     // Extract the location_id part from the URL
-        //     const locationID = instance.url.split("#")[1];
-        //     const instanceName = instance.name
-    
-        //     try {
-        //       // Fetch the amenity locations for the current location_id
-        //       const rawData = await fetchAmenityLocations(
-        //         locationID,
-        //         adminAreaTypesState
-        //       );
-    
-        //       const amenityData = rawData[0];
-        //     //   //console.log('amenity data: ', amenityData)
-        //       const locationIDLocationData = rawData[1];
-        //       console.log('locationIDLocationData: ',locationIDLocationData)
-        //       setlocationIDPolygons(locationIDLocationData);
-        //       // Format the fetched Amenties using formatAmenties
-        //       const formattedAmenities = formatAmenities(amenityData);
-        //     //   //console.log('formattedAmenities: ', formattedAmenities)
-        //       formattedAmenities.instanceName = instanceName
-        //       formattedAmenities.instanceURL = instance.url
-    
-        //       // Add the formatted Amenties to the newAmenityPolygons object
-        //       newAmenityPolygons[locationID] = formattedAmenities;
-
-        //     } catch (error) {
-        //       console.error(
-        //         `Error fetching or formatting Amenties for ${locationID}:`,
-        //         error
-        //       );
-        //     }
-        //   }
-    
-        //   // Once all Amenties are fetched and formatted, update the state
-        //   setLoading(false); // Data is ready, stop loading
-        // //   //console.log('new amenity polygons: ', newAmenityPolygons)
-        //   setAmenityPolygons(newAmenityPolygons);
-        // };
-
         const locationIDfetchAndFormatAmenties = async () => {
             const instancesToFetch = selectedAdminInstancesURLs.filter(
                 (instance) => !amenityPolygons[instance.url.split('#')[1]]
@@ -688,11 +590,12 @@ const Amenities = ({
     }, [selectedAdminInstancesURLs]);
     // console.log('admin area instance stae: ',adminAreaInstancesState)
     // console.log('amenity polygons keys: ', amenityPolygons)
-    console.log('current area name: ',currentAreaName)
-    console.log('current area uri: ', currentAreaURI)
-    console.log('citystate: ',cityState)
-    console.log('selected admin instance urls: ', selectedAdminInstancesURLs)
-    console.log('cityURI: ', currentCityURI)
+    // console.log('current area name: ',currentAreaName)
+    // console.log('current area uri: ', currentAreaURI)
+    // console.log('citystate: ',cityState)
+    // console.log('selected admin instance urls: ', selectedAdminInstancesURLs)
+    // console.log('cityURI: ', currentCityURI)
+    console.log('admin instances: ', adminAreaInstancesState)
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box

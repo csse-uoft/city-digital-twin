@@ -266,6 +266,28 @@ export const fetchIndicators = async (setIndicatorURLs) => {
   }
 };
 
+export const fetchCityAverage = async (
+  adminInstances,
+  cityState
+) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/city-average-walkability`,{
+        amenityCategories: cityState.amenityCategories,
+        areaURIList: Object.keys(adminInstances).map((key) => adminInstances[key].URL.split('#')[1])
+      }
+    )
+    //given response, store in local storage
+    console.log('city average data: ', response.data.data)
+    sessionStorage.setItem(cityState.cityURI, JSON.stringify(response.data.data))
+    //return success?
+    return { success: true}
+  } catch (err) {
+    console.error('Error fetching city average')
+    return { success: false}
+  }
+}
+
 export const fetchLocations = async (
   admin,
   cityURLs,

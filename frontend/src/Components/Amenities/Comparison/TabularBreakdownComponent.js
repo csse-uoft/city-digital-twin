@@ -118,9 +118,15 @@ function getCellStyle (delta) {
 }
 
 
+const COLUMN_WIDTH = 150;
+
 function IconTableCell({ icon: Icon, iconSrc, iconSize = 22, label, align = 'left', ...props }) {
   return (
-    <TableCell align={align} {...props}>
+    <TableCell
+      align={align}
+      sx={{ width: COLUMN_WIDTH, minWidth: COLUMN_WIDTH, ...props.sx }}
+      {...props}
+    >
       <Box sx={{
         display: 'flex',
         alignItems: 'center',
@@ -148,7 +154,7 @@ function RowCell({walkability,cityAvg, ...props}) {
   const delta = ((walkability - cityAvg)*100).toFixed(0) ?? null
   const background = getCellStyle(delta)
   return(
-    <TableCell sx={{width:'150px'}} {...props}>
+    <TableCell sx={{ width: COLUMN_WIDTH, minWidth: COLUMN_WIDTH }} {...props}>
       <Box sx={{
         display: 'flex',
         alignItems:'center',
@@ -171,17 +177,19 @@ const TabularBreakDownComponent = ({
     amenityCategories,
     areaURIList
 }) => {
-    const [cityAvg, setCityAvg] = useState({
-      Health: 0.25,
-      RetailAndServices: 0.60,
-      EducationAndChildcare: 0.60,
-      Cultural: 0.60,
-      Communal:0.60,
-      Spiritual: 0.60,
-      Recreational:0.60,
-      ParkService: 0.90,
-      PublicTransitService: 0.95
-    })
+    const [cityAvg, setCityAvg] = useState(() => {
+      return JSON.parse(sessionStorage.getItem(cityURI)) ?? 
+      {
+      Health: 0.00,
+      RetailAndServices: 0.00,
+      EducationAndChildcare: 0.00,
+      Cultural: 0.00,
+      Communal:0.00,
+      Spiritual: 0.00,
+      Recreational:0.00,
+      ParkService: 0.00,
+      PublicTransitService: 0.00
+    }})
     const [loading, setLoading] = useState(false)
     const [walkabilityData, setWalkabilityData] = useState({})
 
@@ -231,12 +239,12 @@ const TabularBreakDownComponent = ({
               boxShadow: 'none',
               marginBottom:'28px'
             }}>
-              <Table>
+              <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
                 <TableHead>
                 <TableRow>
-                  <TableCell align="left" sx={{fontWeight:"semibold"}}>Area</TableCell>
+                  <TableCell align="left" sx={{fontWeight:"bold", width: 100, minWidth: 100}}>Area</TableCell>
                   {categoryOptions?.map((category) => (
-                    <IconTableCell icon={HighlightOffIcon} iconSrc={amenityCategories[category]?.icon ?? ''} label={category}  />
+                    <IconTableCell key={category} icon={HighlightOffIcon} iconSrc={amenityCategories[category]?.icon ?? ''} label={category}  />
                   ))}
                   
                 </TableRow>
@@ -245,12 +253,12 @@ const TabularBreakDownComponent = ({
                 {Object.entries(rows)?.map(([key,value]) => {
 
                   return(
-                    <TableRow>
-                      <TableCell>
+                    <TableRow key={key}>
+                      <TableCell sx={{ width: COLUMN_WIDTH, minWidth: COLUMN_WIDTH }}>
                         {key}
                       </TableCell>
                       {categoryOptions.map((category) => (
-                        <RowCell walkability={value[category]} cityAvg={cityAvg[category]} />
+                        <RowCell key={`${key}-${category}`} walkability={value[category]} cityAvg={cityAvg[category]} />
                       ))}
                      {/* <RowCell walkability={value.health} cityAvg={cityAvg.health} />
                      <RowCell walkability={value.retail} cityAvg={cityAvg.retail} />
