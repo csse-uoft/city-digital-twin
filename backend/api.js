@@ -1821,7 +1821,7 @@ router.post('/city-average-walkability', async (req,res) => {
     let avgWalkability = {}
     console.log('aggregate walkabilities: ',obj)
     Object.keys(obj).forEach((category) => {
-      const scores = obj[category]
+      const scores = obj[category].filter(k => k != null && k != undefined)
       const len = scores.length
       const total = scores.reduce((accumulator, current) => accumulator + current, 0);
       const avg = total/len ?? null
