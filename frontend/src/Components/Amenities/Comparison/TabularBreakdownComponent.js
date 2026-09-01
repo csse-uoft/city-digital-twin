@@ -166,7 +166,7 @@ function RowCell({walkability,cityAvg, ...props}) {
         backgroundColor: background?.backgroundColor ? background.backgroundColor : '#fff'
       }}>
         <Typography sx={{fontSize: {md: 14, xs:12}}}>{(walkability*100).toFixed(0) ?? null}%</Typography>
-        <Typography sx={{fontSize: {md:12, xs:10}}}>{delta > 0 ? '+' : ''}{delta} vs city</Typography>
+        <Typography sx={{fontSize: {md:12, xs:10}}}>{delta != null && delta > 0 ? '+' : ''}{delta} vs city</Typography>
       </Box>
     </TableCell>
   )
@@ -180,15 +180,15 @@ const TabularBreakDownComponent = ({
     const [cityAvg, setCityAvg] = useState(() => {
       return JSON.parse(sessionStorage.getItem(cityURI)) ?? 
       {
-      Health: 0.00,
-      RetailAndServices: 0.00,
-      EducationAndChildcare: 0.00,
-      Cultural: 0.00,
-      Communal:0.00,
-      Spiritual: 0.00,
-      Recreational:0.00,
-      ParkService: 0.00,
-      PublicTransitService: 0.00
+      Health: null,
+      RetailAndServices: null,
+      EducationAndChildcare: null,
+      Cultural: null,
+      Communal:null,
+      Spiritual: null,
+      Recreational:null,
+      ParkService: null,
+      PublicTransitService: null
     }})
     const [loading, setLoading] = useState(false)
     const [walkabilityData, setWalkabilityData] = useState({})

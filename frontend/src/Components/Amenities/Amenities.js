@@ -24,7 +24,8 @@ import {
   fetchAmenityLocations,
   testBackendConnection,
   fetchAmenityData,
-  fetchCityAverage
+  fetchCityAverage,
+  fetchCityAverageV2
 } from "../../helpers/fetchFunctions";
 import ChartPanel from "./Charts/ChartPanel";
 
@@ -487,10 +488,10 @@ const Amenities = ({
         //check if the city average for the current city is in session storage
         const currentCityAverageWalkability = sessionStorage.getItem(cityState.cityURI)
         console.log('current city avg walkability: ',currentCityAverageWalkability)
-        if (currentCityAverageWalkability === undefined) {
+        if (currentCityAverageWalkability === undefined || currentCityAverageWalkability === null) {
             //fetch it and store it
             console.log('fetching city avg data')
-            fetchCityAverage(adminAreaInstancesState,cityState)
+            fetchCityAverageV2(adminAreaInstancesState,cityState)
 
         }
       }, [adminAreaInstancesState,cityState]);

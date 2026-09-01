@@ -8,7 +8,6 @@ import {
   setCachedWalkabilityData,
   getCachedWalkabilityData
  } from './cacheServices'
-
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
 /**
@@ -17,6 +16,7 @@ const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
  * Sends a GET request to the `/api/health-check` endpoint to verify if the backend is reachable.
  * Logs the result to the console and returns a boolean if successful, or `null` if the request fails.
  */
+
 
 function getSubtypeMap (amenityData) {
   //console.log('creating amenity subtype map')
@@ -245,6 +245,7 @@ export const fetchWalkabilityData = async (
       }
     } catch (err) {
       console.error('POST Error getting walkability data: ',err)
+      return null
     }
   }
 }
@@ -271,6 +272,7 @@ export const fetchCityAverage = async (
   cityState
 ) => {
   try {
+    console.log('V1 START: ', new Date().toLocaleTimeString())
     const response = await axios.post(
       `${API_BASE_URL}/api/city-average-walkability`,{
         amenityCategories: cityState.amenityCategories,
@@ -281,9 +283,65 @@ export const fetchCityAverage = async (
     console.log('city average data: ', response.data.data)
     sessionStorage.setItem(cityState.cityURI, JSON.stringify(response.data.data))
     //return success?
+    console.log('V1 END: ', new Date().toLocaleTimeString())
     return { success: true}
   } catch (err) {
     console.error('Error fetching city average')
+    return { success: false}
+  }
+}
+
+// a little bit faster than fetchCityAverage
+export const fetchCityAverageV2 = async (
+  adminInstances,
+  cityState
+) => {
+  try {
+    console.log('V2 START: ', new Date().toLocaleTimeString())
+    const areaIdList = Object.keys(adminInstances).map((key) => adminInstances[key].URL.split("#")[1])
+    //initialize aggregate walkability
+
+    //fetch
+    const result = await Promise.all(areaIdList.map((id) => {
+      return fetchWalkabilityData(id,cityState.cityURI)
+    }))
+
+    //initialize aggregate
+    let aggWalkability = {}
+    Object.keys(cityState.amenityCategories).forEach((category) => {
+      aggWalkability[category] = []
+    })
+
+    //populate aggWalkability
+    console.log('result: ',result)
+    result.forEach((scores) => {
+      if (!scores) return
+      Object.keys(scores).forEach((category) => {
+        const score = scores[category]?.walkability
+        aggWalkability[category].push(score != null ? Number(parseFloat(score).toFixed(2)) : null)
+      })
+    })
+
+    let avgWalkability = {}
+    Object.keys(aggWalkability).forEach((category) => {
+      const scores = aggWalkability[category].filter(k => k != null && k != undefined)
+      const len = scores.length
+      if (len === 0) {
+          avgWalkability[category] = null
+          return
+      }
+      const total = scores.reduce((accumulator, current) => accumulator + current, 0);
+      const avg = total/len
+      avgWalkability[category] = Number(avg.toFixed(2))
+    })
+
+    console.log('fetch city avg 2 walkability: ', avgWalkability)
+    //now set it in session
+    sessionStorage.setItem(cityState.cityURI, JSON.stringify(avgWalkability))
+    console.log('V2 END: ', new Date().toLocaleTimeString())
+    return { success: true}
+  } catch (err) {
+    console.error('Error in fetch city average v2: ',err)
     return { success: false}
   }
 }
