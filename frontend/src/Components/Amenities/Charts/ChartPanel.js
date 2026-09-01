@@ -120,7 +120,7 @@ const ChartPanel = ({
                         obj[item.areaName] = item.data
                     })
                     setWalkabilityData(obj)
-                    console.log('multi area walkability data: ',obj)
+                    // console.log('multi area walkability data: ',obj)
                     //initialization of the filter state
 
                     //create the key

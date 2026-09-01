@@ -483,14 +483,14 @@ const Amenities = ({
     useEffect(() => {
         // //console.log("Types State updated:", adminAreaTypesState);
         if(Object.keys(cityState).length === 0 || Object.keys(adminAreaInstancesState).length === 0) return
-        console.log('X citystate: ',cityState)
-        console.log('X adminAreaInstances: ',adminAreaInstancesState)
+        // console.log('X citystate: ',cityState)
+        // console.log('X adminAreaInstances: ',adminAreaInstancesState)
         //check if the city average for the current city is in session storage
         const currentCityAverageWalkability = sessionStorage.getItem(cityState.cityURI)
-        console.log('current city avg walkability: ',currentCityAverageWalkability)
+        // console.log('current city avg walkability: ',currentCityAverageWalkability)
         if (currentCityAverageWalkability === undefined || currentCityAverageWalkability === null) {
             //fetch it and store it
-            console.log('fetching city avg data')
+            // console.log('fetching city avg data')
             fetchCityAverageV2(adminAreaInstancesState,cityState)
 
         }
@@ -596,7 +596,7 @@ const Amenities = ({
     // console.log('citystate: ',cityState)
     // console.log('selected admin instance urls: ', selectedAdminInstancesURLs)
     // console.log('cityURI: ', currentCityURI)
-    console.log('admin instances: ', adminAreaInstancesState)
+    // console.log('admin instances: ', adminAreaInstancesState)
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
             <Box

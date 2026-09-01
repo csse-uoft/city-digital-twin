@@ -96,7 +96,7 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 // }
 
 function transformRows (walkabilityData,categoryOptions) {
-  console.log('rows walkabilityData: ',walkabilityData)
+  // console.log('rows walkabilityData: ',walkabilityData)
   let rows = {}
   const areaNames = Object.keys(walkabilityData)
   // const categoryOptions = [...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))]
@@ -106,7 +106,7 @@ function transformRows (walkabilityData,categoryOptions) {
       rows[area][category] = walkabilityData[area]?.[category]?.walkability ?? null
     })
   })
-  console.log('tabular rows: ',rows)
+  // console.log('tabular rows: ',rows)
   return rows
 }
 

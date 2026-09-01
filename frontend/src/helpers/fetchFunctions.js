@@ -221,12 +221,12 @@ export const fetchWalkabilityData = async (
     try {
       const cachedWalkabilityData = await getCachedWalkabilityData(areaIdentifier)
       if (cachedWalkabilityData && isFresh(cachedWalkabilityData.timestamp)) {
-        console.log('found cached walkability data of ',areaIdentifier)
+        // console.log('found cached walkability data of ',areaIdentifier)
         //dispatch results
         return cachedWalkabilityData.data
       } else {
         // make new request
-        console.log('making server request for walkability data of',areaIdentifier)
+        // console.log('making server request for walkability data of',areaIdentifier)
         //get cached categories
         const cityDetails = await getCachedAmenityCategories(cityURI)
 
@@ -272,7 +272,7 @@ export const fetchCityAverage = async (
   cityState
 ) => {
   try {
-    console.log('V1 START: ', new Date().toLocaleTimeString())
+    // console.log('V1 START: ', new Date().toLocaleTimeString())
     const response = await axios.post(
       `${API_BASE_URL}/api/city-average-walkability`,{
         amenityCategories: cityState.amenityCategories,
@@ -280,10 +280,10 @@ export const fetchCityAverage = async (
       }
     )
     //given response, store in local storage
-    console.log('city average data: ', response.data.data)
+    // console.log('city average data: ', response.data.data)
     sessionStorage.setItem(cityState.cityURI, JSON.stringify(response.data.data))
     //return success?
-    console.log('V1 END: ', new Date().toLocaleTimeString())
+    // console.log('V1 END: ', new Date().toLocaleTimeString())
     return { success: true}
   } catch (err) {
     console.error('Error fetching city average')
@@ -297,7 +297,7 @@ export const fetchCityAverageV2 = async (
   cityState
 ) => {
   try {
-    console.log('V2 START: ', new Date().toLocaleTimeString())
+    // console.log('V2 START: ', new Date().toLocaleTimeString())
     const areaIdList = Object.keys(adminInstances).map((key) => adminInstances[key].URL.split("#")[1])
     //initialize aggregate walkability
 
@@ -313,7 +313,7 @@ export const fetchCityAverageV2 = async (
     })
 
     //populate aggWalkability
-    console.log('result: ',result)
+    // console.log('result: ',result)
     result.forEach((scores) => {
       if (!scores) return
       Object.keys(scores).forEach((category) => {
@@ -335,10 +335,10 @@ export const fetchCityAverageV2 = async (
       avgWalkability[category] = Number(avg.toFixed(2))
     })
 
-    console.log('fetch city avg 2 walkability: ', avgWalkability)
+    // console.log('fetch city avg 2 walkability: ', avgWalkability)
     //now set it in session
     sessionStorage.setItem(cityState.cityURI, JSON.stringify(avgWalkability))
-    console.log('V2 END: ', new Date().toLocaleTimeString())
+    // console.log('V2 END: ', new Date().toLocaleTimeString())
     return { success: true}
   } catch (err) {
     console.error('Error in fetch city average v2: ',err)
@@ -415,7 +415,7 @@ export const fetchLocations = async (
           centerCoords: updatedLocationURLs[key].centerCoords
         };
       }
-      console.log('fetchLocations result: ', areaNameToCoordsAndURL)
+      // console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",

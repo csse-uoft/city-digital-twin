@@ -38,7 +38,7 @@ const checkboxStyles = {
 
 function formatSubtypes (subtypeState) {
     //console.log('subtype state: ', subtypeState)
-    console.log('aa: ',Object.values(subtypeState).reduce((acc, subtypes) => ({ ...acc, ...subtypes }), {}))
+    // console.log('aa: ',Object.values(subtypeState).reduce((acc, subtypes) => ({ ...acc, ...subtypes }), {}))
     return Object.values(subtypeState).reduce((acc, subtypes) => ({ ...acc, ...subtypes }), {})
 }
 
