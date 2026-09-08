@@ -1,6 +1,7 @@
 import Dashboard from "./Dashboard";
 import Home from "./Home";
 import FAQ from "./FAQ";
+import Amenities from './Amenities/Amenities'
 
 import MobileHeader from "./MainComponents/MobileHeader";
 import NewSidebar from "./MainComponents/NewSidebar";
@@ -9,6 +10,10 @@ import { useState, useEffect, useReducer } from "react";
 import CompleteCommunitiesDashboard from "./CompleteCommunitiesDashboard";
 import { adminAreaTypeReducer } from "../reducers/adminAreaTypeReducer";
 import { adminAreaInstanceReducer } from "../reducers/adminAreaInstanceReducer";
+// import { adminCompareAreaInstanceReducer } from '../reducers/adminCompareAreaInstanceReducer'
+import { cityReducer } from '../reducers/cityReducer'
+import { filterPanelReducer } from '../reducers/filterPanelReducer'
+import { chartCategoryParameterReducer, chartSubtypeParameterReducer, chartParameterReducer, chartEditParameterReducer } from '../reducers/chartParameterReducer'
 import { fetchCities } from "../helpers/fetchFunctions";
 
 // The main display that shows the navbar and the indicator dashboard pages
@@ -24,12 +29,20 @@ function Main() {
   // Checkout reducers.js for the state structure
   const [adminAreaTypesState, dispatchAdminAreaTypes] = useReducer(adminAreaTypeReducer, {});
   const [adminAreaInstancesState, dispatchAdminAreaInstances] = useReducer(adminAreaInstanceReducer, {});
+  // const [compareAdminAreaInstancesState, dispatchCompareAdminAreaInstances] = useReducer(adminCompareAreaInstanceReducer, {})
+  const [cityState, dispatchCityState] = useReducer(cityReducer, {})
+  const [filterPanelState, dispatchFilterPanelState] = useReducer(filterPanelReducer, {})
+  const [chartCategoryParameterState, dispatchChartCategoryParameterState] = useReducer(chartCategoryParameterReducer, {})
+  const [chartSubtypeParameterState, dispatchChartSubtypeParameterState] = useReducer(chartSubtypeParameterReducer, {})
+  //new
+  const [chartParameterState, dispatchChartParameterState] = useReducer(chartParameterReducer, {})
+  const [chartEditParameterState, dispatchChartEditParameterState] = useReducer(chartEditParameterReducer, {})
 
   useEffect(() => {
     fetchCities(setCityURLs);
   }, []);
 
-  const [ activePage, setActivePage ] = useState("search");
+  const [ activePage, setActivePage ] = useState("amenities");
 
   const [ dashboardData, setDashboardData ] = useState({
     currentCity: {
@@ -76,6 +89,29 @@ function Main() {
                 adminAreaInstancesState={adminAreaInstancesState}
                 dispatchAdminAreaInstances={dispatchAdminAreaInstances}
                 />;
+      case "amenities":
+        return <Amenities
+                cityURLs={cityURLs}
+                setCityURLs={setCityURLs}
+                cityState={cityState}
+                dispatchCityState={dispatchCityState}
+                filterPanelState={filterPanelState}
+                dispatchFilterPanelState={dispatchFilterPanelState}
+                chartCategoryParameterState={chartCategoryParameterState}
+                dispatchChartCategoryParameterState={dispatchChartCategoryParameterState}
+                chartSubtypeParameterState={chartSubtypeParameterState}
+                dispatchChartSubtypeParameterState={dispatchChartSubtypeParameterState}
+                adminAreaTypesState={adminAreaTypesState}
+                dispatchAdminAreaTypes={dispatchAdminAreaTypes}
+                adminAreaInstancesState={adminAreaInstancesState}
+                dispatchAdminAreaInstances={dispatchAdminAreaInstances} 
+                // compareAdminAreaInstancesState={compareAdminAreaInstancesState}
+                // dispatchCompareAdminAreaInstances={dispatchCompareAdminAreaInstances}
+                chartParameterState={chartParameterState}
+                dispatchChartParameterState={dispatchChartParameterState}
+                chartEditParameterState={chartEditParameterState}
+                dispatchChartEditParameterState={dispatchChartEditParameterState}
+                />
       case "faq":   // Not completed yet
         return <FAQ />;
       case "complete community":

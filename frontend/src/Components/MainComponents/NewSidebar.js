@@ -13,6 +13,7 @@ import Typography from "@mui/joy/Typography"
 import Sheet from "@mui/joy/Sheet"
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded"
 import MapsHomeWorkIcon from '@mui/icons-material/MapsHomeWork';
+import FmdGoodIcon from '@mui/icons-material/FmdGood';
 
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import InsertChartRoundedIcon from '@mui/icons-material/InsertChartRounded';
@@ -63,7 +64,7 @@ export default function NewSidebar({activePage, setActivePage}) {
           md: "none"
         },
         transition: "transform 0.4s, width 0.4s",
-        zIndex: 10000,
+        zIndex: 950,
         height: "100vh",
         width: "var(--Sidebar-width)",
         top: 0,
@@ -143,6 +144,15 @@ export default function NewSidebar({activePage, setActivePage}) {
               <InsertChartRoundedIcon />
               <ListItemContent>
                 <Typography level="title-sm" sx={{...(activePage === "dashboard" && {fontWeight:"bold"})}}>Dashboard</Typography>
+              </ListItemContent>
+            </ListItemButton>
+          </ListItem>
+
+          <ListItem sx={{userSelect: "none"}}>
+            <ListItemButton onClick={() => setActivePage("amenities")}>  
+              <FmdGoodIcon />
+              <ListItemContent>
+                <Typography level="title-sm" sx={{...(activePage === "amenities" && {fontWeight:"bold"})}}>Amenities</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>

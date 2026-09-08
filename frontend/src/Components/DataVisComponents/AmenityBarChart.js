@@ -1,22 +1,15 @@
-import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  Legend,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
-import { useMemo, useState, useEffect } from 'react'
+import { BarChart, Legend, XAxis, YAxis, CartesianGrid, Tooltip, Bar, Cell, ResponsiveContainer } from 'recharts';
 import { Select, Option } from '@mui/joy'
-
+// import { RechartsDevtools } from '@recharts/devtools';
+import { useState, useEffect, useMemo } from 'react'
 const AREA_COLOR_PALETTE = ['#3B82F6', '#EC4899', '#22C55E', '#FB923C', '#A855F7', '#EF4444', '#92400E']
 
 const isMultiArea = (walkabilityData) => {
   if (!walkabilityData || typeof walkabilityData !== 'object') return false
   const areas = Object.keys(walkabilityData)
   return areas.length > 1
+  // const firstValue = Object.values(walkabilityData)[0]
+  // return !!firstValue && typeof firstValue === 'object' && !('walkability' in firstValue)
 }
 
 const getColor = (rawColor, fallback = '#ccc') => (rawColor ? `#${rawColor}` : fallback)
@@ -98,16 +91,6 @@ const transformSingleAreaData = (walkabilityData, mode, categoryOptions) => {
     }))
   }
 
-  // return categoryOptions.flatMap((category) => {
-  //   const subtypes = categoryMap[category]?.subtypes ?? []
-  //   const categoryColor = getColor(categoryMap[category]?.color)
-  //   return subtypes.map((subtype) => ({
-  //     name: subtype.subtype,
-  //     walkability: subtype.walkability,
-  //     color: categoryColor,
-  //     category: category
-  //   }))
-  // })
   let encounteredSubtypes = {}
   const l = categoryOptions.flatMap((category) => {
     const subtypes = categoryMap[category]?.subtypes ?? []
@@ -133,42 +116,61 @@ const transformSingleAreaData = (walkabilityData, mode, categoryOptions) => {
   })
   console.log('bar chart subtype list: ',l)
   return l
-
 }
 
-const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParameterKey, mode }) => {
+const isVisible = (mode,parameter,state) => {
+  if (mode === 'category') {
+    
+  } else {
+
+  }
+}
+
+// const transformCategoryData = (amenityData) => {
+
+//   return Object.keys(amenityData).map((name) => {
+//     return {walkability: amenityData[name]?.walkability, name: name, color: `#${amenityData[name]?.color}` ?? '#ccc'}        // add name field
+//   })
+
+// };
+
+// const transformSubtypeData = (amenityData) => {
+
+// }
+
+const AmenityBarChart = ({ 
+  walkabilityData, 
+  chartParameterState, 
+  chartParameterKey, 
+  mode 
+}) => {
   const multiArea = useMemo(() => isMultiArea(walkabilityData), [walkabilityData])
   const [subtypeCategory, setSubtypeCategory] = useState('Health')
-
   const categoryOptions = useMemo(() => {
     if (!walkabilityData) return []
     const areaNames = Object.keys(walkabilityData)
     return [...new Set(areaNames.flatMap((area) => Object.keys(walkabilityData[area])))]
   }, [walkabilityData])
 
-  // keep subtypeCategory pointing at a real category once data/options load
-  useEffect(() => {
-    if (categoryOptions.length > 0 && !categoryOptions.includes(subtypeCategory)) {
-      setSubtypeCategory(categoryOptions[0])
-    }
-  }, [categoryOptions])
-
   const { chartData, areaNames } = useMemo(() => {
+    //console.log('walkability data received in bar chart: ',walkabilityData)
     if (!walkabilityData || Object.keys(walkabilityData).length === 0) {
       return { chartData: [], areaNames: [] }
     }
     if (multiArea) {
-      const { rows, areaNames } = transformMultiAreaData(walkabilityData, mode, categoryOptions)
+      const { rows, areaNames } = transformMultiAreaData(walkabilityData,mode,categoryOptions)
       return { chartData: rows, areaNames }
     }
-    return { chartData: transformSingleAreaData(walkabilityData, mode, categoryOptions), areaNames: [] }
+    return { chartData: transformSingleAreaData(walkabilityData,mode,categoryOptions), areaNames: [] }
   }, [walkabilityData, multiArea, mode, categoryOptions])
+  
 
+  console.dir(chartParameterState, {depth:null})
   const areaState = chartParameterState[chartParameterKey]
 
   const visibleChartData = useMemo(() => {
-    //console.log('chart radar data: ',chartData)
     if (!areaState) return []
+    
     if (mode === 'subtype' && !multiArea) {
       const visibleSubtypes = chartData.filter((entry) => {
         const entrySubtype = entry.name.split(' - ').at(0)
@@ -194,40 +196,37 @@ const AmenityRadarChart = ({ walkabilityData, chartParameterState, chartParamete
 
   return (
     <>
-      <ResponsiveContainer width="90%" height={500}>
-        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={visibleChartData}>
-          <PolarGrid />
-          <PolarAngleAxis dataKey="name" />
-          <PolarRadiusAxis angle={30} domain={[0, 1]} tick={{ fontSize: 2 }} />
-          <Tooltip />
-          <Legend />
+    <ResponsiveContainer width="90%" height={500}>
+      <BarChart data={visibleChartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis width={60} domain={[0, 1]} />
+        <Tooltip />
+        <Legend />
 
-          {multiArea ? (
-            areaNames.map((area, index) => (
-              <Radar
-                key={area}
-                name={area}
-                dataKey={area}
-                stroke={AREA_COLOR_PALETTE[index % AREA_COLOR_PALETTE.length]}
-                fill={AREA_COLOR_PALETTE[index % AREA_COLOR_PALETTE.length]}
-                fillOpacity={0.6}
-                isAnimationActive={true}
-              />
-            ))
-          ) : (
-            <Radar
-              name={'Walkability'}
-              dataKey="walkability"
-              stroke={AREA_COLOR_PALETTE[0]}
-              fill={AREA_COLOR_PALETTE[0]}
-              fillOpacity={0.6}
-              isAnimationActive={true}
+        {multiArea ? (
+          // One <Bar> series per area, grouped side-by-side per category
+          areaNames.map((area, index) => (
+            <Bar
+              key={area}
+              dataKey={area}
+              name={area}
+              fill={AREA_COLOR_PALETTE[index % AREA_COLOR_PALETTE.length]}
+              radius={[10, 10, 0, 0]}
             />
-          )}
-        </RadarChart>
-      </ResponsiveContainer>
+          ))
+        ) : (
+          // Single series, colored per-category
+          <Bar dataKey="walkability" radius={[10, 10, 0, 0]}>
+            {visibleChartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
+        )}
+      </BarChart>
+    </ResponsiveContainer>
     </>
   )
 }
 
-export default AmenityRadarChart
+export default AmenityBarChart
