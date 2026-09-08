@@ -79,7 +79,7 @@ L.Icon.Default.mergeOptions({
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
-console.log(API_BASE_URL);
+//console.log(API_BASE_URL);
 
 /*
  * Implements the search page.
@@ -198,7 +198,7 @@ function Dashboard({
   useEffect(() => {
     fetchIndicators(setIndicatorURLs);
     const checkBackend = async () => {
-      console.log("Checking backend connection...");
+      //console.log("Checking backend connection...");
       const result = await testBackendConnection();
       if (!result) {
         alert(
@@ -210,23 +210,23 @@ function Dashboard({
   }, []);
 
   useEffect(() => {
-    console.log("Types State updated:", adminAreaTypesState);
+    //console.log("Types State updated:", adminAreaTypesState);
   }, [adminAreaTypesState]);
 
   // This useEffect is for testing and developement purposes.
   useEffect(() => {
-    // console.log("indicatorURLs:", indicatorURLs);
-    // console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
-    // console.log("selectedIndicators:", selectedIndicators);
-    // console.log("indicatorData:", indicatorData);
-    // console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
-    // console.log("tabeColumns:", tableColumns);
-    // console.log("tableData:", tableData);
-    // console.log("chartData:", chartData);
-    // console.log("graphTypes:", graphTypes);
-    // console.log("comparisonGraphTypes:", comparisonGraphTypes);
-    // console.log("years:", years);
-    // console.log("END OF USE EFFECT");
+    // //console.log("indicatorURLs:", indicatorURLs);
+    // //console.log("Size of indicatorURLs:", Object.keys(indicatorURLs).length);
+    // //console.log("selectedIndicators:", selectedIndicators);
+    // //console.log("indicatorData:", indicatorData);
+    // //console.log("currentSelectedMultiIndicators:", currentSelectedMultiIndicators);
+    // //console.log("tabeColumns:", tableColumns);
+    // //console.log("tableData:", tableData);
+    // //console.log("chartData:", chartData);
+    // //console.log("graphTypes:", graphTypes);
+    // //console.log("comparisonGraphTypes:", comparisonGraphTypes);
+    // //console.log("years:", years);
+    // //console.log("END OF USE EFFECT");
   }, [
     cityURLs,
     currentSelectedMultiIndicators,

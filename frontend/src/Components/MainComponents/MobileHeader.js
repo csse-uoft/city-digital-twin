@@ -3,6 +3,7 @@ import GlobalStyles from '@mui/joy/GlobalStyles';
 import Sheet from '@mui/joy/Sheet';
 import IconButton from '@mui/joy/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+// import { useLocation } from 'react-router-dom'
 
 const toggleSidebar = () => {
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
@@ -33,6 +34,7 @@ export const closeSidebar = () => {
 
 
 export default function MobileHeader() {
+  // const { pathname } = useLocation()
   return (
     <Sheet
       sx={{
@@ -43,7 +45,7 @@ export default function MobileHeader() {
         top: 0,
         width: '100vw',
         height: 'var(--Header-height)',
-        zIndex: 9995,
+        zIndex: 900,
         p: 2,
         gap: 1,
         borderBottom: '1px solid',

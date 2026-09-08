@@ -89,7 +89,7 @@ const CompleteCommunitiesDashboard = ({
 
   useEffect(() => {
     const checkBackend = async () => {
-      console.log("Checking backend connection...");
+      //console.log("Checking backend connection...");
       const result = await testBackendConnection();
       if (!result) {
         alert(
@@ -106,9 +106,9 @@ const CompleteCommunitiesDashboard = ({
   );
 
   useEffect(() => {
-    console.log("Current Admin Type", currentAdminType);
-    console.log("Current City", cityURLs);
-    console.log("Print Admin Area instance states", adminAreaInstancesState);
+    //console.log("Current Admin Type", currentAdminType);
+    //console.log("Current City", cityURLs);
+    //console.log("Print Admin Area instance states", adminAreaInstancesState);
 
     /*
      * Fetches the amenity scores for the radar graph.
@@ -170,6 +170,7 @@ const CompleteCommunitiesDashboard = ({
 
           const amenityData = rawData[0];
           const locationIDLocationData = rawData[1];
+          //console.log('location id location data: ', locationIDLocationData)
           setlocationIDPolygons(locationIDLocationData);
           // Format the fetched Amenties using formatAmenties
           const formattedAmenities = formatAmenities(amenityData);
@@ -186,6 +187,7 @@ const CompleteCommunitiesDashboard = ({
 
       // Once all Amenties are fetched and formatted, update the state
       setLoading(false); // Data is ready, stop loading
+      //console.log('new amenity polygons: ', newAmenityPolygons)
       setAmenityPolygons(newAmenityPolygons);
     };
 
@@ -266,7 +268,9 @@ const CompleteCommunitiesDashboard = ({
                     const baseURI =
                       "http://ontology.eil.utoronto.ca/Toronto/Toronto#";
                     const fullKey = baseURI + locationIDKey;
+                    //console.log('complete communities locationIDKey: ', locationIDKey)
                     const locationID = amenityPolygons[locationIDKey];
+                    //console.log('complete communities locationId: ', locationID)
                     let overlayCoords =
                       locationIDPolygons[fullKey]?.coordinates;
                     return (
