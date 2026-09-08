@@ -480,21 +480,21 @@ const Amenities = ({
      */
 
 
-    useEffect(() => {
-        // //console.log("Types State updated:", adminAreaTypesState);
-        if(Object.keys(cityState).length === 0 || Object.keys(adminAreaInstancesState).length === 0) return
-        // console.log('X citystate: ',cityState)
-        // console.log('X adminAreaInstances: ',adminAreaInstancesState)
-        //check if the city average for the current city is in session storage
-        const currentCityAverageWalkability = sessionStorage.getItem(cityState.cityURI)
-        // console.log('current city avg walkability: ',currentCityAverageWalkability)
-        if (currentCityAverageWalkability === undefined || currentCityAverageWalkability === null) {
-            //fetch it and store it
-            // console.log('fetching city avg data')
-            fetchCityAverageV2(adminAreaInstancesState,cityState)
+    // useEffect(() => {
+    //     // //console.log("Types State updated:", adminAreaTypesState);
+    //     if(Object.keys(cityState).length === 0 || Object.keys(adminAreaInstancesState).length === 0) return
+    //     // console.log('X citystate: ',cityState)
+    //     // console.log('X adminAreaInstances: ',adminAreaInstancesState)
+    //     //check if the city average for the current city is in session storage
+    //     const currentCityAverageWalkability = sessionStorage.getItem(cityState.cityURI)
+    //     // console.log('current city avg walkability: ',currentCityAverageWalkability)
+    //     if (currentCityAverageWalkability === undefined || currentCityAverageWalkability === null) {
+    //         //fetch it and store it
+    //         // console.log('fetching city avg data')
+    //         fetchCityAverage(adminAreaInstancesState,cityState)
 
-        }
-      }, [adminAreaInstancesState,cityState]);
+    //     }
+    //   }, [adminAreaInstancesState,cityState]);
 
     useEffect(() => {
         const locationIDfetchAndFormatAmenties = async () => {

@@ -111,7 +111,7 @@ function transformRows (walkabilityData,categoryOptions) {
 }
 
 function getCellStyle (delta) {
-    if (delta === null) return {}                          // city avg — no color
+    if (delta === null) return { backgroundColor: '#f9fafb' }                          // city avg — no color
     if (delta > 0)  return { backgroundColor: '#cdf6d9' } // green tint
     if (delta < 0)  return { backgroundColor: '#ffd8d8' } // red tint
     return { backgroundColor: '#f9fafb' }                  // neutral
@@ -151,7 +151,7 @@ function IconTableCell({ icon: Icon, iconSrc, iconSize = 22, label, align = 'lef
 }
 
 function RowCell({walkability,cityAvg, ...props}) {
-  const delta = ((walkability - cityAvg)*100).toFixed(0) ?? null
+  const delta = cityAvg ? ((walkability - cityAvg)*100).toFixed(0) : null
   const background = getCellStyle(delta)
   return(
     <TableCell sx={{ width: COLUMN_WIDTH, minWidth: COLUMN_WIDTH }} {...props}>
@@ -166,7 +166,7 @@ function RowCell({walkability,cityAvg, ...props}) {
         backgroundColor: background?.backgroundColor ? background.backgroundColor : '#fff'
       }}>
         <Typography sx={{fontSize: {md: 14, xs:12}}}>{(walkability*100).toFixed(0) ?? null}%</Typography>
-        <Typography sx={{fontSize: {md:12, xs:10}}}>{delta != null && delta > 0 ? '+' : ''}{delta} vs city</Typography>
+        <Typography sx={{fontSize: {md:12, xs:10}}}>{delta != null && delta > 0 ? '+' : ''}{delta ? delta : 'null'} vs city</Typography>
       </Box>
     </TableCell>
   )
@@ -192,6 +192,9 @@ const TabularBreakDownComponent = ({
     }})
     const [loading, setLoading] = useState(false)
     const [walkabilityData, setWalkabilityData] = useState({})
+    const cityAvgReady = useMemo(() => {
+      return !Object.values(cityAvg).every(value => value === null)
+    }, [cityAvg])
 
     useEffect(() => {
       const getData = async () => {
@@ -232,6 +235,11 @@ const TabularBreakDownComponent = ({
               </Box>
               
             ) :
+            <>
+            {!cityAvgReady && <div style={{width:'100%', display:'flex', justifyContent:'flex-start',marginTop:'8px'}}>
+                <Typography variant="h3" style={{ fontSize: '12px', color:'var(--text-dark)'}}>City Average Data loading...</Typography>
+            </div>
+            }
             <TableContainer component={Paper} 
               sx={{
               overflowX:"auto", 
@@ -272,7 +280,8 @@ const TabularBreakDownComponent = ({
                 })}
               </TableBody>
               </Table>
-            </TableContainer>}
+            </TableContainer>
+            </>}
         </Box>
     )
 }
