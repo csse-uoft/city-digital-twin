@@ -291,7 +291,7 @@ export const fetchCityAverage = async (
   }
 }
 
-// a little bit faster than fetchCityAverage
+// a little bit slower than fetchCityAverage
 export const fetchCityAverageV2 = async (
   adminInstances,
   cityState

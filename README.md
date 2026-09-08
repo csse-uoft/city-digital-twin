@@ -105,3 +105,16 @@ npm run dev-start
 - Make sure to update the `.env` files with your actual API endpoints.
 - This script is intended for development only — for production use Docker-based deployment.
 - If you modify the backend code, `nodemon` will auto-restart the server.
+
+
+## Next Steps
+
+Optimize City Average Fetch functions
+- In fetchFunctions.js there are two function I built to help calculate the city average walkability for each category called 'fetchCityAverage' and 'fetchCityAverageV2'. fetchCityAverageV2 is a little slower because it tries to batch request to the walkability-score endpoint, but the database doesn't handle parallel request so this function is slow. fetchCityAverage is a little faster, and it makes one request to an endpoint on the server where the area instance ids are iterated over and a walkability query is executed for each one. It is only 1-2% faster.
+- Aside from the optimizing to fetching functions themselves, it is worth considering developing an automated script to run daily and execute the fetch function, and then write the city average data to the knowledge graph. Then request from users using the interface will always get there request fulfilled much faster, and the data won't be stale.
+
+Catchment Areas
+- A feature that wasn't implemented yet, catchment areas would involve selecting a individual building within a neighborhood and rendering a circle of a fixed radius around the coordinate, and showcasing walkability data of that building (such as how many amenity markers fall within the circle radius). We would need building level data in the knowledge graph for the feature for the purpose of highlighting a structure, but calculating the walkability in a fixed radius (ex 400m) from a coordinate on the map is something can be developed now but calculating the number of amenity markers that are within the boundary of the circle, and dividing that by the total number of amenities within the area instance border (organized by amenity category).
+
+Icon Industry Standardization
+- Investigate existing industry standards for icons/colors and evaluate if we meet them for the dashboard
