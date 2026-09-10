@@ -4,12 +4,9 @@ const { polygon, centerOfMass } = require("@turf/turf");
 var SparqlClient = require("sparql-http-client");
 require("dotenv").config();
 
-const endpointUrl = process.env.ENDPOINT_URL;
+const endpointUrl = process.env.NEW_ENDPOINT_URL || process.env.ENDPOINT_URL;
 
-const endpointUrl2 = process.env.NEW_ENDPOINT_URL
-// const client = new SparqlClient({ endpointUrl: endpointUrl });
-
-const client2 = new SparqlClient({ endpointUrl: endpointUrl2 })
+const client2 = new SparqlClient({ endpointUrl });
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
