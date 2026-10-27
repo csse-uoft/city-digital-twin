@@ -1041,17 +1041,18 @@ router.post("/6", async (req, res) => {
     console.log(`prefix: ${prefix}, citySuffix: ${citySuffix}, adminTypeSuffix: ${adminTypeSuffix}`)
     const query = `
       PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-#PREFIX CITY: <${prefix}>
+      PREFIX CITY: <${prefix}>
       PREFIX iso50872City: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
       PREFIX iso50871Loc: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
 
       SELECT DISTINCT ?adminAreaInstance ?areaLocation WHERE {
- #       CITY:${citySuffix} ?p ?adminAreaInstance.
-        ?adminAreaInstance rdfs:comment ?areaName.
+        CITY:${citySuffix} ?p ?adminAreaInstance.
+        ?adminAreaInstance genprop:hasName ?areaName.
         ?adminAreaInstance rdf:type tor:${adminTypeSuffix}.
         ?adminAreaInstance loc:hasLocation ?loc.
         ?loc geo:asWKT ?areaLocation.
