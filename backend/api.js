@@ -292,11 +292,13 @@ router.get("/cities", async (req, res) => {
 
   try {
     const query = `
+      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
-      SELECT ?city WHERE {
-        ?city rdf:type i50872:City.
+      SELECT ?city ?cityname WHERE {
+      ?city rdf:type i50872:City;
+      genprop:hasName ?cityname.
       }
     `;
 
@@ -306,10 +308,12 @@ router.get("/cities", async (req, res) => {
     let totalResults = 0;
 
     stream.on("data", (row) => {
-      Object.entries(row).forEach(([key, value]) => {
-        result.push(value.value);
+      console.log('city row: ',row)
+        result.push({
+          uri: row.city.value,
+          name: row.cityname.value,
+        });
         totalResults++;
-      });
     });
 
     stream.on("end", () => {
@@ -407,10 +411,12 @@ router.post("/admin-types", async (req, res) => {
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
-      SELECT DISTINCT ?AdminAreaType WHERE {
+      SELECT DISTINCT ?AdminAreaType ?areaLabel WHERE {
           
           ?AdminArea rdf:type ?AdminAreaType.
           ?AdminAreaType rdfs:subClassOf iso50872:CityAdministrativeArea.
+          ?AdminAreaType rdfs:label ?areaLabel.
+
       }
     `;
     //CITY:${suffix} ?p ?AdminArea.
@@ -434,9 +440,11 @@ router.post("/admin-types", async (req, res) => {
       var result = [];
 
       stream.on("data", (row) => {
+        console.log('admin type row: ',row)
         // Version for simply putting each result value into the final array
-        Object.entries(row).forEach(([key, value]) => {
-          result.push(value.value);
+        result.push({
+          uri: row.AdminAreaType.value,
+          name: row.areaLabel.value
         });
         console.log('admin types result: ',result)
       });
