@@ -478,18 +478,18 @@ router.post("/admin-instances", async (req, res) => {
   } else {
     const [prefix, citySuffix] = splitURI(req.body.cityName);
     const [, adminTypeSuffix] = splitURI(req.body.adminType);
+    const adminAreaType = req.body.adminType
     console.log('REQUEST TO ADMIN-INSTANCES')
     const query = `
       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
       PREFIX CITY: <${prefix}>
+      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
+
       SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-      CITY:${citySuffix} ?p ?adminAreaInstance.
-      ?adminAreaInstance genprop:hasName ?areaName.
-      ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-      }
+      ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> tor:toronto. ?adminAreaInstance genprop:hasName ?areaName. ?adminAreaInstance rdf:type <${adminAreaType}>. }
     `;
     // const query = `
     // PREFIX CITY: <${prefix}>
