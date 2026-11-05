@@ -24,7 +24,7 @@ const LocationSelect = ({
   isGeneratingVisualization,
 }) => {
   const [cityLoading, setCityLoading] = useState(false);
-
+  console.log('admin area type state: ', adminAreaTypesState)
   return (
     <JoyBox sx={{ textAlign: "center", marginBottom: "50px" }}>
       <JoyBox

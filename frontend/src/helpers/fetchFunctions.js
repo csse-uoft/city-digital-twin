@@ -74,12 +74,12 @@ export const testBackendConnection = async () => {
 export const fetchCities = async (setCityURLs) => {
   const response = await axios.get(`${API_BASE_URL}/api/cities`);
 
-  response.data.cityNames.forEach((URL, index) => {
-    const [, cityName] = URL.split("#");
+  response.data.cityNames.forEach((city) => {
+    // const [, cityName] = URL.split("#");
 
     setCityURLs((prevCityURLs) => ({
       ...prevCityURLs,
-      [cityName]: URL,
+      [city.name]: city.uri,
     }));
   });
 };
@@ -94,19 +94,18 @@ export const fetchAdministration = async (
       const response = await axios.post(`${API_BASE_URL}/api/admin-types`, {
         cityName: cityURLs[city],
       });
-      //console.log('FETCH ADMIN AREA response: ', response)
+      console.log('FETCH ADMINISTRATION response: ', response)
       dispatchAdminAreaTypes({
         type: "SET_CURRENT_CITY",
         payload: city,
       });
       const adminAreaTypeURLs = {};
 
-      response.data.adminAreaTypeNames.forEach((URL, index) => {
-        const [, adminName] = URL.split("#");
-
-        adminAreaTypeURLs[adminName] = { URL: URL, selected: false };
+      response.data.adminAreaTypeNames.forEach((adminType) => {
+        if (adminType) adminAreaTypeURLs[adminType.name] = { URL: adminType.uri, selected: false };
       });
 
+      console.log('adminAreaTpyeURLs: ', adminAreaTypeURLs)
       dispatchAdminAreaTypes({
         type: "SET_URLS",
         payload: adminAreaTypeURLs,
@@ -409,11 +408,14 @@ export const fetchLocations = async (
         //console.log('key value', updatedLocationURLs[key])
         const areaName = mapAreaURLtoName(areaInstaceList, key);
         //console.log('key area name: ',areaName)
-        areaNameToCoordsAndURL[areaName] = {
-          URL: key,
-          coordinates: updatedLocationURLs[key].coordinates,
-          centerCoords: updatedLocationURLs[key].centerCoords
-        };
+        if (areaName) {
+          areaNameToCoordsAndURL[areaName] = {
+            URL: key,
+            coordinates: updatedLocationURLs[key].coordinates,
+            centerCoords: updatedLocationURLs[key].centerCoords
+          };
+        }
+        
       }
       // console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
