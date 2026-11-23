@@ -402,11 +402,11 @@ router.post("/admin-types", async (req, res) => {
     res.status(400);
     res.json({ message: "Bad request: cityName is not an URI" });
   } else {
-    const [prefix, suffix] = splitURI(req.body.cityName);
-    console.log(`ADMIN TYPES API prefix: ${prefix}, suffex: ${suffix}`)
+    // const [prefix, suffix] = splitURI(req.body.cityName);
+    const cityName = req.body.cityName
+    console.log(`ADMIN TYPES API cityName: ${cityName}`)
 
     const query = `
-      PREFIX CITY: <${prefix}>
       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -422,12 +422,11 @@ router.post("/admin-types", async (req, res) => {
     //CITY:${suffix} ?p ?AdminArea.
     // Check if city is in database; if not, quit
     const doesCityExist = await client2.query.ask(`
-      PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
       ASK {
-        CITY:${suffix} rdf:type i50872:City.
+        <${cityName}> rdf:type i50872:City.
       }
     `);
 
@@ -476,20 +475,21 @@ router.post("/admin-instances", async (req, res) => {
     res.status(400);
     res.json({ message: "Bad request: cityName or adminType is not an URI" });
   } else {
-    const [prefix, citySuffix] = splitURI(req.body.cityName);
-    const [, adminTypeSuffix] = splitURI(req.body.adminType);
+    // const [prefix, citySuffix] = splitURI(req.body.cityName);
+    // const [, adminTypeSuffix] = splitURI(req.body.adminType);
+    const cityName = req.body.cityName
     const adminAreaType = req.body.adminType
     console.log('REQUEST TO ADMIN-INSTANCES')
     const query = `
       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-      PREFIX CITY: <${prefix}>
       PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 
       SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-      ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> tor:toronto. ?adminAreaInstance genprop:hasName ?areaName. ?adminAreaInstance rdf:type <${adminAreaType}>. }
+      ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> tor:toronto. ?adminAreaInstance genprop:hasName ?areaName. ?adminAreaInstance rdf:type <${adminAreaType}>. 
+      }
     `;
     // const query = `
     // PREFIX CITY: <${prefix}>
@@ -505,12 +505,11 @@ router.post("/admin-instances", async (req, res) => {
 
     // Check if city is in database; if not, quit
     const doesCityExist = await client2.query.ask(`
-      PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
       ASK {
-        CITY:${citySuffix} rdf:type i50872:City.
+        <${cityName}> rdf:type i50872:City.
       }
     `);
 
@@ -993,16 +992,19 @@ router.post("/5", async (req, res) => {
     res.status(400);
     res.json({ message: "Bad request: predicate or subject is not an URI" });
   } else {
-    const [predicatePrefix, predicateSuffix] = splitURI(req.body.predicate);
-    const [subjectPrefix, subjectSuffix] = splitURI(req.body.subject);
+    // const [predicatePrefix, predicateSuffix] = splitURI(req.body.predicate);
+    // const [subjectPrefix, subjectSuffix] = splitURI(req.body.subject);
+    const { subject, predicate } = req.body;
 
+    // PREFIX FINDFROM: <${subjectPrefix}>
+    //   PREFIX PROPERTY: <${predicatePrefix}>
+
+    //   SELECT ?propertyValue WHERE {
+    //     FINDFROM:${subjectSuffix} PROPERTY:${predicateSuffix} ?propertyValue.
+    //   }
     const stream = await client2.query.select(`
-      PREFIX FINDFROM: <${subjectPrefix}>
-      PREFIX PROPERTY: <${predicatePrefix}>
+      SELECT ?propertyValue WHERE { <${subject}> <${predicate}> ?propertyValue. }
 
-      SELECT ?propertyValue WHERE {
-        FINDFROM:${subjectSuffix} PROPERTY:${predicateSuffix} ?propertyValue.
-      }
     `);
 
     var result = [];
@@ -1046,13 +1048,14 @@ router.post("/6", async (req, res) => {
     res.status(400);
     res.json({ message: "Bad request: cityName or adminType is not an URI" });
   } else {
-    const [prefix, citySuffix] = splitURI(req.body.cityName);
-    const [, adminTypeSuffix] = splitURI(req.body.adminType);
+    // const [prefix, citySuffix] = splitURI(req.body.cityName);
+    // const [, adminTypeSuffix] = splitURI(req.body.adminType);
+    const cityName = req.body.cityName
+    const adminType = req.body.adminType
     console.log('API 6')
-    console.log(`prefix: ${prefix}, citySuffix: ${citySuffix}, adminTypeSuffix: ${adminTypeSuffix}`)
+    console.log(`cityName: ${cityName}, adminType: ${adminType}`)
     const query = `
       PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-#PREFIX CITY: <${prefix}>
       PREFIX iso50872City: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
       PREFIX iso50871Loc: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
@@ -1061,9 +1064,9 @@ router.post("/6", async (req, res) => {
       PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
       SELECT DISTINCT ?adminAreaInstance ?areaLocation WHERE {
- #       CITY:${citySuffix} ?p ?adminAreaInstance.
+        ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> <${cityName}>.
         ?adminAreaInstance rdfs:comment ?areaName.
-        ?adminAreaInstance rdf:type tor:${adminTypeSuffix}.
+        ?adminAreaInstance rdf:type <${adminType}>.
         ?adminAreaInstance loc:hasLocation ?loc.
         ?loc geo:asWKT ?areaLocation.
       }
@@ -1072,12 +1075,11 @@ router.post("/6", async (req, res) => {
     //CITY:${citySuffix} ?p ?adminAreaInstance.
     // Check if city is in database; if not, quit
     const doesCityExist = await client2.query.ask(`
-      PREFIX CITY: <${prefix}>
       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
       ASK {
-        CITY:${citySuffix} rdf:type i50872:City.
+        <${cityName}> rdf:type i50872:City.
       }
     `);
 
@@ -1839,6 +1841,42 @@ router.post('/city-average-walkability', async (req,res) => {
 
     res.json({ data: avgWalkability, success: true})
 
+})
+
+// API 16
+router.post('/city-average-walkability-v2', async (req,res) => {
+  const city = req.body.city //city URI
+  const walkabilityClass = req.body.class //walkabilit class
+  try {
+    const query = `
+    PREFIX cdt: http://ontology.eil.utoronto.ca/CDT/
+    PREFIX i72: http://ontology.eil.utoronto.ca/ISO21972/iso21972#
+    PREFIX tor: http://ontology.eil.utoronto.ca/Toronto/Toronto#
+    PREFIX rdfs: http://www.w3.org/2000/01/rdf-schema#
+    PREFIX config: http://ontology.eil.utoronto.ca/CDT_Config/
+    select ?score ?walkscore ?class where {
+    {city} cdt:hasWalkabilityScore ?score.
+    ?score i72:hasValue [i72:hasNumericalValue ?walkscore];
+    cdt:walkabilityForClass {class}.
+
+    }
+    `
+
+    const stream = await client2.query.select(sanitizeSparqlQuery(query));
+
+    let rawData = []
+    stream.on("data", (row) => {
+          rawData.push(row);
+        });
+
+    stream.on("end", () => {
+      console.log('Raw data for walkability v2: ', rawData)
+
+
+    })
+  } catch (err) {
+
+  }
 })
 
 // helper

@@ -27,6 +27,8 @@ export const adminAreaTypeReducer = (state, action) => {
         return newState;
       case "CLEAR":
         return { currCity: state.currCity };
+      case "RESET":
+        return {}
       default:
         return {...state};
     }

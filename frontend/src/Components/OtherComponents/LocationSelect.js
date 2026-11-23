@@ -24,6 +24,7 @@ const LocationSelect = ({
   isGeneratingVisualization,
 }) => {
   const [cityLoading, setCityLoading] = useState(false);
+  const [adminTypesLoading, setAdminTypesLoading] = useState(false)
   console.log('admin area type state: ', adminAreaTypesState)
   return (
     <JoyBox sx={{ textAlign: "center", marginBottom: "50px" }}>
@@ -109,19 +110,22 @@ const LocationSelect = ({
                     (key) => key !== "currCity"
                   )}
                   desc="Select the demarcation type for analysis."
-                  onChange={(event, newValue) => {
+                  onChange={async (event, newValue) => {
+                    setAdminTypesLoading(true)
                     dispatchAdminAreaTypes({
                       type: "SET_SELECTED",
                       payload: newValue,
                     });
-                    fetchLocations(
+                    
+                    await fetchLocations(
                       newValue,
                       cityURLs,
                       adminAreaTypesState,
                       dispatchAdminAreaInstances
                     );
+                    setAdminTypesLoading(false)
                   }}
-                  isLoading={false}
+                  isLoading={adminTypesLoading}
                 />
                 <NewDropdownMultiSelect
                   id="admin-instances-multiinput"

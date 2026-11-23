@@ -12,3 +12,8 @@ export const customAmenityMarker = (iconURL) => {
     });
     return customIcon
 }
+
+export const hideScrollbar = {
+  scrollbarWidth: 'none',
+  '&::-webkit-scrollbar': { display: 'none' },
+};
