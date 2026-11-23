@@ -28,7 +28,10 @@ const ChartExpansionModal = ({
         backgroundColor: 'white',
         margin: { xs: 0, md: 'auto' },
         zIndex: 10010,
-        position: 'relative'
+        display:'flex',
+        flexDirection:'column',
+        justifyContent:'start',
+        alignItems:'center',
     }}}
     sx={{
         '& .MuiDialog-container': {
@@ -39,25 +42,27 @@ const ChartExpansionModal = ({
             width:"100%", 
             height: '40px', 
             px:2, 
+            py:2,
             display:"flex", 
             alignItems:"center", 
             justifyContent:"space-between", 
             boxSizing:"border-box", 
             borderBottom: "1px solid var(--border-color)",
-            position:"absolute",
-            top:0,
-            left:0
+            // position:"absolute",
+            // top:0,
+            // left:0
             }}>
             <Typography variant="h3" style={{fontWeight:"semibold", fontSize:'16px'}}>Walkability Coverage Chart</Typography>
             <CloseIcon onClick={()=>onClose()} style={{color:'var(--text-medium)', cursor:'pointer'}} />
         </Box>
             <Box sx={{
-            height:'100%',
+            height: { xs:'calc(100dvh-40px-50px)', md:'calc(70dvh-40px-50px)'},
             width:'100%',
-            marginTop:'40px',
-            marginBottom:'50px',
+            // marginTop:'40px',
+            // marginBottom:'50px',
             boxSizing:"border-box",
             px:1,
+            flex:1,
             display:'flex',
             alignItems:"center",
             justifyContent:"center"
@@ -70,15 +75,16 @@ const ChartExpansionModal = ({
             width:"100%", 
             height: '50px', 
             px:2, 
+            backgroundColor:'white',
             py:1,
             display:"flex", 
             alignItems:"center", 
             justifyContent:"flex-end", 
             boxSizing:"border-box", 
             borderTop: "1px solid var(--border-color)",
-            position:"absolute",
-            bottom:0,
-            left:0
+            // position:"absolute",
+            // bottom:0,
+            // left:0
             }}>
             
 

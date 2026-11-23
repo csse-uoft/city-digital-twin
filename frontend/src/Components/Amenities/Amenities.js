@@ -548,7 +548,9 @@ const Amenities = ({
     }, [selectedAdminInstancesURLs]);
 
     useEffect(() => {
-        if (Object.keys(adminAreaInstancesState).length === 0) return
+        if (Object.keys(adminAreaInstancesState).length === 0) {
+            setEnrichedAmenityPolygons([])
+        }
         //we need to prepare what we need and call a fetch function to get a list of neighborhood area instances of toronto
         // //console.log('ADMIN AREA INSTANCES STATE: ',adminAreaInstancesState)
         //we need to enrich this user friendly identifiers, mainly the instance name
@@ -591,11 +593,11 @@ const Amenities = ({
     }, [selectedAdminInstancesURLs]);
     // console.log('admin area instance stae: ',adminAreaInstancesState)
     // console.log('amenity polygons keys: ', amenityPolygons)
-    // console.log('current area name: ',currentAreaName)
-    // console.log('current area uri: ', currentAreaURI)
-    // console.log('citystate: ',cityState)
+    console.log('current area name: ',currentAreaName)
+    console.log('current area uri: ', currentAreaURI)
+    console.log('citystate: ',cityState)
     // console.log('selected admin instance urls: ', selectedAdminInstancesURLs)
-    // console.log('cityURI: ', currentCityURI)
+    console.log('cityURI: ', currentCityURI)
     // console.log('admin instances: ', adminAreaInstancesState)
     return (
         <Box sx={{width:"100%",marginRight: 0, marginLeft: 0}}>
