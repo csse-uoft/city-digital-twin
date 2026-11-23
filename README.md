@@ -1,17 +1,18 @@
 
 # City Digital Twin — Backend & Frontend Setup Guide
 
-This guide explains how to set up and run the backend and frontend services for the City Digital Twin project in a local development environment.
+Run the backend and frontend with Docker Compose from the repository root,
+using one root `.env` file for configuration.
 
 ---
 
 ## Prerequisites
 
-Make sure you have the following installed:
-
-- Node.js (v16 or higher recommended)
-- npm (Node Package Manager)
+- Docker with Docker Compose
 - Git
+
+Node.js and npm are only required for development outside Docker. The frontend
+requires Node.js 20 or newer; its Docker build uses Node.js 22.
 
 ---
 
@@ -19,45 +20,72 @@ Make sure you have the following installed:
 
 ```
 city-digital-twin/
+├── .env
+├── docker-compose.yml
 ├── backend/
-│   ├── .env
-│   └── (source code)
 └── frontend/
-    ├── .env
-    └── (source code)
 ```
 
 ---
 
 ## Environment Variables (.env)
 
-Before running the project, you need to create `.env` files for both `backend` and `frontend`.
+Copy `.env.example` to `.env` next to `docker-compose.yml` in the repository root
+(`cp .env.example .env` on Linux/macOS, or `Copy-Item .env.example .env` in
+PowerShell), then replace the example addresses:
 
-### Backend `.env` example:
-
-Create `backend/.env`:
-
-```
-ENDPOINT_URL=http://your-graphdb-endpoint-url
-```
-
-Replace `http://your-graphdb-endpoint-url` with your actual GraphDB endpoint.
-
----
-
-### Frontend `.env` example:
-
-Create `frontend/.env`:
-
-```
+```dotenv
+ENDPOINT_URL=http://your-graphdb-host:7200/repositories/your-repository
 REACT_APP_API_URL=http://localhost:3000
 ```
 
-This tells the frontend where to send API requests. (It should points to the backend address)
+- `ENDPOINT_URL`: the GraphDB endpoint reachable from the backend container.
+- `REACT_APP_API_URL`: the backend API URL reachable from the user's browser.
+  For deployment to another machine, replace `localhost` with that server's
+  hostname or IP address. Docker service names such as `backend` are not browser URLs.
+
+Compose automatically loads the root `.env`. It passes `ENDPOINT_URL` to the
+backend at runtime and `REACT_APP_API_URL` to the frontend at build time.
+Neither `backend/.env` nor `frontend/.env` is required for this Compose workflow.
+Both variables must be non-empty. Keep the root `.env` uncommitted; it is already
+covered by `.gitignore`.
+
+## Running with Docker Compose
+
+From the repository root:
+
+```bash
+docker compose up -d --build
+```
+
+- Frontend: `http://localhost:3001`
+- Backend API: `http://localhost:3000`
+
+The frontend image runs `npm ci` and `npm run build` in a Node.js build stage.
+Nginx serves the generated static files, with fallback to `index.html` for
+client-side routes.
+
+After changing either address in the root `.env`, run the same command again.
+`REACT_APP_API_URL` is embedded in the frontend build, so restarting an existing
+container alone does not apply changes to it. To rebuild only the frontend:
+
+```bash
+docker compose up -d --build --no-deps frontend
+```
+
+To stop both services:
+
+```bash
+docker compose down
+```
 
 ---
 
 ## Running Backend and Frontend Locally
+
+For development outside Docker, put `ENDPOINT_URL` in `backend/.env` and
+`REACT_APP_API_URL` in `frontend/.env`. The root `.env` is loaded by Compose,
+not by these local development commands.
 
 You can use the provided script to automatically install dependencies and start both services.
 
@@ -92,7 +120,7 @@ npm run dev-start
 ```
 ---
 
-## Expected Behavior
+## Local Development Behavior
 
 - The backend server (API) will start on port `3000`.
 - The frontend React development server will start on port `3001` or `3000` (depending on configuration).

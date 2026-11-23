@@ -1,21 +1,18 @@
-# Use an official Node.js runtime as a parent image
-FROM node:16
+FROM node:22-alpine AS build
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy the rest of the application code
 COPY . .
+ARG REACT_APP_API_URL
+RUN npm run build
 
-# Expose the port the app will run on
+FROM nginx:stable-alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/build /usr/share/nginx/html
+
 EXPOSE 3001
-
-# Set environment variable for development (can be overridden by docker-compose)
-ENV NODE_ENV=development
-
-# Run the frontend application (make sure this is the right command for your frontend)
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]

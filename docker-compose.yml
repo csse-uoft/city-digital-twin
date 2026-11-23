@@ -7,21 +7,20 @@ services:
       - "3000:3000"
     volumes:
       - ./backend:/app
-      - /app/node_modules
+      - backend_node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
+      - ENDPOINT_URL=${ENDPOINT_URL:?Set ENDPOINT_URL in the root .env file}
     networks:
       - app-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:?Set REACT_APP_API_URL in the root .env file}
     ports:
-      - "3001:3001"  # Match the internal port if needed
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
+      - "3001:3001"
     depends_on:
       - backend
     networks:
@@ -30,3 +29,6 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  backend_node_modules:
