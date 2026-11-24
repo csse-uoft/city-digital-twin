@@ -1063,7 +1063,7 @@ router.post("/6", async (req, res) => {
 
       SELECT DISTINCT ?adminAreaInstance ?areaLocation WHERE {
         ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> <${cityName}>.
-        ?adminAreaInstance rdfs:comment ?areaName.
+        ?adminAreaInstance genprop:hasName ?areaName.
         ?adminAreaInstance rdf:type <${adminType}>.
         ?adminAreaInstance loc:hasLocation ?loc.
         ?loc geo:asWKT ?areaLocation.
