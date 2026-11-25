@@ -266,84 +266,84 @@ export const fetchIndicators = async (setIndicatorURLs) => {
   }
 };
 
-export const fetchCityAverage = async (
-  adminInstances,
-  cityState
-) => {
-  try {
-    // console.log('V1 START: ', new Date().toLocaleTimeString())
-    const response = await axios.post(
-      `${API_BASE_URL}/api/city-average-walkability`,{
-        amenityCategories: cityState.amenityCategories,
-        areaURIList: Object.keys(adminInstances).map((key) => adminInstances[key].URL.split('#')[1])
-      }
-    )
-    //given response, store in local storage
-    // console.log('city average data: ', response.data.data)
-    sessionStorage.setItem(cityState.cityURI, JSON.stringify(response.data.data))
-    //return success?
-    // console.log('V1 END: ', new Date().toLocaleTimeString())
-    return { success: true}
-  } catch (err) {
-    console.error('Error fetching city average')
-    return { success: false}
-  }
-}
+// export const fetchCityAverage = async (
+//   adminInstances,
+//   cityState
+// ) => {
+//   try {
+//     // console.log('V1 START: ', new Date().toLocaleTimeString())
+//     const response = await axios.post(
+//       `${API_BASE_URL}/api/city-average-walkability`,{
+//         amenityCategories: cityState.amenityCategories,
+//         areaURIList: Object.keys(adminInstances).map((key) => adminInstances[key].URL.split('#')[1])
+//       }
+//     )
+//     //given response, store in local storage
+//     // console.log('city average data: ', response.data.data)
+//     sessionStorage.setItem(cityState.cityURI, JSON.stringify(response.data.data))
+//     //return success?
+//     // console.log('V1 END: ', new Date().toLocaleTimeString())
+//     return { success: true}
+//   } catch (err) {
+//     console.error('Error fetching city average')
+//     return { success: false}
+//   }
+// }
 
 // a little bit slower than fetchCityAverage
-export const fetchCityAverageV2 = async (
-  adminInstances,
-  cityState
-) => {
-  try {
-    // console.log('V2 START: ', new Date().toLocaleTimeString())
-    const areaIdList = Object.keys(adminInstances).map((key) => adminInstances[key].URL.split("#")[1])
-    //initialize aggregate walkability
+// export const fetchCityAverageV2 = async (
+//   adminInstances,
+//   cityState
+// ) => {
+//   try {
+//     // console.log('V2 START: ', new Date().toLocaleTimeString())
+//     const areaIdList = Object.keys(adminInstances).map((key) => adminInstances[key].URL.split("#")[1])
+//     //initialize aggregate walkability
 
-    //fetch
-    const result = await Promise.all(areaIdList.map((id) => {
-      return fetchWalkabilityData(id,cityState.cityURI)
-    }))
+//     //fetch
+//     const result = await Promise.all(areaIdList.map((id) => {
+//       return fetchWalkabilityData(id,cityState.cityURI)
+//     }))
 
-    //initialize aggregate
-    let aggWalkability = {}
-    Object.keys(cityState.amenityCategories).forEach((category) => {
-      aggWalkability[category] = []
-    })
+//     //initialize aggregate
+//     let aggWalkability = {}
+//     Object.keys(cityState.amenityCategories).forEach((category) => {
+//       aggWalkability[category] = []
+//     })
 
-    //populate aggWalkability
-    // console.log('result: ',result)
-    result.forEach((scores) => {
-      if (!scores) return
-      Object.keys(scores).forEach((category) => {
-        const score = scores[category]?.walkability
-        aggWalkability[category].push(score != null ? Number(parseFloat(score).toFixed(2)) : null)
-      })
-    })
+//     //populate aggWalkability
+//     // console.log('result: ',result)
+//     result.forEach((scores) => {
+//       if (!scores) return
+//       Object.keys(scores).forEach((category) => {
+//         const score = scores[category]?.walkability
+//         aggWalkability[category].push(score != null ? Number(parseFloat(score).toFixed(2)) : null)
+//       })
+//     })
 
-    let avgWalkability = {}
-    Object.keys(aggWalkability).forEach((category) => {
-      const scores = aggWalkability[category].filter(k => k != null && k != undefined)
-      const len = scores.length
-      if (len === 0) {
-          avgWalkability[category] = null
-          return
-      }
-      const total = scores.reduce((accumulator, current) => accumulator + current, 0);
-      const avg = total/len
-      avgWalkability[category] = Number(avg.toFixed(2))
-    })
+//     let avgWalkability = {}
+//     Object.keys(aggWalkability).forEach((category) => {
+//       const scores = aggWalkability[category].filter(k => k != null && k != undefined)
+//       const len = scores.length
+//       if (len === 0) {
+//           avgWalkability[category] = null
+//           return
+//       }
+//       const total = scores.reduce((accumulator, current) => accumulator + current, 0);
+//       const avg = total/len
+//       avgWalkability[category] = Number(avg.toFixed(2))
+//     })
 
-    // console.log('fetch city avg 2 walkability: ', avgWalkability)
-    //now set it in session
-    sessionStorage.setItem(cityState.cityURI, JSON.stringify(avgWalkability))
-    // console.log('V2 END: ', new Date().toLocaleTimeString())
-    return { success: true}
-  } catch (err) {
-    console.error('Error in fetch city average v2: ',err)
-    return { success: false}
-  }
-}
+//     // console.log('fetch city avg 2 walkability: ', avgWalkability)
+//     //now set it in session
+//     sessionStorage.setItem(cityState.cityURI, JSON.stringify(avgWalkability))
+//     // console.log('V2 END: ', new Date().toLocaleTimeString())
+//     return { success: true}
+//   } catch (err) {
+//     console.error('Error in fetch city average v2: ',err)
+//     return { success: false}
+//   }
+// }
 
 export const fetchLocations = async (
   admin,

@@ -174,12 +174,21 @@ function RowCell({walkability,cityAvg, ...props}) {
 
 const TabularBreakDownComponent = ({
     cityURI,
+    cityState,
     amenityCategories,
     areaURIList
 }) => {
     const [cityAvg, setCityAvg] = useState(() => {
-      return JSON.parse(sessionStorage.getItem(cityURI)) ?? 
-      {
+      if (cityState) {
+        let cityAvgObj = {}
+        Object.keys(cityState.amenityCategories).forEach((key) => {
+          const avgWalkability = cityState.amenityCategories[key].walkabilityScore ?? null
+          cityAvgObj[key] = avgWalkability
+        })
+        return cityAvgObj
+      } 
+
+      return {
       Health: null,
       RetailAndServices: null,
       EducationAndChildcare: null,

@@ -23,30 +23,9 @@ import {
 import {
   fetchAmenityLocations,
   testBackendConnection,
-  fetchAmenityData,
-  fetchCityAverage,
-  fetchCityAverageV2
+  fetchAmenityData
 } from "../../helpers/fetchFunctions";
 import ChartPanel from "./Charts/ChartPanel";
-
-const mockAmenityData = { 
-	'South Riverdale (70)': {
-				'Health':0.7,  // type - walkability score
-				'Spiritual':0.2, 
-				'Education & childcare':0.8, 
-				'Retail & services':0.8, 
-				'Communal':0,
-                'Cultural':0.3,
-                'Recreational': 0.1
-				},
-    // 'University (79)':      {
-	// 			'Health':0.7, 
-	// 			'Spiritual':0.2, 
-	// 			'Education & Childcare':0.8, 
-	// 			'Retail & services':0.8, 
-	// 			'Communal':0
-	// 		       }
-}
 
 const mockAmenityData2 = {
     'South Riverdale (70)': {
@@ -67,200 +46,6 @@ const mockAmenityData2 = {
 			       }
 }
 
-const mockWalkabilityData = {
-    'South Riverdale (70)':{
-        "Communal": {
-            "walkability": 0.5535714285714286,
-            "subtypes": [
-                {
-                    "subtype": "Library",
-                    "walkability": 0.5535714285714286
-                }
-            ],
-            "color": "EC4899"
-        },
-        "Cultural": {
-            "walkability": 0.5535714285714286,
-            "subtypes": [
-                {
-                    "subtype": "Library",
-                    "walkability": 0.5535714285714286
-                }
-            ],
-            "color": "92400E"
-        },
-        "EducationAndChildcare": {
-            "walkability": 0.9285714285714286,
-            "subtypes": [
-                {
-                    "subtype": "School",
-                    "walkability": 0.9285714285714286
-                }
-            ],
-            "color": "3B82F6"
-        },
-        "Health": {
-            "walkability": 0.9285714285714286,
-            "subtypes": [
-                {
-                    "subtype": "Clinic",
-                    "walkability": 0.21428571428571427
-                },
-                {
-                    "subtype": "DoctorsOffice",
-                    "walkability": 0.35714285714285715
-                },
-                {
-                    "subtype": "Hospital",
-                    "walkability": 0.125
-                },
-                {
-                    "subtype": "Pharmacy",
-                    "walkability": 0.9285714285714286
-                }
-            ],
-            "color": "EF4444"
-        },
-        "ParkService": {
-            "walkability": 1,
-            "subtypes": [
-                {
-                    "subtype": "ParkService",
-                    "walkability": 1
-                }
-            ],
-            "color": ""
-        },
-        "PublicTransitService": {
-            "walkability": 1,
-            "subtypes": [
-                {
-                    "subtype": "PublicTransitService",
-                    "walkability": 1
-                }
-            ],
-            "color": ""
-        },
-        "RetailAndServices": {
-            "walkability": 1,
-            "subtypes": [
-                {
-                    "subtype": "FastFood",
-                    "walkability": 0.9821428571428571
-                },
-                {
-                    "subtype": "Greengrocer",
-                    "walkability": 0.6607142857142857
-                },
-                {
-                    "subtype": "Restaurant",
-                    "walkability": 0.9642857142857143
-                },
-                {
-                    "subtype": "Supermarket",
-                    "walkability": 0.8571428571428571
-                }
-            ],
-            "color": "FB923C"
-        }
-    },
-    'North Riverdale (72)':{
-        "Communal": {
-            "walkability": 0.5535714285714286,
-            "subtypes": [
-                {
-                    "subtype": "Library",
-                    "walkability": 0.5535714285714286
-                }
-            ],
-            "color": "EC4899"
-        },
-        "Cultural": {
-            "walkability": 0.5535714285714286,
-            "subtypes": [
-                {
-                    "subtype": "Library",
-                    "walkability": 0.5535714285714286
-                }
-            ],
-            "color": "92400E"
-        },
-        "EducationAndChildcare": {
-            "walkability": 0.9285714285714286,
-            "subtypes": [
-                {
-                    "subtype": "School",
-                    "walkability": 0.9285714285714286
-                }
-            ],
-            "color": "3B82F6"
-        },
-        "Health": {
-            "walkability": 0.9285714285714286,
-            "subtypes": [
-                {
-                    "subtype": "Clinic",
-                    "walkability": 0.21428571428571427
-                },
-                {
-                    "subtype": "DoctorsOffice",
-                    "walkability": 0.35714285714285715
-                },
-                {
-                    "subtype": "Hospital",
-                    "walkability": 0.125
-                },
-                {
-                    "subtype": "Pharmacy",
-                    "walkability": 0.9285714285714286
-                }
-            ],
-            "color": "EF4444"
-        },
-        "ParkService": {
-            "walkability": 1,
-            "subtypes": [
-                {
-                    "subtype": "ParkService",
-                    "walkability": 1
-                }
-            ],
-            "color": ""
-        },
-        "PublicTransitService": {
-            "walkability": 1,
-            "subtypes": [
-                {
-                    "subtype": "PublicTransitService",
-                    "walkability": 1
-                }
-            ],
-            "color": ""
-        },
-        "RetailAndServices": {
-            "walkability": 1,
-            "subtypes": [
-                {
-                    "subtype": "FastFood",
-                    "walkability": 0.9821428571428571
-                },
-                {
-                    "subtype": "Greengrocer",
-                    "walkability": 0.6607142857142857
-                },
-                {
-                    "subtype": "Restaurant",
-                    "walkability": 0.9642857142857143
-                },
-                {
-                    "subtype": "Supermarket",
-                    "walkability": 0.8571428571428571
-                }
-            ],
-            "color": "FB923C"
-        }
-    }
-}
 
 function initializeFilterState (amenities) {
     let state = {}
@@ -623,6 +408,7 @@ const Amenities = ({
 
                             <CompareSelect
                                 cityURI={currentCityURI}
+                                cityState={cityState}
                                 adminAreaTypesState={adminAreaTypesState}
                                 dispatchAdminAreaTypes={dispatchAdminAreaTypes}
                                 adminAreaInstancesState={adminAreaInstancesState}

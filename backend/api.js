@@ -146,7 +146,8 @@ function transformAmenityCategories (amenityData) {
       amenities[name] = {
         colour: colour,
         icon: iconUrl,
-        label:label
+        label:label,
+        uri: amenity.d.value
       }
     }
     
@@ -1527,6 +1528,9 @@ router.post("/amenity-categories", async (req,res) => {
             console.log(`subtypes for ${name}: `, subtypes)
             amenities[name].subtypes = subtypes.filter(k => k != name) 
           }
+
+          const walkScore = await cityWalkability(cityURI,amenities[name].uri)
+          amenities[name].walkabilityScore = walkScore?.success ? walkScore.data : null
           
         })
       )
@@ -1788,101 +1792,101 @@ router.post('/walkability-scores', async (req,res) => {
 })
 
 // API 15
-router.post('/city-average-walkability', async (req,res) => {
-    const areaURIList = req.body.areaURIList
-    const amenityCategories = req.body.amenityCategories
-    console.log('/CITY-AVERAGE-WALKABILITY')
+// router.post('/city-average-walkability', async (req,res) => {
+//     const areaURIList = req.body.areaURIList
+//     const amenityCategories = req.body.amenityCategories
+//     console.log('/CITY-AVERAGE-WALKABILITY')
 
-    //iterate over the area Ids, and format a query for each id. Then execute the query stream in a try catch on each iteration
-    let obj = {}
-    Object.keys(amenityCategories).forEach((category) => {
-      obj[category] = []
-    })
+//     //iterate over the area Ids, and format a query for each id. Then execute the query stream in a try catch on each iteration
+//     let obj = {}
+//     Object.keys(amenityCategories).forEach((category) => {
+//       obj[category] = []
+//     })
 
-    for (const areaId of areaURIList) {
-      try {
-        console.log('area id: ',areaId)
-        const query = formatWalkabilityQuery(areaId)
-        const stream = await client2.query.select(sanitizeSparqlQuery(query));
+//     for (const areaId of areaURIList) {
+//       try {
+//         console.log('area id: ',areaId)
+//         const query = formatWalkabilityQuery(areaId)
+//         const stream = await client2.query.select(sanitizeSparqlQuery(query));
 
-        // Collect results from the stream
-        let rawData = [];
-        stream.on("data", (row) => {
-          rawData.push(row);
-        });
+//         // Collect results from the stream
+//         let rawData = [];
+//         stream.on("data", (row) => {
+//           rawData.push(row);
+//         });
 
-        stream.on("end", async () => {
-          console.log("walkability-scores API  result: ", rawData)
-          //first pre filter the raw data, by categories matching the subtype categories of the city
-          const formattedWalkability = formatWalkability(rawData,amenityCategories)
-          Object.keys(amenityCategories).forEach((category) => {
-            const score = formattedWalkability[category]?.walkability
-            obj[category].push(score ? Number(parseFloat(score).toFixed(2)) : null)
-          })
+//         stream.on("end", async () => {
+//           console.log("walkability-scores API  result: ", rawData)
+//           //first pre filter the raw data, by categories matching the subtype categories of the city
+//           const formattedWalkability = formatWalkability(rawData,amenityCategories)
+//           Object.keys(amenityCategories).forEach((category) => {
+//             const score = formattedWalkability[category]?.walkability
+//             obj[category].push(score ? Number(parseFloat(score).toFixed(2)) : null)
+//           })
                     
-          //iterate over categories to add totals to obj
-        });
+//           //iterate over categories to add totals to obj
+//         });
 
-        // Handle errors in the query or stream
-        stream.on("error", (err) => {
-          console.error("Query error: ", err);
-          // res.status(500).send("Error executing query");
-          //if error, skip that areas walkability data
-        });
-      } catch (err) {
-        console.error(`city-average walkability server error for ${areaId}: `, err)
-      }
-    }
-    //format the obj and return
-    let avgWalkability = {}
-    console.log('aggregate walkabilities: ',obj)
-    Object.keys(obj).forEach((category) => {
-      const scores = obj[category].filter(k => k != null && k != undefined)
-      const len = scores.length
-      const total = scores.reduce((accumulator, current) => accumulator + current, 0);
-      const avg = total/len ?? null
-      avgWalkability[category] = Number(avg.toFixed(2))
-    })
+//         // Handle errors in the query or stream
+//         stream.on("error", (err) => {
+//           console.error("Query error: ", err);
+//           // res.status(500).send("Error executing query");
+//           //if error, skip that areas walkability data
+//         });
+//       } catch (err) {
+//         console.error(`city-average walkability server error for ${areaId}: `, err)
+//       }
+//     }
+//     //format the obj and return
+//     let avgWalkability = {}
+//     console.log('aggregate walkabilities: ',obj)
+//     Object.keys(obj).forEach((category) => {
+//       const scores = obj[category].filter(k => k != null && k != undefined)
+//       const len = scores.length
+//       const total = scores.reduce((accumulator, current) => accumulator + current, 0);
+//       const avg = total/len ?? null
+//       avgWalkability[category] = Number(avg.toFixed(2))
+//     })
 
-    res.json({ data: avgWalkability, success: true})
+//     res.json({ data: avgWalkability, success: true})
 
-})
+// })
 
 // API 16
-router.post('/city-average-walkability-v2', async (req,res) => {
-  const city = req.body.city //city URI
-  const walkabilityClass = req.body.class //walkabilit class
-  try {
-    const query = `
-    PREFIX cdt: http://ontology.eil.utoronto.ca/CDT/
-    PREFIX i72: http://ontology.eil.utoronto.ca/ISO21972/iso21972#
-    PREFIX tor: http://ontology.eil.utoronto.ca/Toronto/Toronto#
-    PREFIX rdfs: http://www.w3.org/2000/01/rdf-schema#
-    PREFIX config: http://ontology.eil.utoronto.ca/CDT_Config/
-    select ?score ?walkscore ?class where {
-    {city} cdt:hasWalkabilityScore ?score.
-    ?score i72:hasValue [i72:hasNumericalValue ?walkscore];
-    cdt:walkabilityForClass {class}.
+// router.post('/city-average-walkability-v2', async (req,res) => {
+//   const city = req.body.city //city URI
+//   const walkabilityClass = req.body.class //walkabilit class
+//   try {
+//     const query = `
+//     PREFIX cdt: http://ontology.eil.utoronto.ca/CDT/
+//     PREFIX i72: http://ontology.eil.utoronto.ca/ISO21972/iso21972#
+//     PREFIX tor: http://ontology.eil.utoronto.ca/Toronto/Toronto#
+//     PREFIX rdfs: http://www.w3.org/2000/01/rdf-schema#
+//     PREFIX config: http://ontology.eil.utoronto.ca/CDT_Config/
+//     select ?score ?walkscore ?class where {
+//     {city} cdt:hasWalkabilityScore ?score.
+//     ?score i72:hasValue [i72:hasNumericalValue ?walkscore];
+//     cdt:walkabilityForClass {class}.
 
-    }
-    `
+//     }
+//     `
 
-    const stream = await client2.query.select(sanitizeSparqlQuery(query));
+//     const stream = await client2.query.select(sanitizeSparqlQuery(query));
 
-    let rawData = []
-    stream.on("data", (row) => {
-          rawData.push(row);
-        });
+//     let rawData = []
+//     stream.on("data", (row) => {
+//           rawData.push(row);
+//         });
 
-    stream.on("end", () => {
-      console.log('Raw data for walkability v2: ', rawData)
+//     stream.on("end", () => {
+//       console.log('Raw data for walkability v2: ', rawData)
 
 
-    })
-  } catch (err) {
+//     })
+//   } catch (err) {
 
-  }
-})
+//   }
+// })
 
 // helper
 async function getSubtypesByAmenity (amenityCategory) {
@@ -1961,6 +1965,63 @@ async function getSubtypesByAmenity (amenityCategory) {
   } catch (err) {
     console.error("Server error: ", err);
     return null
+  }
+}
+
+//API 17
+async function cityWalkability(cityName, amenityCategory) {
+  console.log('CITY WALKABILITY API')
+  // const cityName = req.body.cityName
+  //should pass the amenity categories in the request as well
+  // const amenityCategory = req.body.amenityCategory
+
+  try {
+    const query = `
+    PREFIX cdt: <http://ontology.eil.utoronto.ca/CDT/>
+    PREFIX i72: <http://ontology.eil.utoronto.ca/ISO21972/iso21972#>
+    PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
+    select ?score ?walkscore ?class where {
+    <${cityName}> cdt:hasWalkabilityScore ?score.
+    ?score i72:hasValue [i72:hasNumericalValue ?walkscore];
+    cdt:walkabilityForClass <${amenityCategory}>.
+
+    }`
+
+    const stream = await client2.query.select(query);
+    return new Promise((resolve,reject) => {
+      let rawData = []
+      stream.on("data", (row) => {
+        rawData.push(row)
+      })
+
+      stream.on("end", () => {
+        console.log('city-walkability: ',rawData)
+        const rawWalkabilityScore = rawData[0]?.walkscore?.value || '0'
+        const walkScore = parseFloat(rawWalkabilityScore).toFixed(2)
+
+        resolve({
+          success: true,
+          data: walkScore
+        })
+      })
+
+      stream.on("error", (error) => {
+        console.error('City walkability stream error: ', error)
+        // res.status(500).send(`Error executing city walkability query: ${error.message}`)
+        reject(error)
+      })
+    })
+
+  } catch (err) {
+    console.error('Error getting city walkability: ', err)
+    // res.status(500).send(`Internal Server Error: ${err.message}`)
+    return {
+      success: false,
+      error: err,
+      data: null
+    }
   }
 }
 
