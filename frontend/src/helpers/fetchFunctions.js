@@ -356,23 +356,13 @@ export const fetchLocations = async (
       const areaTypeURL = adminAreaTypesState[admin].URL;
       const cityName = cityURLs[adminAreaTypesState["currCity"]];
 
-      const response1 = await axios.post(
-        `${API_BASE_URL}/api/admin-instances`,
-        {
-          cityName: cityName,
-          adminType: areaTypeURL,
-        }
-      );
-      //console.log('FETCH LOCATIONS response1: ',response1)
-      const areaInstaceList = response1.data["adminAreaInstanceNames"];
 
       const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
-        cityName: cityURLs[adminAreaTypesState["currCity"]],
-        adminType: adminAreaTypesState[admin].URL,
+        cityName: cityName,
+        adminType: areaTypeURL,
       });
 
       const updatedLocationURLs = {};
-      //console.log('FETCH LOCATIONS resposne2 result: ',response2)
       // this extracts the cooridnates into the updatedLocationURLs variable
       response2.data["adminAreaInstanceNames"].forEach((Instance, index) => {
         var wkt = new Wkt.Wkt();
@@ -397,17 +387,16 @@ export const fetchLocations = async (
         }
         // add the center coord
         flipped.centerCoords = Instance["centerCoords"]
+        //add the instance name
+        flipped.areaName = Instance["areaName"]
 
         updatedLocationURLs[Instance["adminAreaInstance"]] = flipped;
       });
 
       const areaNameToCoordsAndURL = {};
-      //console.log('UPDATED LOCATION URLS: ', updatedLocationURLs)
       for (const key in updatedLocationURLs) {
-        //console.log('key:', key)
-        //console.log('key value', updatedLocationURLs[key])
-        const areaName = mapAreaURLtoName(areaInstaceList, key);
-        //console.log('key area name: ',areaName)
+
+        const areaName = updatedLocationURLs[key].areaName
         if (areaName) {
           areaNameToCoordsAndURL[areaName] = {
             URL: key,
@@ -417,7 +406,6 @@ export const fetchLocations = async (
         }
         
       }
-      // console.log('fetchLocations result: ', areaNameToCoordsAndURL)
 
       dispatchAdminAreaInstances({
         type: "SET_COORDINATES_AND_URLS",
@@ -519,15 +507,6 @@ export const fetchAmenityLocations = async (
 
     const areaTypeURL = getSelectedURL(adminAreaTypesState);
 
-    // Get admin area instance names
-    const response1 = await axios.post(`${API_BASE_URL}/api/admin-instances`, {
-      cityName: cityName,
-      adminType: areaTypeURL,
-    });
-    //console.log('api response1: ', response1)
-
-    const areaInstaceList = response1.data["adminAreaInstanceNames"];
-
     // Get geometry (WKT) of those admin area instances
     const response2 = await axios.post(`${API_BASE_URL}/api/6`, {
       cityName: cityName,
@@ -559,13 +538,15 @@ export const fetchAmenityLocations = async (
       }
       flipped.centerCoords = Instance["centerCoords"]
 
+      flipped.areaName = Instance["areaName"]
+
       NeighborhoodLocationURLs[Instance["adminAreaInstance"]] = flipped;
     });
 
     const areaNameToCoordsAndURL = {};
 
     for (const key in NeighborhoodLocationURLs) {
-      const areaName = mapAreaURLtoName(areaInstaceList, key);
+      const areaName = NeighborhoodLocationURLs[key].areaName;
       areaNameToCoordsAndURL[areaName] = {
         URL: key,
         coordinates: NeighborhoodLocationURLs[key].coordinates,

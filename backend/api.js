@@ -457,124 +457,127 @@ router.post("/admin-types", async (req, res) => {
 });
 
 // API 3: Check Backend Documentation file for more information.
-router.post("/admin-instances", async (req, res) => {
-  /*
-  Input form: {"cityName":"http://ontology.eil.utoronto.ca/5087/2/City#Toronto", "adminType":"http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood"}
-  Output: JSON list of all administrative area instances with the URI and the human-readable name included.
-  Description: Gets a list of all instances of a particular administrative area type.
-  */
-  if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
-    res.status(400);
-    res.json({
-      message: "Bad request: missing or non-string cityName or adminType",
-    });
-  } else if (!isURI(req.body.cityName) || !isURI(req.body.adminType)) {
-    res.status(400);
-    res.json({ message: "Bad request: cityName or adminType is not an URI" });
-  } else {
-    // const [prefix, citySuffix] = splitURI(req.body.cityName);
-    // const [, adminTypeSuffix] = splitURI(req.body.adminType);
-    const cityName = req.body.cityName
-    const adminAreaType = req.body.adminType
-    console.log('REQUEST TO ADMIN-INSTANCES')
-    const query = `
-      PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
-      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-
-      SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-      ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> tor:toronto. ?adminAreaInstance genprop:hasName ?areaName. ?adminAreaInstance rdf:type <${adminAreaType}>. 
-      }
-    `;
-    // const query = `
-    // PREFIX CITY: <${prefix}>
-    // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-    // SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
-    // CITY:${citySuffix} ?p ?adminAreaInstance.
-    // ?adminAreaInstance rdfs:comment ?areaName.
-    // ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
-    // }`
-    //CITY:${citySuffix} ?p ?adminAreaInstance.
-
-    // Check if city is in database; if not, quit
-    const doesCityExist = await client2.query.ask(`
-      PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-      ASK {
-        <${cityName}> rdf:type i50872:City.
-      }
-    `);
-
-    // Check if provided admin area type exists; if not, exit
-    const doesAdminAreaTypeExist = await client2.query.ask(`
-      PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+// router.post("/admin-instances", async (req, res) => {
+//   /*
+//   Input form: {"cityName":"http://ontology.eil.utoronto.ca/5087/2/City#Toronto", "adminType":"http://ontology.eil.utoronto.ca/Toronto/Toronto#Neighbourhood"}
+//   Output: JSON list of all administrative area instances with the URI and the human-readable name included.
+//   Description: Gets a list of all instances of a particular administrative area type.
+//   */
+//   if (!includesAllInputs([req.body.cityName, req.body.adminType], "string")) {
+//     res.status(400);
+//     res.json({
+//       message: "Bad request: missing or non-string cityName or adminType",
+//     });
+//   } else if (!isURI(req.body.cityName) || !isURI(req.body.adminType)) {
+//     res.status(400);
+//     res.json({ message: "Bad request: cityName or adminType is not an URI" });
+//   } else {
+//     // const [prefix, citySuffix] = splitURI(req.body.cityName);
+//     // const [, adminTypeSuffix] = splitURI(req.body.adminType);
+//     const cityName = req.body.cityName
+//     const adminAreaType = req.body.adminType
+//     console.log('REQUEST TO ADMIN-INSTANCES')
+//     const query = `
+//       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
+//       PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
+//       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+//       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
-      ASK {
+
+
+//       SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+//       ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> tor:toronto. 
+//       ?adminAreaInstance genprop:hasName ?areaName. 
+//       ?adminAreaInstance rdf:type <${adminAreaType}>. 
+//       }
+//     `;
+//     // const query = `
+//     // PREFIX CITY: <${prefix}>
+//     // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+//     // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+//     // SELECT DISTINCT ?adminAreaInstance ?areaName  WHERE {
+//     // CITY:${citySuffix} ?p ?adminAreaInstance.
+//     // ?adminAreaInstance rdfs:comment ?areaName.
+//     // ?adminAreaInstance rdf:type CITY:${adminTypeSuffix}.
+//     // }`
+//     //CITY:${citySuffix} ?p ?adminAreaInstance.
+
+//     // Check if city is in database; if not, quit
+//     const doesCityExist = await client2.query.ask(`
+//       PREFIX i50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+//       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+//       ASK {
+//         <${cityName}> rdf:type i50872:City.
+//       }
+//     `);
+
+//     // Check if provided admin area type exists; if not, exit
+//     const doesAdminAreaTypeExist = await client2.query.ask(`
+//       PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+//       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+//       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      
+//       ASK {
           
-      }
-    `);
+//       }
+//     `);
 
-    // const doesAdminAreaTypeExist = await client2.query.ask(`
-    //   PREFIX CITY: <${prefix}>
-    //   PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
-    //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+//     // const doesAdminAreaTypeExist = await client2.query.ask(`
+//     //   PREFIX CITY: <${prefix}>
+//     //   PREFIX iso50872: <http://ontology.eil.utoronto.ca/5087/2/City/>
+//     //   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+//     //   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       
-    //   ASK {
-    //       CITY:${citySuffix} ?p ?AdminArea.
-    //       ?AdminArea rdf:type CITY:${adminTypeSuffix}.
-    //       CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
-    //   }
-    // `);
+//     //   ASK {
+//     //       CITY:${citySuffix} ?p ?AdminArea.
+//     //       ?AdminArea rdf:type CITY:${adminTypeSuffix}.
+//     //       CITY:${adminTypeSuffix} rdfs:subClassOf iso50872:CityAdministrativeArea.
+//     //   }
+//     // `);
 
-    if (!doesCityExist || !doesAdminAreaTypeExist) {
-      if (!doesCityExist) {
-        res.status(400);
-        res.json({ message: "Bad request: Provided city does not exist" });
-      } else {
-        res.status(400);
-        res.json({
-          message:
-            "Bad request: Provided administrative area type does not exist",
-        });
-      }
-    } else {
-      const stream = await client2.query.select(query);
+//     if (!doesCityExist || !doesAdminAreaTypeExist) {
+//       if (!doesCityExist) {
+//         res.status(400);
+//         res.json({ message: "Bad request: Provided city does not exist" });
+//       } else {
+//         res.status(400);
+//         res.json({
+//           message:
+//             "Bad request: Provided administrative area type does not exist",
+//         });
+//       }
+//     } else {
+//       const stream = await client2.query.select(query);
 
-      var result = [];
-      var totalResults = 0;
+//       var result = [];
+//       var totalResults = 0;
 
-      stream.on("data", (row) => {
-        var singleRow = {};
-        Object.entries(row).forEach(([key, value]) => {
-          singleRow[key] = value.value?.split('_').join('').replace('neighbourhood','neighborhood');
-        });
-        result.push(singleRow);
-        totalResults++;
-      });
+//       stream.on("data", (row) => {
+//         var singleRow = {};
+//         Object.entries(row).forEach(([key, value]) => {
+//           singleRow[key] = value.value?.split('_').join('').replace('neighbourhood','neighborhood');
+//         });
+//         result.push(singleRow);
+//         totalResults++;
+//       });
 
-      stream.on("end", () => {
-        console.log('closing admin-instances')
-        res.json({
-          message: "success",
-          adminAreaInstanceNames: result,
-          totalResults: totalResults,
-        });
-      });
+//       stream.on("end", () => {
+//         console.log('closing admin-instances')
+//         res.json({
+//           message: "success",
+//           adminAreaInstanceNames: result,
+//           totalResults: totalResults,
+//         });
+//       });
 
-      stream.on("error", (err) => {
-        res.status(500).send("Oops, error!");
-      });
-    }
-  }
-});
+//       stream.on("error", (err) => {
+//         res.status(500).send("Oops, error!");
+//       });
+//     }
+//   }
+// });
 
 // API 4: Check Backend Documentation file for more information.
 router.post("/visualization-data", async (req, res) => {
@@ -1052,7 +1055,6 @@ router.post("/6", async (req, res) => {
     console.log('API 6')
     console.log(`cityName: ${cityName}, adminType: ${adminType}`)
     const query = `
-      PREFIX tor: <http://ontology.eil.utoronto.ca/Toronto/Toronto#>
       PREFIX iso50872City: <http://ontology.eil.utoronto.ca/5087/2/City/>
       PREFIX loc: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/SpatialLoc/>
       PREFIX iso50871Loc: <http://ontology.eil.utoronto.ca/5087/1/SpatialLoc/>
@@ -1061,9 +1063,10 @@ router.post("/6", async (req, res) => {
       PREFIX geo: <http://www.opengis.net/ont/geosparql#>
       PREFIX genprop: <https://standards.iso.org/iso-iec/5087/-1/ed-1/en/ontology/GenericProperties/>
 
-      SELECT DISTINCT ?adminAreaInstance ?areaLocation WHERE {
+      SELECT DISTINCT ?adminAreaInstance ?areaName ?areaLocation WHERE {
         ?adminAreaInstance <https://standards.iso.org/iso-iec/5087/-2/ed-1/en/ontology/City/administrativeAreaOf> <${cityName}>.
-        ?adminAreaInstance rdfs:comment ?areaName.
+        #?adminAreaInstance rdfs:comment ?areaName.
+        ?adminAreaInstance genprop:hasName ?areaName.
         ?adminAreaInstance rdf:type <${adminType}>.
         ?adminAreaInstance loc:hasLocation ?loc.
         ?loc geo:asWKT ?areaLocation.
@@ -1126,6 +1129,7 @@ router.post("/6", async (req, res) => {
 
       stream.on("data", (row) => {
         var singleRow = {};
+        console.log('API 6 row: ',row)
         Object.entries(row).forEach(([key, value]) => {
           console.log('area key: ',key)
           // console.log('area value: ', value.value)
@@ -1140,6 +1144,9 @@ router.post("/6", async (req, res) => {
               console.error(`Failed to compute centreCoords for row:`, singleRow.adminAreaInstance ?? '(unknown)', err.message);
               singleRow.centerCoords = null; // don't crash — just omit it
             }
+          }
+          if (key === 'adminAreaInstance') {
+            singleRow[key] = value.value?.split('_').join('').replace('neighbourhood','neighborhood');
           }
         });
         result.push(singleRow);
