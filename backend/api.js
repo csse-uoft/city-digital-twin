@@ -296,7 +296,7 @@ router.get("/cities", async (req, res) => {
       SELECT ?city ?cityname WHERE {
       ?city rdf:type i50872:City;
       genprop:hasName ?cityname.
-      }
+      } ORDER BY ?cityname
     `;
 
     const stream = await client2.query.select(query);
@@ -414,7 +414,7 @@ router.post("/admin-types", async (req, res) => {
           ?AdminAreaType rdfs:subClassOf iso50872:CityAdministrativeArea.
           ?AdminAreaType rdfs:label ?areaLabel.
 
-      }
+      } ORDER BY ?areaLabel
     `;
     //CITY:${suffix} ?p ?AdminArea.
     // Check if city is in database; if not, quit
