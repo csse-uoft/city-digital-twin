@@ -1070,7 +1070,7 @@ router.post("/6", async (req, res) => {
         ?adminAreaInstance rdf:type <${adminType}>.
         ?adminAreaInstance loc:hasLocation ?loc.
         ?loc geo:asWKT ?areaLocation.
-      }
+      } ORDER BY ?areaName
     `;
     //
     //CITY:${citySuffix} ?p ?adminAreaInstance.
