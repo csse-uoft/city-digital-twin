@@ -174,12 +174,22 @@ function RowCell({walkability,cityAvg, ...props}) {
 
 const TabularBreakDownComponent = ({
     cityURI,
+    cityState,
     amenityCategories,
-    areaURIList
+    areaURIList,
+    adminAreaTypesState
 }) => {
     const [cityAvg, setCityAvg] = useState(() => {
-      return JSON.parse(sessionStorage.getItem(cityURI)) ?? 
-      {
+      if (cityState) {
+        let cityAvgObj = {}
+        Object.keys(cityState.amenityCategories).forEach((key) => {
+          const avgWalkability = cityState.amenityCategories[key].walkabilityScore ?? null
+          cityAvgObj[key] = avgWalkability
+        })
+        return cityAvgObj
+      } 
+
+      return {
       Health: null,
       RetailAndServices: null,
       EducationAndChildcare: null,
@@ -201,7 +211,7 @@ const TabularBreakDownComponent = ({
         setLoading(true)
         try {
           let obj = {}
-          const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI)})))
+          const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI,adminAreaTypesState)})))
           dataResult.forEach((item) => {
               obj[item.areaName] = item.data
           })

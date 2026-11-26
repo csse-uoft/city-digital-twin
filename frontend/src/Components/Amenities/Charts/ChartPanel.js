@@ -83,7 +83,8 @@ const ChartPanel = ({
     chartParameterState,
     dispatchChartParameterState,
     chartEditParameterState,
-    dispatchChartEditParameterState
+    dispatchChartEditParameterState,
+    adminAreaTypesState
         }) => {
 
     
@@ -115,7 +116,7 @@ const ChartPanel = ({
 
                     //get the walkabilityData for all the areas and construct
                     let obj = {}
-                    const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI)})))
+                    const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI,adminAreaTypesState)})))
                     dataResult.forEach((item) => {
                         obj[item.areaName] = item.data
                     })
@@ -156,7 +157,7 @@ const ChartPanel = ({
 
                 } else { //there is only one area 
                     const areaURI = Object.keys(areaURIList).at(0)
-                    const data = await fetchWalkabilityData(areaURI,cityURI)
+                    const data = await fetchWalkabilityData(areaURI,cityURI,adminAreaTypesState)
                     const formattedWD = formatWalkabilityData(data,areaName)
                     setWalkabilityData(formattedWD)
 

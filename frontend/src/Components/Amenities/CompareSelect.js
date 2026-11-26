@@ -20,6 +20,7 @@ import ComparisonModal from './Comparison/ComparisonModal'
 
 const CompareSelect = ({
     cityURI,
+    cityState,
     adminAreaTypesState,
     dispatchAdminAreaTypes,
     adminAreaInstancesState,
@@ -45,7 +46,9 @@ const CompareSelect = ({
                     open={openComparisonModal} 
                     areaURIList={areaURIList} 
                     amenityCategories={amenityCategories}
+                    adminAreaTypesState={adminAreaTypesState}
                     cityURI={cityURI}
+                    cityState={cityState}
                     chartParameterState={chartParameterState}
                     dispatchChartParameterState={dispatchChartParameterState}
                     chartEditParameterState={chartEditParameterState}

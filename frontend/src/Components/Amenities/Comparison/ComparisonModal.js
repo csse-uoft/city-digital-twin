@@ -15,9 +15,11 @@ const ComparisonModal = ({
     onClose,
     open,
     amenityData,
+    cityState,
     cityURI,
     areaURIList,
     amenityCategories,
+    adminAreaTypesState,
     chartParameterState,
     dispatchChartParameterState,
     chartEditParameterState,
@@ -124,7 +126,7 @@ const ComparisonModal = ({
                     </Box>
 
                     <Box sx={{width:'100%', height: { xs: 'auto', md:'100%'}, flex: 1, alignItems:'center', justifyContent:'center'}}>
-                        <TabularBreakdownComponent amenityCategories={amenityCategories} areaURIList={areaURIList} cityURI={cityURI} />
+                        <TabularBreakdownComponent amenityCategories={amenityCategories} areaURIList={areaURIList} cityURI={cityURI} cityState={cityState} adminAreaTypesState={adminAreaTypesState} />
                     </Box>
                     </>
                 ) : (
