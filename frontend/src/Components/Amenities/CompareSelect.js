@@ -46,6 +46,7 @@ const CompareSelect = ({
                     open={openComparisonModal} 
                     areaURIList={areaURIList} 
                     amenityCategories={amenityCategories}
+                    adminAreaTypesState={adminAreaTypesState}
                     cityURI={cityURI}
                     cityState={cityState}
                     chartParameterState={chartParameterState}

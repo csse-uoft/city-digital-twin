@@ -16,7 +16,13 @@ const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
  * Sends a GET request to the `/api/health-check` endpoint to verify if the backend is reachable.
  * Logs the result to the console and returns a boolean if successful, or `null` if the request fails.
  */
-
+function getSelectedAdminAreaTypeURL (obj) {
+      for (const key in obj) {
+        if (obj[key]?.selected === true) {
+          return obj[key].URL;
+        }
+      }
+    };
 
 function getSubtypeMap (amenityData) {
   //console.log('creating amenity subtype map')
@@ -214,7 +220,8 @@ export const fetchAreaAmenities = async (
 
 export const fetchWalkabilityData = async (
   areaIdentifier,
-  cityURI
+  cityURI,
+  adminAreaTypesState
 ) => {
   if (areaIdentifier) {
     try {
@@ -228,10 +235,13 @@ export const fetchWalkabilityData = async (
         // console.log('making server request for walkability data of',areaIdentifier)
         //get cached categories
         const cityDetails = await getCachedAmenityCategories(cityURI)
+        const adminAreaTypeURL = getSelectedAdminAreaTypeURL(adminAreaTypesState)
+        console.log('walkability adminAreaTypeURL: ', adminAreaTypeURL)
 
         const response = await axios.post(`${API_BASE_URL}/api/walkability-scores`, {
           areaURI: areaIdentifier,
-          amenityCategories: cityDetails?.data
+          amenityCategories: cityDetails?.data,
+          adminType: adminAreaTypeURL
         })
         //console.log('fetch walkability score response:', response)
 
@@ -497,15 +507,8 @@ export const fetchAmenityLocations = async (
     // 2. Retrieve admin area info based on selected area type
     const cityName = "http://ontology.eil.utoronto.ca/Toronto/Toronto#toronto";
 
-    const getSelectedURL = (obj) => {
-      for (const key in obj) {
-        if (obj[key]?.selected === true) {
-          return obj[key].URL;
-        }
-      }
-    };
 
-    const areaTypeURL = getSelectedURL(adminAreaTypesState);
+    const areaTypeURL = getSelectedAdminAreaTypeURL(adminAreaTypesState);
 
     // Get geometry (WKT) of those admin area instances
     const response2 = await axios.post(`${API_BASE_URL}/api/6`, {

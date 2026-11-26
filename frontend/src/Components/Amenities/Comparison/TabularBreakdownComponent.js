@@ -176,7 +176,8 @@ const TabularBreakDownComponent = ({
     cityURI,
     cityState,
     amenityCategories,
-    areaURIList
+    areaURIList,
+    adminAreaTypesState
 }) => {
     const [cityAvg, setCityAvg] = useState(() => {
       if (cityState) {
@@ -210,7 +211,7 @@ const TabularBreakDownComponent = ({
         setLoading(true)
         try {
           let obj = {}
-          const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI)})))
+          const dataResult = await Promise.all(Object.keys(areaURIList).map(async (uri) => ({areaName: areaURIList[uri], data: await fetchWalkabilityData(uri,cityURI,adminAreaTypesState)})))
           dataResult.forEach((item) => {
               obj[item.areaName] = item.data
           })

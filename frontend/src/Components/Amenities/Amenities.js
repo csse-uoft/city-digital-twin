@@ -320,7 +320,7 @@ const Amenities = ({
         adminAreaInstancesState,
         dispatchAdminAreaInstances,
       ]);
-
+    console.log('LOC ID POLYGONS: ', locationIDPolygons)
     useEffect(() => {
         const selectedIDs = new Set(selectedAdminInstancesURLs.map(i => i.url.split('#')[1]));
         setAmenityPolygons((prev) => {
@@ -449,6 +449,7 @@ const Amenities = ({
                                     areaURI={currentAreaURI} 
                                     areaName={currentAreaName}  
                                     areaURIList={{ [currentAreaURI]: currentAreaName }}
+                                    adminAreaTypesState={adminAreaTypesState}
                                     amenityCategories={cityState.amenityCategories}
                                     chartParameterState={chartParameterState}
                                     dispatchChartParameterState={dispatchChartParameterState}

@@ -52,6 +52,26 @@ function parsePolygonCoords (coordStr) {
   }
 }
 
+function parseMultiPolygonCoords (coordStr) {
+  const match = coordStr.match(/\(([^()]+)\)/g)
+  if (match) {
+    const polygonList = []
+    match.forEach((match) => {
+      const coordList = match.split(',')
+      const arr = coordList.map((data) => {
+        const coords = data.trim().split(/\s+/)
+        const lon = parseFloat(coords[0].replace(/[^0-9.-]+/g, ""))
+        const lat = parseFloat(coords[1].replace(/[^0-9.-]+/g, ""))
+        return [lat,lon]
+      })
+      polygonList.push(arr)
+    })
+    return polygonList
+  } else {
+    return null
+  }
+}
+
 function parseMapCoords (coordStr,category) {
   //check if it is a point or a polygon
   // console.log('parse map coordStr: ',coordStr)
@@ -71,8 +91,9 @@ function parseMapCoords (coordStr,category) {
       }
     } else if (type === 'POLYGON' && category != 'ParkService') { //convert polygon to central point
       const coords = parsePolygonCoords(coordStr)
-      console.log('COORDS FOR TURF: ',coords)
+      // console.log('COORDS FOR TURF: ',coords)
       const p = centerOfMass(polygon([coords]))
+      console.log('p center: ', p)
       return {
         coords: {
           lat: p.geometry.coordinates[0],
@@ -80,7 +101,25 @@ function parseMapCoords (coordStr,category) {
         },
         type: 'point'
       }
-    } else {
+    } else if (type === 'MULTIPOLYGON' && category === 'ParkService') {
+      return {
+        coords: parseMultiPolygonCoords(coordStr),
+        type:'polygon'
+      }
+    } else if (type === 'MULTIPOLYGON' && category != 'ParkService') {
+      const polygonListCoords = parseMultiPolygonCoords(coordStr)
+      const [polygonCoords] = polygonListCoords
+      const p = centerOfMass(polygon([polygonCoords]))
+      console.log('p center: ', p)
+      return {
+        coords: {
+          lat: p.geometry.coordinates[0],
+          lon: p.geometry.coordinates[1]
+        },
+        type: 'point'
+      }
+    }
+     else {
       return null
     }
   } else {
@@ -127,18 +166,18 @@ function formatAmenities (amenityData,subTypeMap) {
     data[item.category][item.subCategory] = [...(data[item.category][item.subCategory] ?? []), item]
   })
 
-  console.log('formatted amenity data for filter panel: ', data)
+  // console.log('formatted amenity data for filter panel: ', data)
   return data
 }
 
 function transformAmenityCategories (amenityData) {
-  console.log('amenity categories: ',amenityData)
+  // console.log('amenity categories: ',amenityData)
   let amenities = {}
 
   amenityData.forEach((amenity) => {
     const label = amenity?.d_label?.value
     const name = amenity.d.value.split('/').at(-1).replace('Amenity','')
-    console.log('name: ',name)
+    // console.log('name: ',name)
     const colour = amenity?.colour?.value ?? null
     const iconUrl = amenity?.icon?.value ?? null
     if (name) {
@@ -247,8 +286,8 @@ function formatWalkabilityQuery (areaId) {
 function formatWalkability (data,amenityCategories) {
 
   const transformedWalkabilityData = transformWalkabilityData(data)
-  console.log('transformed walkability data: ', transformedWalkabilityData)
-  console.log('format walkability amenity categories: ',amenityCategories)
+  // console.log('transformed walkability data: ', transformedWalkabilityData)
+  // console.log('format walkability amenity categories: ',amenityCategories)
   scores = {}
 
   Object.keys(amenityCategories).forEach((category,index) => {
@@ -306,7 +345,7 @@ router.get("/cities", async (req, res) => {
     let totalResults = 0;
 
     stream.on("data", (row) => {
-      console.log('city row: ',row)
+      // console.log('city row: ',row)
         result.push({
           uri: row.city.value,
           name: row.cityname.value,
@@ -437,13 +476,13 @@ router.post("/admin-types", async (req, res) => {
       var result = [];
 
       stream.on("data", (row) => {
-        console.log('admin type row: ',row)
+        // console.log('admin type row: ',row)
         // Version for simply putting each result value into the final array
         result.push({
           uri: row.AdminAreaType.value,
           name: row.areaLabel.value
         });
-        console.log('admin types result: ',result)
+        // console.log('admin types result: ',result)
       });
 
       stream.on("end", () => {
@@ -1130,9 +1169,9 @@ router.post("/6", async (req, res) => {
 
       stream.on("data", (row) => {
         var singleRow = {};
-        console.log('API 6 row: ',row)
+        // console.log('API 6 row: ',row)
         Object.entries(row).forEach(([key, value]) => {
-          console.log('area key: ',key)
+          // console.log('area key: ',key)
           // console.log('area value: ', value.value)
           // const areaCenterCoords = parseMapCoords(value.value,'area instance')
           // console.log('area center coords: ', areaCenterCoords)
@@ -1140,6 +1179,7 @@ router.post("/6", async (req, res) => {
           singleRow[key] = value.value;
           if (key === 'areaLocation') {
             try {
+              // console.log('area location value: ', value.value)
               singleRow.centerCoords = parseMapCoords(value.value, 'area location')?.coords;
             } catch (err) {
               console.error(`Failed to compute centreCoords for row:`, singleRow.adminAreaInstance ?? '(unknown)', err.message);
@@ -1156,7 +1196,7 @@ router.post("/6", async (req, res) => {
 
       stream.on("end", () => {
         // console.log('area instance names: ',result)
-        console.log('total results: ', result.slice(0,10))
+        // console.log('total results: ', result.slice(0,10))
         res.json({
           message: "success",
           adminAreaInstanceNames: result,
@@ -1221,7 +1261,7 @@ router.post("/amenity-location-all", async (req, res) => {
 
   // Extract location_id from the request body
   const location_id = req.body.location_id;
-  console.log('locationId: ', location_id)
+  // console.log('locationId: ', location_id)
 
   // SPARQL query to retrieve amenities intersecting with the specified location
   const query = `
@@ -1267,7 +1307,7 @@ router.post("/amenity-location-all", async (req, res) => {
       rawData.push(row);
     });
     stream.on("end", () => {
-      console.log('rawData: ', rawData)
+      // console.log('rawData: ', rawData)
       const formattedData = rawData.map((binding) => {
         var amenity_tp = "";
         if (binding.amenity) {
@@ -1307,7 +1347,7 @@ router.post("/amenity-score", async (req, res) => {
   // Returns metrics describing how easily a amenties is accessible by all neighbourhoods
   // NOTE, for now only fetch score for neighbourhoods
   const adminType = req.body.adminType;
-  console.log(adminType);
+  // console.log(adminType);
   try {
     // update this query once you know how to query other type of adminType
     const query = `
@@ -1464,9 +1504,9 @@ router.post("/map-coords", async (req,res) => {
 
     stream.on("end", () => {
       const coordStr = rawData[0].coord.value
-      console.log(coordStr)
+      // console.log(coordStr)
       const coords = parseMapCoords(coordStr)
-      console.log('final map coords: ',coords)
+      // console.log('final map coords: ',coords)
       // Send the formatted data as JSON
       res.json({ success: true, data: coords });
     });
@@ -1513,7 +1553,7 @@ router.post("/amenity-categories", async (req,res) => {
     });
 
     stream.on("end", async () => {
-      console.log("amenity-categories API result: ", rawData)
+      // console.log("amenity-categories API result: ", rawData)
       //add the subtypes to the result before returning a response
       const amenities = transformAmenityCategories(rawData) // {health : {color: '#dfdf', icon: ''}}
       
@@ -1525,7 +1565,7 @@ router.post("/amenity-categories", async (req,res) => {
             amenities[name].subtypes = ['PublicTransitService']
           } else {
             const subtypes = await getSubtypesByAmenity(name)
-            console.log(`subtypes for ${name}: `, subtypes)
+            // console.log(`subtypes for ${name}: `, subtypes)
             amenities[name].subtypes = subtypes.filter(k => k != name) 
           }
 
@@ -1554,8 +1594,8 @@ router.post("/amenity-categories", async (req,res) => {
 router.post('/get-area-amenities', async (req,res) => {
   const area_id = req.body.areaId
   const categoryFilters = req.body.subTypeMap //Map, which we can check in constant time to filter
-  console.log('subtype category filters: ', categoryFilters)
-  console.log('/get-area-amenities areaURI: ',area_id)
+  // console.log('subtype category filters: ', categoryFilters)
+  // console.log('/get-area-amenities areaURI: ',area_id)
   try {
     const query = `
       PREFIX config: <http://ontology.eil.utoronto.ca/CDT_Config/>
@@ -1682,9 +1722,13 @@ router.post('/get-area-amenities', async (req,res) => {
 router.post('/walkability-scores', async (req,res) => {
   try {
     const areaURI = req.body.areaURI
-    const areaId = areaURI.split("#").at(-1)
+    const adminType = req.body.adminType
+    // const areaId = areaURI.split("#").at(-1)
     const amenityCategories = req.body.amenityCategories
+    //need to add the admin type for the query
     console.log('/walkability-scores areaURI: ', areaURI)
+    console.log('/walkability-scores adminType: ', adminType)
+    console.log('/walkability-scors amenity cat: ', amenityCategories)
 
     const query = `
     PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
@@ -1705,18 +1749,18 @@ router.post('/walkability-scores', async (req,res) => {
       # 1. Compute total buildings ONCE in a fast, isolated subquery
       {
         SELECT (COUNT(DISTINCT ?bTotal) AS ?totalBuildingCount) WHERE {
-          tor:${areaId} a tor:Neighborhood .
+          <${areaURI}> a <${adminType}> .
           ?bTotal a bdg:Building ;
                   bdg:use ?use ;
-                  cdt:locatedInAdministrativeArea tor:${areaId} .
+                  cdt:locatedInAdministrativeArea <${areaURI}> .
         }
       }
 
           {
-        tor:${areaId} a tor:Neighborhood.
+        <${areaURI}> a <${adminType}>.
         ?b a bdg:Building;
           bdg:use ?use;    #add clause to capture bdg:use residential only
-          cdt:locatedInAdministrativeArea tor:${areaId};
+          cdt:locatedInAdministrativeArea <${areaURI}>;
           loc:hasLocation ?bloc.
         ?bloc geo:asWKT ?bwkt.
         # Fetch candidate amenities
@@ -1736,10 +1780,10 @@ router.post('/walkability-scores', async (req,res) => {
         {
             #select DISTINCT ?b where{
         
-        tor:${areaId} a tor:Neighborhood.
+        <${areaURI}> a <${adminType}>.
         ?b a bdg:Building;
           bdg:use ?use;    #add clause to capture bdg:use residential only
-          cdt:locatedInAdministrativeArea tor:${areaId};
+          cdt:locatedInAdministrativeArea <${areaURI}>;
           loc:hasLocation ?bloc.
         ?bloc geo:asWKT ?bwkt.
         # Fetch candidate amenities
@@ -1759,7 +1803,7 @@ router.post('/walkability-scores', async (req,res) => {
     GROUP BY ?class ?totalBuildingCount`
 
     // Execute the query
-    console.log('executing walkability query')
+    // console.log('executing walkability query')
     const stream = await client2.query.select(sanitizeSparqlQuery(query));
 
     // Collect results from the stream
@@ -1769,7 +1813,7 @@ router.post('/walkability-scores', async (req,res) => {
     });
 
     stream.on("end", async () => {
-      console.log("walkability-scores API  result: ", rawData)
+      console.log("walkability-scores API  result: ", rawData.slice(0,3))
       //first pre filter the raw data, by categories matching the subtype categories of the city
 
       const formattedWalkability = formatWalkability(rawData,amenityCategories)
@@ -1997,7 +2041,7 @@ async function cityWalkability(cityName, amenityCategory) {
       })
 
       stream.on("end", () => {
-        console.log('city-walkability: ',rawData)
+        // console.log('city-walkability: ',rawData)
         const rawWalkabilityScore = rawData[0]?.walkscore?.value || '0'
         const walkScore = parseFloat(rawWalkabilityScore).toFixed(2)
 
@@ -2092,21 +2136,21 @@ router.post("/park-locations", async (req, res) => {
 
 // Function to handle the multiple cases for splitting URIs
 // Supports both URIs with "#" and those with just "/"
-function splitURI(URI) {
-  var prefix, suffix;
-  if (String(URI).includes("#")) {
-    prefix = String(URI).split("#")[0] + "#";
-    suffix = String(URI).split("#")[1];
-  } else {
-    prefix = String(URI).substring(0, String(URI).lastIndexOf("/") + 1);
-    suffix = String(URI).substring(String(URI).lastIndexOf("/"));
+// function splitURI(URI) {
+//   var prefix, suffix;
+//   if (String(URI).includes("#")) {
+//     prefix = String(URI).split("#")[0] + "#";
+//     suffix = String(URI).split("#")[1];
+//   } else {
+//     prefix = String(URI).substring(0, String(URI).lastIndexOf("/") + 1);
+//     suffix = String(URI).substring(String(URI).lastIndexOf("/"));
 
-    // Remove illegal characters (currently / and #) from the suffix, as they break SPARQL queries
-    suffix = suffix.replace(/[\/#]/g, "");
-  }
+//     // Remove illegal characters (currently / and #) from the suffix, as they break SPARQL queries
+//     suffix = suffix.replace(/[\/#]/g, "");
+//   }
 
-  return [prefix, suffix];
-}
+//   return [prefix, suffix];
+// }
 
 function isURI(URI) {
   URI = String(URI);
